@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="nymn_text">#808080</color>
+    <color name="group_info_bg">#F3F3F3</color>
+
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="kons_blue">#3FA9F5</color>
+    <color name="kons_pink">#FA79A9</color>
+    <color name="kons_green">#79C842</color>
+
+    <color name="red_bottom">#ff0000</color>
+    <color name="dark_gray">#ffC2C2C2</color>
+    <color name="red_status_bar">#db0606</color>
+    <color name="red_text">#ff0000</color>
+
+    <color name="wild_gray">#DADADA</color>
+    <color name="back_gray">#9A9494</color>
+    <color name="bold_header">#56575A</color>
+    <color name="description_color">#57585B</color>
+    <color name="light_black">#696969</color>
+    <color name="light_gray">#EFEFEF</color>
+    <color name="dim_gray">#696969</color>
+    <color name="gray">#ffCCCCCC</color>
+    <color name="black">#ff000000</color>
+    <color name="homeclr">#bb000000</color>
+    <color name="white">#ffffffff</color>
+    <color name="appcolor">#33404f</color>
+    <color name="appcolor2">#6633404f</color>
+    <color name="drawercolor">#404040</color>
+    <color name="drawercolor2">#CC494040</color>
+    <color name="homecolor">#ee33373A</color>
+    <color name="testselector">#04524f</color>
+    <color name="red">#FF00</color>
+    <color name="green">#039646</color>
+    <color name="blue">#0000FF</color>
+    <color name="prsd">#5E7C8C</color>
+    <color name="imgbg">#777777</color>
+    <color name="Tarnsperent">#00000000</color>
+    <color name="left_font_color">#00A2FF</color>
+    <color name="right_font_color">#FFFFFF</color>
+    <color name="header_cart_circle_color">#000000</color>
+    <color name="header_cart_solid_color">#ffffff</color>
+    <color name="header_cart_txt_color">#FE1212</color>
+    <color name="app_bgcolor">#edebeb</color>
+    <color name="trans">#8fffffff</color>
+    <color name="kaching_color">#fe0000</color>
+    <color name="kaching_selected_color">#fe0099</color>
+
+    <!-- <color name="app_color_blue">#00a0ff</color> -->
+    <color name="app_color_blue">#FE0000</color>
+    <color name="app_color_blue_light">#9FDBFF</color>
+    <color name="app_color_dark_gray">#999999</color>
+    <!-- <color name="app_color_dark_gray">#FE0000</color> -->
+    <color name="app_color_gray">#D3D3D3</color>
+    <color name="app_chat_notification_bg">#F2F2F2</color>
+    <color name="list_devider">#E2E2E2</color>
+    <color name="date">#85D3EF</color>
+    <color name="color_msg_text">#2d2d2d</color>
+    <!-- <color  name="app_color_light_blue">#BDE7FF</color> -->
+    <color name="app_color_light_blue">#ffdddddd</color>
+    <color name="chat_list_selector">#FE0000</color>
+    <color name="gray_light">#efedef</color>
+    <color name="holo_light_background">#ffe8e8e8</color>
+    <color name="holo_light_selected">#ff7cc9e5</color>
+
+    <!-- Photo Viewer Colors -->
+    <color name="solid_black">#ff000000</color>
+    <color name="photo_crop_dim_color">#cc000000</color>
+    <color name="photo_crop_highlight_color">#fff</color>
+    <color name="background_tab_pressed">#6633B5E5</color>
+
+    <!--Indigo 500-->
+    <color name="primary_500">#3F51B5</color>
+    <!--Indigo 700-->
+    <color name="primary_700">#303F9F</color>
+    <!--Pink 500-->
+    <color name="accent_500">#ff0000</color>
+    <!--Pink 700-->
+    <color name="accent_700">#C2185B</color>
+    <color name="black_trans80">#14000000</color>
+     <color name="indicator_unselected">#4D000000</color>
+
+
+    <color name="blue_grey">#455A64</color>
+    <color name="pink">#E91E63</color>
+    <color name="purple">#9C27B0</color>
+    <color name="deep_purple">#673AB7</color>
+    <color name="indigo">#3F51B5</color>
+    <color name="light_blue">#03A9F4</color>
+    <color name="cyan">#00BCD4</color>
+    <color name="teal">#009688</color>
+    <color name="light_green">#8BC34A</color>
+    <color name="lime">#CDDC39</color>
+    <color name="yellow">#FFEB3B</color>
+    <color name="amber">#FFC107</color>
+    <color name="orange">#FF9800</color>
+    <color name="deep_orange">#FF5722</color>
+    <color name="grey_light">#dadada</color>
+
+    <!-- Setting Color Goes Here -->
+
+    <color name="msg_notification">#C0232B</color>
+    <color name="title_txt_notification">#525252</color>
+    <color name="subsv_txt_notification">#8A8A8A</color>
+    <color name="setting_content">#606060</color>
+
+    <color name="contact_border">#CCCCCC</color>
+    <color name="contact_back">#EFEFEF</color>
+    <color name="contact_screen">#BF373C</color>
+    <color name="check_box_bg">#CE363A</color>
+    <color name="action_bar_bg_color">#FF0000</color>
+
+    <!--Cart Color Goes Here -->
+
+    <color name="merchant_name">#5A5A5A</color>
+    <color name="product_name">#FF0000</color>
+    <color name="reg_price">#606060</color>
+    <color name="buxs_price_bg">#DADADA</color>
+    <color name="buxs_price">#696969</color>
+    <color name="horizontal_separator">#DADADA</color>
+
+    <!--fast scroller color-->
+    <color name="alphabet_text_color">#232323</color>
+    <color name="alphabet_text_selected_color">#ff0000</color>
+    <color name="alphabet_background_color">#00ffffff</color>
+    <color name="alphabet_background_border_color">#00ffffff</color>
+
+</resources>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="#fff"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/ka_offer_img"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/noimage" />
+
+    <LinearLayout
+        android:id="@+id/ka_offer_lay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/ka_offer_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="Offer"
+            android:textColor="#000"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/ka_offer_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Descrip"
+            android:textColor="#0000EE"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/ka_offer_deelno"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No Deals"
+        android:textColor="#000"
+        android:textSize="18sp" />
+
+</LinearLayout>

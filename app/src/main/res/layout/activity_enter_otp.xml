@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/Ka_enter_otp_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:text="Thanks!!  Enter Phone Number To get The Otp"
+        android:textColor="#000"
+        android:textSize="18dp"
+        android:textStyle="italic|bold" />
+
+    <LinearLayout
+        android:id="@+id/Ka_enter_number_lay"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="14dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/Ka_enter_number_code"
+            android:layout_width="30dp"
+            android:layout_height="40dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/border_style"
+            android:inputType="number"
+            android:padding="1dp"
+            android:text=" "
+            android:textColor="#000"
+            android:textSize="17dp" />
+
+        <EditText
+            android:id="@+id/Ka_enter_number"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:layout_margin="5dp"
+            android:background="@drawable/border_style"
+            android:hint="Enter Phone Number"
+            android:inputType="number"
+            android:paddingLeft="3dp"
+            android:textColor="#000"
+            android:textSize="17dp" />
+    </LinearLayout>
+
+    <EditText
+        android:id="@+id/Ka_enter_otp_number"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="14dp"
+        android:background="@drawable/border_style"
+        android:hint="Enter Otp"
+        android:inputType="number"
+        android:paddingLeft="3dp"
+        android:textColor="#000"
+        android:textSize="17dp"
+        android:visibility="gone" />
+
+    <EditText
+        android:id="@+id/Ka_enter_pass"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="14dp"
+        android:background="@drawable/border_style"
+        android:hint="Enter Password"
+        android:inputType="textPassword"
+        android:paddingLeft="3dp"
+        android:textColor="#000"
+        android:textSize="17dp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/Ka_check_lay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <CheckBox
+            android:id="@+id/checkBoxck"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CheckBox" />
+
+        <TextView
+            android:id="@+id/textViewcheck"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:text="TextView"
+            android:textColor="#000" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/Ka_check_lay2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <CheckBox
+            android:id="@+id/checkBoxck2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CheckBox" />
+
+        <TextView
+            android:id="@+id/textViewcheck2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:text="TextView"
+            android:textColor="#000" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/Ka_enter_otp_lay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/Ka_resend_otp"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="10dp"
+            android:background="@drawable/selectorforclick"
+            android:gravity="center"
+            android:text="Resend"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/Ka_edit_otp"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="10dp"
+            android:background="@drawable/selectorforclick"
+            android:gravity="center"
+            android:text="Edit"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/Ka_enter_otp_btn"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="10dp"
+            android:background="@drawable/selectorforclick"
+            android:gravity="center"
+            android:text="Verify"
+            android:textColor="#fff"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>

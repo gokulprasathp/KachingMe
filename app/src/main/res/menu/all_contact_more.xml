@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto" 
+    >
+
+    <item
+        android:id="@+id/menu_sms"
+        android:orderInCategory="1"
+        android:title="SMS"
+        android:showAsAction="always">
+    </item>
+    <item
+        android:id="@+id/menu_email"
+        android:orderInCategory="2"
+        android:title="Email"
+        android:showAsAction="always">
+    </item>
+    <item
+        android:id="@+id/menu_more"
+        android:orderInCategory="3"
+        android:title="More.."
+        android:showAsAction="always">
+    </item>
+ 
+</menu>

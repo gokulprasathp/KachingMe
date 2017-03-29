@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:widget="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!--<ScrollView-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content">-->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <!-- <include layout="@layout/activity_header" />-->
+
+            <FrameLayout
+                android:id="@+id/FrameImageWithText_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="30dp"
+                android:visibility="visible">
+
+                <ImageView
+                    android:id="@+id/Bubble_img"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:src="@drawable/kons_format_one" />
+
+                <com.wifin.kachingme.emojicons.emojicon.EmojiconTextView
+                    android:id="@+id/Bubble_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="#fff"
+                    android:textSize="30dp"
+                    android:textStyle="bold" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/text_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/gray_border_background"
+                android:orientation="horizontal">
+
+                <com.wifin.kachingme.emojicons.emojicon.EmojiconEditText
+                    android:id="@+id/Bubble_edit_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:hint="Enter Text here"
+                    android:imeOptions="actionDone"
+                    android:inputType="textNoSuggestions" />
+
+                <ImageButton
+                    android:id="@+id/btn_emo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:background="@color/white"
+                    android:focusable="true"
+                    android:src="@drawable/emoji_btn_normal"
+                    android:text="">
+
+                    <requestFocus />
+                </ImageButton>
+            </LinearLayout>
+
+
+
+
+            <LinearLayout
+                android:id="@+id/select_shapes_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/select_shape_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select Shapes"
+                    android:textColor="@color/bold_header" />
+
+                <LinearLayout
+                    android:id="@+id/shapes_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <com.wifin.kachingme.kaching_feature.kons.HorizontalListView
+                        android:id="@+id/hlv"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentLeft="true"
+                        android:layout_alignParentStart="true"
+                        android:layout_centerVertical="true"
+                        android:layout_gravity="center"
+                        android:background="@drawable/gray_border_background"
+                        android:divider="#E0E0E0"
+
+                        android:fadingEdgeLength="5dp"
+                        android:requiresFadingEdge="horizontal"
+                        widget:dividerWidth="1dp" />
+                </LinearLayout>
+            </LinearLayout>
+
+
+
+            <LinearLayout
+                android:id="@+id/select_color_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/select_color_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Select Color"
+                    android:textColor="@color/bold_header" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/gray_border_background"
+                    android:orientation="horizontal">
+
+                    <Spinner
+                        android:id="@+id/spinner_color"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/spinner_bg"
+                        android:spinnerMode="dropdown" />
+                </LinearLayout>
+            </LinearLayout>
+
+
+            <LinearLayout
+                android:id="@+id/Cancel_Add_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/Cancel_Btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/button_selector_gray_to_red"
+                    android:text="Cancel"
+                    android:textColor="@color/nymn_text" />
+
+
+                <TextView
+                    android:id="@+id/Add_Btn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/button_selector_gray_to_red"
+                    android:text="Add"
+                    android:textColor="@color/nymn_text" />
+            </LinearLayout>
+
+        </LinearLayout>
+    <!--</ScrollView>-->
+
+    <LinearLayout
+        android:id="@+id/footer_for_emoticons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:visibility="gone"></LinearLayout>
+
+    <GridView
+        android:id="@+id/gridview_emo"
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:layout_x="0px"
+
+        android:layout_y="450px"
+        android:numColumns="7"
+        android:verticalSpacing="5dp"
+        android:visibility="gone">
+
+    </GridView>
+
+    <LinearLayout
+        android:id="@+id/emoji_frag"
+        android:layout_width="match_parent"
+        android:layout_height="500dp"
+        android:layout_x="0px"
+        android:layout_y="500px"
+        android:visibility="gone">
+
+        <fragment
+            class="com.wifin.kachingme.emojicons.emojicon.EmojiconFragmentGroup"
+            android:layout_width="match_parent"
+            android:layout_height="500dp" />
+    </LinearLayout>
+</LinearLayout>

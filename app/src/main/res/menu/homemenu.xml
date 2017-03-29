@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto" 
+    >
+   <item
+        android:id="@+id/action_contact"
+        android:orderInCategory="1"
+        appcompat:showAsAction="ifRoom"
+        
+        android:title="@string/contacts"/>
+   
+  <!--  <item
+        android:id="@+id/menu_search"
+        android:icon="@drawable/ic_action_search"
+        appcompat:showAsAction="always"
+        android:orderInCategory="1"></item> -->
+
+</menu>

@@ -1,0 +1,825 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.wifin.kaching.me.ui">
+
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_CONTACTS" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="com.google.android.providers.gsf.permission.READ_GSERVICES" />
+    <uses-permission android:name="com.wifin.kaching.me.ui.permission.MAPS_RECEIVE" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.REAL_GET_TASKS" />
+    <uses-permission android:name="android.permission.GET_TASKS" />
+
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.READ_LOGS"/>
+    <uses-permission android:name="android.permission.READ_CALL_LOG"/>
+    <uses-permission android:name="android.permission.WRITE_CALL_LOG"/>
+    <uses-permission android:name="android.permission.PROCESS_OUTGOING_CALLS"/>
+
+    <permission
+        android:name="com.wifin.kaching.me.ui.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="com.wifin.kaching.me.ui.permission.C2D_MESSAGE" />
+
+    <!-- Required to show current location -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Required OpenGL ES 2.0. for Maps V2 -->
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
+
+    <application
+        android:name="com.wifin.kachingme.applications.KachingMeApplication"
+        android:allowBackup="true"
+        android:icon="@drawable/ic_launcher33"
+        android:label="@string/app_name"
+        android:largeHeap="true"
+        android:screenOrientation="portrait"
+        android:theme="@style/Theme.Nifty_action_theme">
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.MainActivity"
+            android:label="@string/app_name"
+            android:theme="@style/android:Theme.Wallpaper">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.Slideshow"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.BaseActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.RegisterActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.Signin"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.OtpVerification"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.VerificationActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.FreebieActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.StartUpDazz"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.WelcomeActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.AddToCart"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.util.cropimage.CropImage"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.SettingsPrivacyInfo"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/niftychat"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.LockScreen"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.ArchiveList"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/niftychat"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Profile"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/profile"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Status"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/status"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.FAQ_Activity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.AboutActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.ContactUsActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.FAQ_Answer_Activity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.DeleteSecondaryNumber"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Wallpaper_Activity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.muc_chat.NewGroup"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/new_group"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Settings"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.UserProfile"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.muc_chat.NewGroup_Name"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="Group Name"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.muc_chat.MUCTest"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.muc_chat.MUC_Info"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.wifin.kachingme.chat.muc_chat.MUCTest" />
+        </activity>
+
+        <activity
+            android:name="com.wifin.kachingme.util.SelectContactList"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/select_contacts"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.util.Select_Group_Member"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/select_contacts"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.util.Select_MUC_Admin"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/select_group_admin"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.ContactsSetting"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/contacts"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.delete_account_settings"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/account"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Delete_Account_Confirm"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/delete_account_confirm"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Chat_Settings"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/chat_settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.blocked_users"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/blocked_users"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.MediaAutoDownload"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/auto_download"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.SettingsNotifications"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/notifications"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Privacy"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/privacy"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.ForwardList"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/select_contacts"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat_home.HeaderActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="com.wifin.kachingme.buxs.BuxSActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.LocationShare"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/share_locations"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.SendContact"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/send_contacts"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.ContactView"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/contact"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.ContactView_Normal"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/contact"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.RestoreBackup"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/restore_backup"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.registration_and_login.RestoreBackupCloud"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/restore_backup_cloud"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.util.MultiselectMembers"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="Select Members"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.broadcast_chat.Broadcast_create"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/new_broadcast"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.broadcast_chat.BroadCastTest"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/new_broadcast"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.broadcast_chat.Broadcast_info"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/broadcast_list_info"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.muc_chat.NewGroup_FragmentActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/new_group"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.muc_chat.GroupProfilePic"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/group_icon"
+            android:screenOrientation="portrait" />
+
+        <!-- login declaration -->
+        <activity
+            android:name="com.wifin.kachingme.chat_home.MainActivity"
+            android:label="@string/title_activity_splash"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.deals.VerifyShop"
+            android:label="@string/title_activity_splash"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name="com.wifin.kachingme.redimer.RedeemedSuccessActivity"
+            android:label="@string/title_activity_splash"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.single_chat.ChatTest"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:icon="@drawable/avtar"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="stateAlwaysVisible" />
+
+        <activity
+            android:name="com.wifin.kachingme.redimer.NewAccount"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name="com.wifin.kachingme.redimer.ExistingAccount"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name="com.wifin.kachingme.redimer.ExistingAccountDetails"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name="com.wifin.kachingme.deals.Verified_Activity"
+            android:label="@string/title_activity_splash"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.social_media.TellFriend"
+            android:label="@string/title_activity_splash"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat_home.SliderTesting"
+            android:label=""
+            android:screenOrientation="portrait"
+            android:theme="@style/SliderBaseTheme" />
+
+        <!--for nymns Function-->
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.nynms.NynmAddActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.nynms.NynmActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.nynms.MultipleNynmActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+
+        <!--for KonS-->
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.kons.KonsHomeScreen"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.kons.KonsActivity"
+            android:screenOrientation="portrait" />
+
+        <!--for DazZ-->
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.DazzPlainActivity"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.DazzTabActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.DazzActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name="com.wifin.kachingme.deals.WishActivity"
+            android:label="@string/title_activity_pons"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.deals.WishListActivity"
+            android:label="@string/title_activity_pons"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.wish_list.AddWishList"
+            android:label="@string/title_activity_pons"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Settings_account"
+            android:label="@string/title_activity_pons"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Network_Usage"
+            android:label="@string/title_activity_pons"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.deals.DealsActivity"
+            android:label="@string/title_activity_deals"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.deals.OfferSummaryActivity"
+            android:label="@string/title_activity_offer_summary"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.cart.CartActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.KaraokeActivity"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.KaraokeListActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.KaraokeYoutubeActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.KaraokeActivityGroup"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.SmackThatActivity"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.SmackThatGroup"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.KaraokeYoutube"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.KaraokeMainActivity"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.KaraokeMainGroup"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.deals.StoreActivity"
+            android:label="@string/title_activity_store"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.karaoke.KaraokeTab"
+            android:label="@string/title_activity_verification"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.social_media.WebViewActivity"
+            android:label="@string/title_activity_welcome"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.LogoPreview"
+            android:label="@string/title_activity_welcome"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.LogoGroup"
+            android:label="@string/title_activity_welcome"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.muc_chat.OrientationGroup"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.SongList"
+            android:label="@string/title_activity_cart"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.chat.chat_common_classes.CustomPhotoGalleryActivity"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.StatusUpdate"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/status"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.BannerActivityZzleAdapter"
+            android:label="@string/status"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.BannerActivity"
+            android:label="@string/status"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.BannerPreview"
+            android:label="@string/status"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.BannerActivityChat"
+            android:label="@string/status"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.BannerActivityLED"
+            android:label="@string/status"
+            android:screenOrientation="landscape" />
+
+        <activity
+            android:name="com.wifin.kachingme.kaching_feature.dazz.BannerActivityDazzAdapter"
+            android:label="@string/status"
+            android:screenOrientation="landscape" />
+
+        <!-- Settings Activity -->
+        <activity
+            android:name="com.wifin.kachingme.settings.SettingsActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Nifty_action_theme" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.AppInfo"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.SocialActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.UsageActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.ChatSettings"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.NotificationSettings"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.FaqActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.PrivacyActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.DeleteAccount"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.DataUsage"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="com.wifin.kachingme.settings.Contact"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/settings"
+            android:screenOrientation="portrait" />
+
+        <activity
+            android:name="de.duenndns.ssl.MemorizingActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <activity android:name="com.darsh.multipleimageselect.activities.AlbumSelectActivity"
+            tools:replace="android:theme"
+            android:theme="@style/OverrideMultipleImageSelectTheme">
+            <intent-filter>
+                <category android:name="ANDROID.INTENT.CATEGORY.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name="com.darsh.multipleimageselect.activities.ImageSelectActivity"
+            tools:replace="android:theme"
+            android:theme="@style/OverrideMultipleImageSelectTheme">
+            <intent-filter>
+                <category android:name="ANDROID.INTENT.CATEGORY.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+        <!--Provider-->
+        <provider
+            android:name="com.wifin.kachingme.database.MessageContentProvider"
+            android:authorities="de.kachingme.android.messages.contentprovider" />
+
+        <!--Services-->
+        <service android:name="com.wifin.kachingme.services.ContactLastSync" />
+        <service android:name="com.wifin.kachingme.services.IntentTypingService" />
+        <service android:name="com.wifin.kachingme.services.TempConnectionService" />
+        <service
+            android:name="com.wifin.kachingme.services.ContactService"
+            android:enabled="true" />
+        <!--
+                <service android:name="com.wifin.kachingme.services.GCMNotificationIntentService" />
+        -->
+        <service android:name="com.wifin.kachingme.services.DestructService" />
+        <service android:name="com.wifin.kachingme.services.DestuctServiceIntent" />
+        <service android:name="com.wifin.kachingme.services.DestructServiceBroad" />
+        <service android:name="com.wifin.kachingme.services.Group_CreateIntentService" />
+        <service
+            android:name="com.wifin.kachingme.services.AlarmService"
+            android:enabled="true" />
+        <service android:name="com.wifin.kachingme.services.GetJidPresenceIntentService" />
+        <service android:name="com.wifin.kachingme.services.MyFirebaseInstanceIDService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="com.wifin.kachingme.services.MyFirebaseMessagingService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!--Receiver-->
+        <!--  <receiver
+              android:name="com.wifin.kachingme.bradcast_recivers.GcmBroadcastReceiver"
+              android:permission="com.google.android.c2dm.permission.SEND">
+              <intent-filter>
+                  &lt;!&ndash; Receives the actual messages. &ndash;&gt;
+                  <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                  &lt;!&ndash; Receives the registration id. &ndash;&gt;
+                  <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+
+                  <category android:name="com.wifin.kaching.me.ui" />
+              </intent-filter>
+          </receiver>-->
+
+        <receiver android:name="com.wifin.kachingme.bradcast_recivers.IncomingSms">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="com.wifin.kachingme.bradcast_recivers.GlobalBroadcast">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+                <!--  <action android:name="android.intent.action.SCREEN_OFF" />
+                  <action android:name="android.intent.action.SCREEN_ON" />
+                -->
+                <action android:name="android.intent.action.PACKAGE_CHANGED" />
+
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.LAUNCHER" />
+
+            </intent-filter>
+        </receiver>
+
+        <receiver android:name="com.wifin.kachingme.services.AlarmReceiver" />
+
+        <receiver android:name="com.wifin.kachingme.bradcast_recivers.CallReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.PHONE_STATE" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.NEW_OUTGOING_CALL" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Goolge Maps API Key for Debug.keystore -->
+        <activity
+            android:name="com.facebook.FacebookActivity"
+            android:configChanges="keyboard|keyboardHidden|screenLayout|screenSize|orientation"
+            android:label="@string/app_name" />
+
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationId"
+            android:value="@string/APP_ID" />
+
+        <meta-data
+            android:name="com.facebook.sdk.ApplicationName"
+            android:value="@string/app_name" />
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="@string/API_KEY" />
+
+    </application>
+
+</manifest>

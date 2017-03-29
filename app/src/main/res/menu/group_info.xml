@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto" 
+    >
+    
+ <item
+       android:id="@+id/muc_info_add"
+        android:title="Add Member"
+        appcompat:showAsAction="always"
+        android:icon="@drawable/ic_action_social_add_person"
+        android:orderInCategory="1"></item>
+ <!-- <item
+       android:id="@+id/muc_adv_info"
+        android:title="Advance group info"
+        appcompat:showAsAction="collapseActionView"
+        android:icon="@drawable/ic_action_social_add_person"
+        android:orderInCategory="1"></item> -->
+</menu>

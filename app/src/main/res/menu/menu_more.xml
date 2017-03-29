@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto"
+     >
+
+    <item
+        android:id="@+id/menu_chat"
+        android:orderInCategory="1"
+        android:title="Chat"
+        appcompat:showAsAction="always">
+    </item>
+    <item
+        android:id="@+id/menu_profile"
+        android:orderInCategory="2"
+        android:title="Profile"
+        appcompat:showAsAction="always">
+    </item>
+     <item
+        android:id="@+id/menu_business_profile"
+        android:orderInCategory="3"
+        android:title="Bussiness Profile"
+        appcompat:showAsAction="always">
+    </item>
+
+</menu>

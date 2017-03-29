@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="20dp"
+    android:paddingRight="20dp">
+
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/img_avatar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/ic_action_social_chat" />
+
+            <Button
+                android:id="@+id/btn_chat_settings"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/Tarnsperent"
+                android:gravity="left|center_vertical"
+                android:paddingLeft="40dp"
+                android:text="Chat Settings" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</LinearLayout>

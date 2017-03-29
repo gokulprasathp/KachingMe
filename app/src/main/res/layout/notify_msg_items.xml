@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardNotifyMsg"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    card_view:cardBackgroundColor="@android:color/white"
+    card_view:cardCornerRadius="0dp"
+    card_view:cardElevation="0dp">
+
+    <LinearLayout
+        android:id="@+id/linearCardNotify"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/linearCardNotifyItems"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="5dp">
+
+            <TextView
+                android:id="@+id/tvNotifyMsgTitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/notify_conver_tone"
+                android:textColor="@color/title_txt_notification" />
+
+            <TextView
+                android:id="@+id/tvNotifyMsgSubs"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/notify_conver_subs"
+                android:textColor="@color/subsv_txt_notification" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="1dp"
+            android:background="@color/light_gray" />
+
+    </LinearLayout>
+
+</android.support.v7.widget.CardView>

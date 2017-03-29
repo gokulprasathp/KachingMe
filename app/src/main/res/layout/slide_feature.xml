@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/kons_topImage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/slide_kons" />
+
+    <TextView
+        android:id="@+id/kons_textTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Features like Never Before!"
+        android:textColor="@color/black"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="left"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/kons_layoutBuxs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/kons_textBuxs"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Buxs" />
+
+            <TextView
+                android:id="@+id/kons_textBuxsDivider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <TextView
+                android:id="@+id/kons_textBuxsRes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Reward Point Builder" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/kons_layoutKons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/kons_textKons"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="KonS" />
+
+            <TextView
+                android:id="@+id/kons_textKonsDivider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <TextView
+                android:id="@+id/kons_textKonsRes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fun Customized Stickers" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/kons_layoutDest"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/kons_textDest"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DesT" />
+
+            <TextView
+                android:id="@+id/kons_textDestDivider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <TextView
+                android:id="@+id/kons_textDestRes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Timed Disappearing Messages" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:id="@+id/kons_layoutLock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/kons_textLock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="LocK" />
+
+            <TextView
+                android:id="@+id/kons_textLockDivider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <TextView
+                android:id="@+id/kons_textLockRes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Absolute Privacy Delivered" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/kons_layoutKrok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/kons_textKrok"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Krok" />
+
+            <TextView
+                android:id="@+id/kons_textKrokDivider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-" />
+
+            <TextView
+                android:id="@+id/kons_textKrokRes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="First Generation Sing Along" />
+        </LinearLayout>
+
+
+    </LinearLayout>
+</LinearLayout>

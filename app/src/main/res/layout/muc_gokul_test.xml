@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:emojicon="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/back"
+    tools:context="com.wifin.kachingme.chat.Chat$PlaceholderFragment">
+
+    <ImageView
+        android:id="@+id/img_chat_background1"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scaleType="centerCrop" />
+
+    <com.wifin.kachingme.util.GIFView
+        android:id="@+id/img_chat_background"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scaleType="centerCrop" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/txt_question"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/convlist"
+            android:padding="5dp"
+            android:text=""
+            android:textColor="@color/app_color_dark_gray"
+            android:textSize="18sp"
+            android:visibility="visible" />
+
+        <!-- <android.support.v7.widget.RecyclerView
+             android:id="@+id/convlist"
+             android:layout_above="@+id/ll_chat"
+             android:layout_width="match_parent"
+
+             android:layout_height="wrap_content" >
+         </android.support.v7.widget.RecyclerView>-->
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/convlist"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/ll_chat"
+            android:layout_weight="0.1"
+            android:animationCache="false"
+            android:background="@null"
+            android:cacheColorHint="#00000000"
+            android:descendantFocusability="beforeDescendants"
+            android:divider="@color/Tarnsperent"
+            android:dividerHeight="2dp"
+            android:fastScrollEnabled="false"
+            android:listSelector="#00000000"
+            android:paddingBottom="5dip"
+            android:paddingTop="5dip"
+            android:scrollingCache="false"
+            android:stackFromBottom="true"
+            android:transcriptMode="disabled" />
+
+        <LinearLayout
+            android:id="@+id/ll_main"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:gravity="bottom"
+            android:orientation="vertical"></LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_chat"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:background="@color/white"
+            android:orientation="vertical">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="5px"
+                android:background="#62C8E7" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#D1F5F8"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:id="@+id/zzle_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="55dp"
+                    android:layout_marginBottom="5dp"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginTop="5dp"
+                    android:orientation="horizontal"
+                    android:visibility="gone">
+
+                    <Button
+                        android:id="@+id/zzle_btn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="Dazzl"
+                        android:visibility="gone" />
+
+                    <View
+                        android:id="@+id/zzle_view_grp"
+                        android:layout_width="1px"
+                        android:layout_height="wrap_content"
+                        android:background="@color/app_color_gray"
+                        android:visibility="gone" />
+
+                    <Button
+                        android:id="@+id/zzle_bannerbtn"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="Bazzl"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/app_color_gray" />
+
+            <LinearLayout
+                android:id="@+id/mnglist_"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ListView
+                    android:id="@+id/mnglist_muc"
+                    style="@style/List"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/ll_chat"
+                    android:layout_weight="0.1"
+                    android:animationCache="false"
+                    android:background="@null"
+                    android:cacheColorHint="#00000000"
+                    android:descendantFocusability="beforeDescendants"
+                    android:divider="@color/Tarnsperent"
+                    android:dividerHeight="3dp"
+                    android:fastScrollEnabled="false"
+                    android:listSelector="#00000000"
+                    android:paddingBottom="5dip"
+                    android:paddingTop="5dip"
+                    android:scrollingCache="false"
+                    android:stackFromBottom="true"
+                    android:transcriptMode="disabled"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ll_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageButton
+                    android:id="@+id/btn_down_arrow_grp"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:background="@drawable/circle_border"
+                    android:focusable="true"
+                    android:src="@drawable/rt_arrow"
+                    android:text="">
+
+                    <requestFocus />
+                </ImageButton>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
+                    android:layout_marginTop="5dp"
+                    android:layout_weight="0.3"
+                    android:background="@drawable/roundcorner"
+                    android:orientation="horizontal">
+
+                    <com.wifin.kachingme.emojicons.emojicon.EmojiconEditText
+                        android:id="@+id/edt_messagegrp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:layout_weight="0.3"
+                        android:background="@color/white"
+                        android:ems="10"
+                        android:hint="Enter a message"
+                        android:singleLine="false"
+                        emojicon:emojiconSize="26sp"></com.wifin.kachingme.emojicons.emojicon.EmojiconEditText>
+
+                    <ImageButton
+                        android:id="@+id/btn_emo"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:layout_gravity="center"
+                        android:focusable="true"
+                        android:src="@drawable/emoji_btn_normal"
+                        android:text="">
+
+                        <requestFocus />
+                    </ImageButton>
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/sendButton"
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_gravity="center"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:background="@drawable/circle_border"
+                    android:padding="3dp"
+                    android:src="@drawable/ic_action_device_access_mic"
+                    android:text="" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/emoji_frag"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:visibility="gone">
+
+                <fragment
+                    android:id="@+id/emojicons"
+                    class="com.wifin.kachingme.emojicons.emojicon.EmojiconFragmentGroup"
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_no_group_member"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1px"
+                android:background="@color/app_color_blue" />
+
+            <TextView
+                android:id="@+id/textView1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="7dp"
+                android:text="@string/no_longer_participant"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textColor="@color/app_color_blue" />
+        </LinearLayout>
+    </LinearLayout>
+
+</FrameLayout>

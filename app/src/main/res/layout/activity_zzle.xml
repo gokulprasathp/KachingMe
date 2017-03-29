@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:emojicon="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/Radio_btn_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/zzle_type_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DazZ Type"
+                android:textColor="#000"
+                android:textStyle="bold" />
+
+            <Spinner
+                android:id="@+id/zzle_type"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/spinner_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/shape_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/shape_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Shape"
+                    android:textColor="#000"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/shape_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/textsize_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textsize_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TextSize"
+                    android:textColor="#000"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/textsize_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/background_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/background_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Background"
+                    android:textColor="#000"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/background_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/textcolor_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textcolor_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TextColor"
+                    android:textColor="#000"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/textcolor_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/speed_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/speed_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Speed"
+                    android:textColor="#000"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/speed_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/text_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/border"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <com.wifin.kachingme.emojicons.emojicon.EmojiconEditText
+                android:id="@+id/chat_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center" />
+
+            <ImageButton
+                android:id="@+id/btn_emo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:focusable="true"
+                android:src="@drawable/emoji_btn_normal"
+                android:text="">
+
+                <requestFocus />
+            </ImageButton>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/footer_for_emoticons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@android:color/transparent"
+            android:orientation="vertical"
+            android:visibility="gone"></LinearLayout>
+
+        <GridView
+            android:id="@+id/gridview_emo"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_x="0px"
+            android:layout_y="400px"
+            android:numColumns="7"
+            android:verticalSpacing="5dp"
+            android:visibility="gone"></GridView>
+
+        <LinearLayout
+            android:id="@+id/emoji_frag"
+            android:layout_width="match_parent"
+            android:layout_height="230dp"
+            android:layout_x="0px"
+            android:layout_y="400px"
+            android:visibility="gone">
+
+            <fragment
+                class="com.wifin.kachingme.emojicons.emojicon.LogoEmojiconsFragment"
+                android:layout_width="match_parent"
+                android:layout_height="220dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/botom_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/back_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/selectorforclick"
+                android:text="Preview" />
+
+            <Button
+                android:id="@+id/send_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/selectorforclick"
+                android:text="Send" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

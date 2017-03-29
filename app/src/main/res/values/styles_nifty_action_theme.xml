@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     File created by the Android Action Bar Style Generator
+
+     Copyright (C) 2011 The Android Open Source Project
+     Copyright (C) 2012 readyState Software Ltd
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+  
+          http://www.apache.org/licenses/LICENSE-2.0
+  
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the00 License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="Theme.Nifty_action_theme" parent="@style/Theme.AppCompat.Light.DarkActionBar">
+      <!--   <item name="displayOptions">useLogo|showHome</item>
+        <item name="actionBarItemBackground">@drawable/selectable_background_nifty_action_theme</item>
+        <item name="popupMenuStyle">@style/PopupMenu.Nifty_action_theme</item>
+        <item name="dropDownListViewStyle">@style/DropDownListView.Nifty_action_theme</item>
+        <item name="actionBarTabStyle">@style/ActionBarTabStyle</item>
+        <item name="android:actionBarTabStyle">@style/ActionBarTabStyle</item>
+        <item name="android:actionBarTabBarStyle">@style/MyTheme.ActionBar.TabBar</item> -->
+       <!--  <item name="actionBarTabBarStyle">@style/MyTheme.ActionBar.TabBar</item>
+        <item name="android:actionBarTabTextStyle">@style/MyTheme.ActionBar.TabText</item>
+        <item name="actionBarTabTextStyle">@style/MyTheme.ActionBar.TabText</item>
+        <item name="actionDropDownStyle">@style/DropDownNav.Nifty_action_theme</item>
+        <item name="actionBarStyle">@style/ActionBar.Solid.Nifty_action_theme</item>
+        <item name="android:actionBarStyle">@style/ActionBar.Solid.Nifty_action_theme</item>
+        <item name="actionModeBackground">@drawable/ab_solid_nifty_action_theme</item> -->
+        <item name="android:actionModeBackground">@drawable/ab_solid_nifty_action_theme</item>
+        <item name="actionModeSplitBackground">@drawable/cab_background_bottom_nifty_action_theme</item>
+        <item name="actionModeCloseButtonStyle">@style/ActionButton.CloseMode.Nifty_action_theme</item>
+
+        <!-- Light.DarkActionBar specific -->
+        <item name="actionBarWidgetTheme">@style/Theme.Nifty_action_theme.Widget</item>
+        <item name="android:editTextStyle">@style/EditTextMy_Theme</item>
+        <item name="android:textColorHighlight">#9900a0ff</item>
+        <item name="android:autoCompleteTextViewStyle">@style/AutoCompleteTextViewMy_Theme</item>
+        <item name="android:buttonStyle">@style/ButtonMy_Theme</item>
+        <item name="buttonStyle">@style/ButtonMy_Theme</item>
+        <item name="android:imageButtonStyle">@style/ImageButtonMy_Theme</item>
+        <item name="android:listViewStyle">@style/ListViewMy_Theme</item>
+        <item name="android:listViewWhiteStyle">@style/ListViewMy_Theme.White</item>
+        <item name="android:seekBarStyle">@style/SeekBarAppTheme</item>
+        <item name="android:progressBarStyleHorizontal">@style/ProgressBarAppTheme</item>
+        <item name="android:actionBarDivider">@color/app_color_blue</item>
+        <item name="actionBarDivider">@color/app_color_blue</item>
+        <item name="colorPrimary">@color/app_color_blue</item>
+        <item name="android:colorPrimaryDark">@color/red_status_bar</item>
+        <item name="android:statusBarColor">@color/red_status_bar</item>
+    </style>
+
+    <style name="MyTheme.ActionBar.TabText" parent="android:style/Widget.Holo.ActionBar.TabText">
+        <item name="android:textColor">@color/app_color_blue</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="ActionBarTabStyle" parent="Widget.AppCompat.Light.ActionBar.TabView">
+        <item name="android:background">@drawable/tab_indicator_ab_nifty_action_theme</item>
+        <item name="background">@drawable/tab_indicator_ab_nifty_action_theme</item>
+    </style>
+
+    <style name="MyTheme.ActionBar.TabBar" parent="android:style/Widget.Holo.Light.ActionBar.TabBar">
+
+        <!-- This is an ORANGE background -->
+        <item name="android:background">@color/white</item>
+        <item name="background">@color/white</item>
+        <item name="android:divider">@color/app_color_blue</item>
+        <item name="android:showDividers">middle</item>
+        <item name="android:dividerPadding">12dip</item>
+        <item name="divider">@color/app_color_blue</item>
+    </style>
+
+    <style name="ActionBar.Solid.Nifty_action_theme" parent="@style/Widget.AppCompat.Light.ActionBar.Solid.Inverse">
+        <item name="background">@drawable/ab_solid_nifty_action_theme</item>
+        <item name="backgroundStacked">@drawable/ab_stacked_solid_nifty_action_theme</item>
+        <item name="backgroundSplit">@drawable/ab_bottom_solid_nifty_action_theme</item>
+        <item name="progressBarStyle">@style/ProgressBar.Nifty_action_theme</item>
+    </style>
+
+    <style name="ActionBar.Transparent.Nifty_action_theme" parent="@style/Widget.AppCompat.ActionBar">
+        <item name="background">@drawable/ab_transparent_nifty_action_theme</item>
+        <item name="progressBarStyle">@style/ProgressBar.Nifty_action_theme</item>
+        <item name="android:divider">@color/app_color_dark_gray</item>
+        <item name="divider">@color/app_color_dark_gray</item>
+    </style>
+
+    <style name="PopupMenu.Nifty_action_theme" parent="@style/Widget.AppCompat.ListPopupWindow">
+        <item name="android:popupBackground">@drawable/menu_dropdown_panel_nifty_action_theme</item>
+        <item name="android:textColor">@color/app_color_blue</item>
+    </style>
+
+    <style name="DropDownListView.Nifty_action_theme" parent="@style/Widget.AppCompat.ListView.DropDown">
+        <item name="android:listSelector">@drawable/selectable_background_nifty_action_theme</item>
+        <item name="android:divider">@color/app_color_dark_gray</item>
+        <item name="divider">@color/app_color_dark_gray</item>
+        <item name="android:dividerHeight">1px</item>
+    </style>
+
+    <!--
+    <style name="ActionBarTabStyle.Nifty_action_theme" parent="@style/Widget.AppCompat.ActionBar.TabView">
+        <item name="android:background">@drawable/tab_indicator_ab_nifty_action_theme</item>
+    </style>
+    -->
+
+    <style name="DropDownNav.Nifty_action_theme" parent="@style/Widget.AppCompat.Spinner.DropDown.ActionBar">
+        <item name="android:background">@drawable/spinner_background_ab_nifty_action_theme</item>
+        <item name="android:popupBackground">@drawable/menu_dropdown_panel_nifty_action_theme</item>
+        <item name="android:dropDownSelector">@drawable/selectable_background_nifty_action_theme</item>
+        <item name="android:textColor">@color/app_color_blue</item>
+        <item name="android:divider">@color/app_color_dark_gray</item>
+    </style>
+
+    <style name="ProgressBar.Nifty_action_theme" parent="@style/Widget.AppCompat.ProgressBar.Horizontal">
+        <item name="android:progressDrawable">@drawable/progress_horizontal_nifty_action_theme</item>
+    </style>
+
+    <style name="ActionButton.CloseMode.Nifty_action_theme" parent="@style/Widget.AppCompat.ActionButton.CloseMode">
+        <item name="android:background">@drawable/btn_cab_done_nifty_action_theme</item>
+    </style>
+
+    <!-- this style is only referenced in a Light.DarkActionBar based theme -->
+    <style name="Theme.Nifty_action_theme.Widget" parent="@style/Theme.AppCompat">
+        <item name="popupMenuStyle">@style/PopupMenu.Nifty_action_theme</item>
+        <item name="dropDownListViewStyle">@style/DropDownListView.Nifty_action_theme</item>
+        <item name="android:textColor">@color/app_color_blue</item>
+    </style>
+
+    <style name="List">
+        <item name="android:scrollbarStyle">insideOverlay</item>
+        <item name="android:fadingEdgeLength">8.0dip</item>
+        <item name="android:drawSelectorOnTop">false</item>
+        <item name="android:cacheColorHint">#ffffffff</item>
+        <item name="android:divider">#ffdddddd</item>
+        <item name="android:dividerHeight">1.0px</item>
+    </style>
+
+    <style name="CropButton">
+        <item name="android:layout_margin">1dp</item>
+        <item name="android:paddingTop">0dp</item>
+        <item name="android:paddingBottom">3dp</item>
+        <item name="android:layout_height">50dp</item>
+        <item name="android:layout_width">60dp</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/selector_crop_button</item>
+    </style>
+
+</resources>

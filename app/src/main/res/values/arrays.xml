@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="syncFrequency">
+        <item name="14">Small</item>
+        <item name="16">Medium</item>
+        <item name="18">Large</item>
+    </string-array>
+    <string-array name="syncFrequencyValues">
+        <item name="14">14</item>
+        <item name="16">16</item>
+        <item name="18">18</item>
+    </string-array>
+    <string-array name="vibrate_lengths">
+        <item>Off</item>
+        <item>Default</item>
+        <item>Short</item>
+        <item>Long</item>
+    </string-array>
+    <string-array name="vibrate_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <!--  Last seen lables and values -->
+    <string-array name="lastseen_lengths">
+        <item>Everyone</item>
+        <item>My Contacts</item>
+        <item>Nobody</item>
+    </string-array>
+    <string-array name="lastseen_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+    </string-array>
+
+    <string-array name="led_colors">
+        <item name="0">None</item>
+        <item name="1">White</item>
+        <item name="2">Red</item>
+        <item name="3">Yellow</item>
+        <item name="4">Gree</item>
+        <item name="5">Cyan</item>
+        <item name="6">Blue</item>
+        <item name="7">Purpal</item>
+    </string-array>
+    <string-array name="led_color_values">
+        <item name="0">0</item>
+        <item name="1">1</item>
+        <item name="2">2</item>
+        <item name="3">3</item>
+        <item name="4">4</item>
+        <item name="5">5</item>
+        <item name="6">6</item>
+        <item name="7">7</item>
+    </string-array>
+    <!--      <string-array name="ar_menu_mucchatinfo"> -->
+    <!--         <item name="1">View Contact</item> -->
+    <!--         <item name="2">Delete Chat</item> -->
+    <!--         <item name="3">Archive Chat</item> -->
+    <!--     </string-array> -->
+    <string-array name="ar_menu_userchat">
+        <item name="1">View Contact</item>
+        <item name="2">Delete Chat</item>
+        <item name="3">Archive Chat</item>
+    </string-array>
+    <string-array name="ar_menu_groupchat">
+        <item name="1">Delete Chat</item>
+        <item name="2">Exit group</item>
+        <item name="3">Archive Group</item>
+    </string-array>
+    <string-array name="degree">
+        <item>High School</item>
+        <item>Associat\'s Degree</item>
+        <item>Bechelor\'s Degree</item>
+        <item>Master\'s Degree</item>
+        <item>Master of Business Administartion</item>
+        <item>Engineer\'s Degree</item>
+        <item>Others</item>
+    </string-array>
+
+    <array name="month">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sept</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </array>
+    <array name="filter_search">
+        <item>All</item>
+        <item>Companies</item>
+        <item>Products</item>
+    </array>
+    <array name="filter_search_variation">
+        <item>All</item>
+        <item>Recently Updated</item>
+        <item>Most Viewed</item>
+        <item>Most Active</item>
+    </array>
+
+    <!-- Settings Page -->
+
+    <string-array name="settings_content_title">
+        <item>About</item>
+        <!--<item>Tell a friend</item>-->
+        <!--<item>Kaching.me web</item>-->
+        <item>Account</item>
+        <item>Chat Settings</item>
+        <item>Notifications</item>
+        <item>Network Status</item>
+    </string-array>
+
+    <string-array name="social_items">
+        <item>Mail</item>
+        <item>Message</item>
+        <item>Twitter</item>
+        <item>Facebook</item>
+    </string-array>
+
+    <string-array name="usage_items">
+        <!--<item>Privacy</item>-->
+        <item>Add Secondary Number</item>
+        <item>Delete My Number</item>
+        <item>Delete My Account</item>
+        <item>Network Usage</item>
+        <item>Storage Usage</item>
+    </string-array>
+
+    <string-array name="chat_settings_title">
+        <item>Enter key setting</item>
+        <item>Default scroll</item>
+        <item>Font size</item>
+        <item>Media auto-download</item>
+        <item>Wallpaper</item>
+        <item>Email conversation</item>
+        <item>Backup conversation</item>
+        <item>Email backup conversation</item>
+        <item>Cloud backup conversation</item>
+        <item>Lock list</item>
+        <item>Block list</item>
+    </string-array>
+
+    <string-array name="chat_settings_subs">
+        <item>Enter key will add new line</item>
+        <item>on</item>
+        <item>Font size for conversation screen</item>
+        <item>null</item>
+        <item>null</item>
+        <item>null</item>
+        <item>Last backup:</item>
+        <item>null</item>
+        <item>null</item>
+        <item>null</item>
+        <item>null</item>
+    </string-array>
+
+    <string-array name="msg_notification_titles">
+        <item>Notification tone</item>
+        <item>Vibrate</item>
+        <item>Light</item>
+        <item>Reset</item>
+    </string-array>
+
+    <string-array name="msg_notification_subs">
+        <item>Select a sound to play a new notification messages</item>
+        <item>Vibrate device when message arrives while application is running</item>
+        <item>Choose a color to blink the notification light when a new message is received</item>
+        <item>Reset your notifications settings</item>
+    </string-array>
+
+    <string-array name="faq_content">
+        <item>How do I verify my number in Kaching.me?</item>
+        <item>How do I restore my messages?</item>
+        <item>How do I use emotions and Licensed Logos?</item>
+        <item>How do I add contacts to Kaching.me?</item>
+        <item>How do I receive Kaching.me push notifications?</item>
+        <item>Which Apple are supported?</item>
+        <item>How do I block or unbloack the contacts?</item>
+        <item>How do I send media, contacts or location?</item>
+    </string-array>
+
+    <string-array name="privacy_title">
+        <item>Last Seen</item>
+        <item>Profile Photo</item>
+        <item>Status</item>
+    </string-array>
+
+    <string-array name="privacy_subs">
+        <item>Everyone</item>
+        <item>My Contacts</item>
+        <item>My Contacts</item>
+    </string-array>
+
+    <string-array name="data_usage_title">
+        <item>Messages sent</item>
+        <item>Media bytes sent</item>
+        <item>Messages bytes sent</item>
+        <item>Total bytes sent</item>
+    </string-array>
+
+    <string-array name="data_usage_subs">
+        <item>Messages received</item>
+        <item>Media bytes received</item>
+        <item>Messages bytes received</item>
+        <item>Total bytes received</item>
+    </string-array>
+
+    <string-array name="data_usage_value">
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0B</item>
+    </string-array>
+
+
+    <string-array name="auto_response_msg">
+        <item>Reply you later</item>
+        <item>At School</item>
+        <item>At the movies</item>
+        <item>At Work</item>
+        <item>Battery about to die</item>
+        <item>In a meeting</item>
+        <item>At the gym</item>
+        <item>Sleeping</item>
+    </string-array>
+
+</resources>

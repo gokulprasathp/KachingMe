@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "849813996214",
+    "firebase_url": "https://kachingme-160714.firebaseio.com",
+    "project_id": "kachingme-160714",
+    "storage_bucket": "kachingme-160714.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:849813996214:android:6d78fd5df2b2ab75",
+        "android_client_info": {
+          "package_name": "com.wifin.kaching.me.ui"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "849813996214-k6muge4mn1vt3qjpfdpha13prfqkoalf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.wifin.kaching.me.ui",
+            "certificate_hash": "7be554bb0389d71122ae48637453abb640424a94"
+          }
+        },
+        {
+          "client_id": "849813996214-cksgr88qac0lspfrm90o11a1lkvh6qng.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAWXak5xqfgztC2LghhxtFIaN8RTAYA7sk"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "849813996214-cksgr88qac0lspfrm90o11a1lkvh6qng.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

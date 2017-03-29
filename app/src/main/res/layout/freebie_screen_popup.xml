@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/popup_element"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffffff"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/freebie_textView1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:background="#FE0000"
+            android:gravity="center"
+            android:text="Select any one Freebie:"
+            android:textColor="#ffffff"
+            android:textStyle="bold" />
+
+        <ListView
+            android:id="@+id/freeebie_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:choiceMode="singleChoice"></ListView>
+
+        <LinearLayout
+            android:id="@+id/todaysaleQtylay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:layout_marginTop="12dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <Button
+                android:id="@+id/btn_cancel_popup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/selectorforclick"
+                android:gravity="center"
+                android:text="Cancel"
+                android:textColor="#fff" />
+
+            <Button
+                android:id="@+id/btn_submit_popup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginLeft="20dp"
+                android:background="@drawable/selectorforclick"
+                android:gravity="center"
+                android:text="Next"
+                android:textColor="#fff" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

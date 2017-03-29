@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dataUsageActivity"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
+    tools:context="com.wifin.kachingme.settings.DataUsage">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/dataUsageAppBar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/dataUsageToolBar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@color/red"
+            android:padding="5dp"
+            android:textAlignment="center"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
+
+            <FrameLayout
+                android:id="@+id/dataUsageFrame"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/dataUsageImgBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/back_arrow_white" />
+
+                <TextView
+                    android:id="@+id/tvTitleNetworkUsage"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="Network Usage"
+                    android:textColor="@color/white" />
+
+            </FrameLayout>
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerDataUsage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:cacheColorHint="#00000000"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+    <LinearLayout
+        android:id="@+id/linearResetText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvDataLastReset"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/data_usage_reset"
+            android:textColor="@color/title_txt_notification" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="@color/light_gray" />
+
+    <LinearLayout
+        android:id="@+id/linearResetButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <Button
+            android:id="@+id/btResetUsage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_back_ground"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="Reset Statistics"
+            android:textColor="@color/msg_notification" />
+
+    </LinearLayout>
+
+</LinearLayout>

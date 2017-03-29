@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/nyms_head"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="15dp"
+        android:gravity="center"
+        android:text="Add Nyms"
+        android:textColor="#FE0000"
+        android:textSize="18dp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/nyms_mess_lay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/nyms_mess_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="NynM"
+            android:textColor="#FE0000"
+            android:textSize="14dp" />
+
+        <EditText
+            android:id="@+id/nyms_mess_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="Enter Your Text"
+            android:inputType="text" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nyms_abb_lay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/nyms_abb_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Actual Message"
+            android:textColor="#FE0000"
+            android:textSize="14dp" />
+
+        <EditText
+            android:id="@+id/nyms_abb_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="Enter Your NynM"
+            android:imeOptions="actionDone"
+            android:inputType="text" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/nymbuttonlay"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/nymcancel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selectorgrey"
+            android:text="Cancel"
+            android:textColor="#000" />
+
+        <Button
+            android:id="@+id/nyms_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/selectorforclick"
+            android:text="Add"
+            android:textColor="#000" />
+    </LinearLayout>
+
+</LinearLayout>

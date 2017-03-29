@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/linearNotifySettings"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical"
+    tools:context="com.wifin.kachingme.settings.NotificationSettings">
+
+    <android.support.design.widget.AppBarLayout
+        android:id="@+id/notifyAppBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:gravity="center"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/notifyToolbar"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@color/red"
+            android:padding="5dp"
+            android:textAlignment="center"
+            app:layout_scrollFlags="scroll|enterAlways|snap">
+
+            <FrameLayout
+                android:id="@+id/frameNotifyMenu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imgNotifyBack"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/back_arrow_white" />
+
+                <TextView
+                    android:id="@+id/tvNotifyTitleText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Notifications"
+                    android:textColor="@color/white" />
+
+            </FrameLayout>
+
+        </android.support.v7.widget.Toolbar>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/contentPreference"
+        android:orientation="vertical"/>
+
+    <!--<LinearLayout
+        android:id="@+id/linearNotifyConversation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="5dp"
+        android:weightSum="2">
+
+        <LinearLayout
+            android:id="@+id/linearNotifyConverItem"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvNotifyConverTone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/notify_conver_tone"
+                android:textColor="@color/title_txt_notification" />
+
+            <TextView
+                android:id="@+id/tvNotifyConverSub"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/notify_conver_subs"
+                android:textColor="@color/subsv_txt_notification" />
+
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/cbNotifyConver"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:button="@drawable/check_box_selector_new"
+            android:checked="true" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="fill_parent"
+        android:layout_height="1dp"
+        android:background="@color/light_gray" />
+
+    <TextView
+        android:id="@+id/tvNotifyMessageContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="5dp"
+        android:text="@string/notify_msg_notifications"
+        android:textColor="@color/msg_notification" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerNotifyList"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/nynmAppBarLayout" />-->
+
+</LinearLayout>

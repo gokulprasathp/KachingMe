@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto"
+     >
+     <item android:id="@+id/menu_create_visitin_card"
+        android:title="Create Visiting Card"
+        android:orderInCategory="0"     
+        appcompat:showAsAction="never"
+     />
+    <item android:id="@+id/menu_create_brochure"
+        android:title="Create Company Brochure"
+        android:orderInCategory="1"     
+        appcompat:showAsAction="never"
+     />
+    
+</menu>

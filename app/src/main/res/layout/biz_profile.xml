@@ -1,0 +1,352 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/gray_light"
+    android:paddingBottom="20dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="20dp"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="90dp"
+                android:scaleType="fitXY"
+                android:src="@drawable/img_profilepic_bg" />
+
+            <FrameLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left|bottom">
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="left">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="left"
+                        android:src="@drawable/ic_profilepic_bg" />
+
+                    <ImageView
+                        android:id="@+id/profile_pic"
+                        android:layout_width="90dp"
+                        android:layout_height="90dp"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginTop="9dp" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/txt_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="140dp"
+                    android:layout_marginTop="60dp"
+                    android:text=""
+                    android:textColor="@color/app_color_blue"
+                    android:textSize="22sp" />
+            </FrameLayout>
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:paddingBottom="5dp">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="60dp"
+                android:alpha="0.7"
+                android:orientation="horizontal"
+                android:paddingBottom="3dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="3dp">
+
+                <TextView
+
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="@string/designation"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="@color/app_color_blue" />
+
+                <Button
+                    android:id="@+id/btn_add_designation"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/blue_button_selector"
+                    android:padding="1dp"
+                    android:text="+"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <include
+                layout="@layout/devider"
+                android:background="@color/app_color_blue" />
+
+            <include layout="@layout/devider_gray" />
+
+            <TextView
+                android:id="@+id/txt_designation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_marginTop="5dp"
+                android:text=""
+                android:textAppearance="?android:attr/textAppearanceMedium" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:paddingBottom="5dp">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="60dp"
+                android:alpha="0.7"
+                android:orientation="horizontal"
+                android:paddingBottom="3dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="3dp">
+
+                <TextView
+                    android:id="@+id/textView1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="@string/experince"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="@color/app_color_blue" />
+
+                <Button
+                    android:id="@+id/btn_add_exp"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/blue_button_selector"
+                    android:padding="1dp"
+                    android:text="+"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <include
+                layout="@layout/devider"
+                android:background="@color/app_color_blue" />
+
+            <include layout="@layout/devider_gray" />
+
+            <ListView
+                android:id="@+id/list_experience"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@color/gray_light"
+                android:dividerHeight="10dp"></ListView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:paddingBottom="5dp">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="60dp"
+                android:alpha="0.7"
+                android:background="@color/white"
+                android:orientation="horizontal"
+                android:paddingBottom="3dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="3dp">
+
+                <TextView
+                    android:id="@+id/TextView01"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="@string/education"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="@color/app_color_blue"
+                    android:textColorLink="@color/app_color_blue" />
+
+                <Button
+                    android:id="@+id/btn_education"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/blue_button_selector"
+                    android:padding="1dp"
+                    android:text="+"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <include layout="@layout/devider" />
+
+            <include layout="@layout/devider_gray" />
+
+            <ListView
+                android:id="@+id/list_education"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@color/gray_light"
+                android:dividerHeight="10dp"></ListView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:paddingBottom="5dp">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="60dp"
+                android:alpha="0.7"
+                android:orientation="horizontal"
+                android:paddingBottom="3dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="3dp">
+
+                <TextView
+                    android:id="@+id/TextView02"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="@string/skill"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="@color/app_color_blue" />
+
+                <Button
+                    android:id="@+id/btn_skill"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/blue_button_selector"
+                    android:padding="1dp"
+                    android:text="+"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <include layout="@layout/devider" />
+
+            <include layout="@layout/devider_gray" />
+
+            <ListView
+                android:id="@+id/list_skill"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@color/gray_light"
+                android:dividerHeight="10dp"></ListView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/white"
+            android:orientation="vertical"
+            android:paddingBottom="5dp">
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="60dp"
+                android:alpha="0.7"
+                android:orientation="horizontal"
+                android:padding="3dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                android:paddingTop="3dp">
+
+                <TextView
+                    android:id="@+id/TextView03"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:text="@string/certification"
+                    android:textAppearance="?android:attr/textAppearanceLarge"
+                    android:textColor="@color/app_color_blue" />
+
+                <Button
+                    android:id="@+id/btn_certification"
+                    style="?android:attr/buttonStyleSmall"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/blue_button_selector"
+                    android:padding="1dp"
+                    android:text="+"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <include layout="@layout/devider" />
+
+            <include layout="@layout/devider_gray" />
+
+            <ListView
+                android:id="@+id/list_certificate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="@color/gray_light"
+                android:dividerHeight="10dp"></ListView>
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

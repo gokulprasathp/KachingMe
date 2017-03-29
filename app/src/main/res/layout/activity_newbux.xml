@@ -1,0 +1,372 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/dash_lay"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:background="@drawable/bg3"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.wifin.kachingme.util.RounderImageView
+            android:id="@+id/profile_pic"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:src="@drawable/avatar84" />
+
+        <TextView
+            android:id="@+id/buxs_stck"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:background="@drawable/selectorforclick"
+            android:gravity="center"
+            android:text="1000 Buxs"
+            android:textColor="#fff" />
+
+        <TextView
+            android:id="@+id/donate_label"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:gravity="center"
+            android:text="Donated"
+            android:textColor="#fff" />
+
+        <TextView
+            android:id="@+id/buxs_donated"
+            android:layout_width="90dp"
+            android:layout_height="40dp"
+            android:background="@drawable/selectorforclick"
+            android:gravity="center"
+            android:text="0"
+            android:textColor="#fff" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/button_pallete"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/bux_list_but"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:background="@drawable/selectorforclick"
+            android:text="My BuxS"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/earn_but"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:background="@drawable/selectorforclick"
+            android:text="My Earnings"
+            android:textColor="#fff"
+            android:visibility="gone" />
+
+        <Button
+            android:id="@+id/donate_but"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:background="@drawable/selectorforclick"
+            android:text="Donate"
+            android:textColor="#fff" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/content_frame"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/my_earnings_lay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <ListView
+                android:id="@+id/earings_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"></ListView>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/donate_lay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/no_of_points_text"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:text="No Of Points"
+                android:textColor="#000" />
+
+            <EditText
+                android:id="@+id/points_edit"
+                android:layout_width="150dp"
+                android:layout_height="25dp"
+                android:background="@drawable/border_style"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:imeOptions="actionDone"
+                android:inputType="number"
+                android:textColor="#000" />
+
+            <TextView
+                android:id="@+id/donate_to_text"
+                android:layout_width="match_parent"
+                android:layout_height="20dp"
+                android:text="Donate to"
+                android:textColor="#000" />
+
+            <Button
+                android:id="@+id/contact_choose_but"
+                android:layout_width="match_parent"
+                android:layout_height="25dp"
+                android:background="@drawable/selectorforclick"
+                android:gravity="center"
+                android:text="Contacts"
+                android:textColor="#fff" />
+
+            <TextView
+                android:id="@+id/donation_counter_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Donation Counter"
+                android:textColor="#000" />
+
+            <Spinner
+                android:id="@+id/date_pick_text"
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:gravity="center"
+                android:text="date"
+                android:textColor="#fff" />
+
+            <View
+                android:id="@+id/donate_view"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="#635b59" />
+
+            <ListView
+                android:id="@+id/donation_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:divider="#635b59"></ListView>
+
+            <LinearLayout
+                android:id="@+id/sum_buxs_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/sum_of_credit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Creit : "
+                    android:textColor="#000" />
+
+                <TextView
+                    android:id="@+id/sum_of_debit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Total Debit : "
+                    android:textColor="#000" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/bucs_lay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/activity_counter"
+                android:layout_width="match_parent"
+                android:layout_height="25dp"
+                android:gravity="center_vertical"
+                android:text="Your Activity Counter"
+                android:textColor="#000" />
+
+            <View
+                android:id="@+id/earnviewhead"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="#635b59" />
+
+            <LinearLayout
+                android:id="@+id/usage_of_bucks_lay"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/earned_text"
+                    android:layout_width="180dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="Earned"
+                    android:textColor="#000" />
+
+                <View
+                    android:id="@+id/earnviewdiv"
+                    android:layout_width="2dp"
+                    android:layout_height="2dp"
+                    android:background="#635b59"
+                    android:visibility="gone" />
+
+                <TextView
+                    android:id="@+id/redeemed_text"
+                    android:layout_width="140dp"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="Redeemed"
+                    android:textColor="#000"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/earnview"
+                android:layout_width="match_parent"
+                android:layout_height="2dp"
+                android:background="#635b59" />
+
+            <LinearLayout
+                android:id="@+id/hor_list"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/activtiy_text"
+                            android:layout_width="100dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="Activity"
+                            android:textColor="#000" />
+
+                        <View
+                            android:id="@+id/earned_view"
+                            android:layout_width="2dp"
+                            android:layout_height="2dp"
+                            android:background="#635b59" />
+
+                        <TextView
+                            android:id="@+id/acheive_text"
+                            android:layout_width="100dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:text="BuxS for Activity"
+                            android:textColor="#000" />
+
+                        <View
+                            android:id="@+id/acheive_view"
+                            android:layout_width="2dp"
+                            android:layout_height="2dp"
+                            android:background="#635b59" />
+
+                        <TextView
+                            android:id="@+id/bucs_text"
+                            android:layout_width="80dp"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:gravity="center"
+                            android:text="Earned Buxs"
+                            android:textColor="#000" />
+                    </LinearLayout>
+
+                    <View
+                        android:id="@+id/earn_bottom_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="2dp"
+                        android:background="#635b59" />
+
+                    <ListView
+                        android:id="@+id/earned_list"
+                        android:layout_width="180dp"
+                        android:layout_height="match_parent"
+                        android:divider="#635b59"></ListView>
+                </LinearLayout>
+
+                <View
+                    android:id="@+id/list_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="2dp"
+                    android:background="#635b59"
+                    android:visibility="gone"></View>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="gone">
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/ret_text"
+                            android:layout_width="65dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="Ret/Mer"
+                            android:textColor="#000" />
+
+                        <View
+                            android:id="@+id/redeem_view"
+                            android:layout_width="2dp"
+                            android:layout_height="2dp"
+                            android:background="#635b59" />
+
+                        <TextView
+                            android:id="@+id/minus_text"
+                            android:layout_width="65dp"
+                            android:layout_height="match_parent"
+                            android:gravity="center"
+                            android:text="Minus"
+                            android:textColor="#000" />
+                    </LinearLayout>
+
+                    <View
+                        android:id="@+id/redeem_bottom_view"
+                        android:layout_width="2dp"
+                        android:layout_height="wrap_content"
+                        android:background="#635b59" />
+
+                    <ListView
+                        android:id="@+id/redeemed_list"
+                        android:layout_width="100dp"
+                        android:layout_height="match_parent"
+                        android:divider="#635b59"></ListView>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

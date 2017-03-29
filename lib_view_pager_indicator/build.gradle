@@ -1,0 +1,26 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 19
+    buildToolsVersion '19.1.0'
+
+    defaultConfig {
+        minSdkVersion 4
+        targetSdkVersion 4
+        multiDexEnabled  true
+
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+dependencies {
+    //compile 'com.android.support:support-v4:18.0.0'
+    // compile files('D:/KachingMe_Studio/KachingMe/libs/android-support-v4.jar')
+    compile 'com.android.support:support-v4:23.0.0'
+}

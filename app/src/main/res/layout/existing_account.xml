@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/wild_gray"
+    android:orientation="vertical">
+
+
+    <LinearLayout
+        android:id="@+id/search_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/gray_border_background"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/existingAccount_serchEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:drawableRight="@drawable/search"
+            android:hint="Search"
+            android:visibility="visible" />
+
+        <SearchView
+            android:id="@+id/existingAccount_serchView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <ListView
+        android:id="@+id/existingAccount_list"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#ffffff" />
+
+    <TextView
+        android:id="@+id/existingAccount_noRedeemerText"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="There is no Existing Redeemer !!"
+        android:visibility="gone"
+        android:textStyle="bold" />
+
+</LinearLayout>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvInfoSecondary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/niftychat_will_send_onetime_sms"
+        android:textColor="@color/app_color_blue" />
+
+    <AutoCompleteTextView
+        android:id="@+id/atvCountryName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/border_style_gray"
+        android:digits="abcdefghijklmnopqrstuvwxyz
+        ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        android:hint="Enter Country Name"
+        android:inputType="text"
+        android:textColor="@color/black" />
+
+    <LinearLayout
+        android:id="@+id/linearMobileNumber"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/etCountryCodeSec"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/border_style_gray"
+            android:ems="3"
+            android:focusable="false"
+            android:textColor="@color/black" />
+
+        <TextView
+            android:id="@+id/tvSeparatorSec"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="-"
+            android:textColor="#000" />
+
+        <EditText
+            android:id="@+id/etMobileNumbSec"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/border_style_gray"
+            android:digits="0123456789"
+            android:ems="5"
+            android:hint="@string/your_mobile_no"
+            android:inputType="phone"
+            android:maxLength="15"
+            android:textColor="@color/black"
+            android:textCursorDrawable="@drawable/color_cursor" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearConfirmSec"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvSignSecDismiss"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text="Dismiss"
+            android:textColor="@color/red" />
+
+        <TextView
+            android:id="@+id/tvSignSecProceed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text="Proceed"
+            android:textColor="@color/red" />
+
+    </LinearLayout>
+
+</LinearLayout>

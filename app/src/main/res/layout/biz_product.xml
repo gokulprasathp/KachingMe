@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/com.niftychat.ui"
+    android:id="@+id/scrollView1"
+    android:layout_width="match_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/gray_light">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="10dp"
+        android:background="@color/white"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <EditText
+            android:id="@+id/txt_product_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/edittext_selector"
+            android:ems="10"
+            android:hint="@string/product_name">
+
+            <requestFocus />
+        </EditText>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <EditText
+                android:id="@+id/txt_product_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:layout_weight="0.5"
+                android:background="@drawable/edittext_selector"
+                android:ems="10"
+                android:hint="@string/price"
+                android:inputType="number" />
+
+            <EditText
+                android:id="@+id/txt_product_dis_price"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_weight="0.5"
+                android:background="@drawable/edittext_selector"
+                android:ems="10"
+                android:hint="@string/discounted_price"
+                android:inputType="number" />
+
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/txt_product_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/edittext_selector"
+            android:ems="10"
+            android:gravity="left|top"
+            android:hint="@string/product_info"
+            android:lines="5" />
+
+        <EditText
+            android:id="@+id/txt_product_tags"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/edittext_selector"
+            android:ems="10"
+            android:gravity="left|top"
+            android:hint="@string/product_tags"
+            android:lines="2" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="5dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:weightSum="1">
+
+                <ImageView
+                    android:id="@+id/img_product_pic"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginRight="5dp"
+                    android:layout_weight="0"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_launcher33" />
+
+                <ImageView
+                    android:id="@+id/img_product_vid"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_weight="0"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_launcher33" />
+
+                <Button
+                    android:id="@+id/btn_attach_pdf"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:layout_gravity="center_vertical"
+
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="0"
+                    android:background="#FE0000"
+                    android:text="@string/attach_pdf" />
+
+            </LinearLayout>
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:background="#FE0000"
+            android:text="@string/save" />
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <!--
+         <Preference
+        android:icon="@drawable/ic_action_social_person"
+        android:key="profile"
+        android:title="Profile" />
+    -->
+    <!-- <Preference -->
+    <!-- android:icon="@drawable/ic_action_collections_view_as_list" -->
+    <!-- android:key="contacts" -->
+    <!-- android:title="Contacts" /> -->
+    <Preference
+        android:icon="@drawable/set_about"
+        android:key="about"
+        android:title="About" />
+    <Preference
+        android:icon="@drawable/set_telfrnd"
+        android:key="frnd"
+        android:title="Tell a friend" />
+    <Preference
+        android:icon="@drawable/set_web"
+        android:key="web"
+        android:title="Kaching.me Web" />
+    <Preference
+        android:icon="@drawable/set_prof"
+        android:key="profile"
+        android:title="Profile" />
+    <Preference
+        android:icon="@drawable/set_account"
+        android:key="account"
+        android:title="Account" />
+    <Preference
+        android:icon="@drawable/set_chatset"
+        android:key="chat"
+        android:title="Chat Settings" />
+    <Preference
+        android:icon="@drawable/set_notif"
+        android:key="notifications"
+        android:title="Notifications" />
+    <Preference
+        android:icon="@drawable/set_nwstatus"
+        android:key="network_status"
+        android:summary="Not Connected"
+        android:title="Network Status" />
+    <Preference
+        android:icon="@drawable/set_archive"
+        android:key="archive"
+        android:title="Archive all Chats" />
+    <Preference
+        android:icon="@drawable/set_clearall"
+        android:key="clearall"
+        android:title="Clear all Chats" />
+
+</PreferenceScreen>

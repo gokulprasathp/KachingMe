@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/main_redeem"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/name_text_redeem"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="STM"
+            android:textColor="#000" />
+
+        <View
+            android:id="@+id/redeem_view"
+            android:layout_width="2dp"
+            android:layout_height="wrap_content"
+            android:background="#635b59" />
+
+        <TextView
+            android:id="@+id/date_text_redeem"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="300"
+            android:textColor="#000" />
+    </LinearLayout>
+    <!--
+    <View
+        android:id="@+id/endviewred"
+        android:layout_width="fill_parent"
+        android:layout_height="2dp"
+        android:background="#635b59" />
+    -->
+
+</LinearLayout>

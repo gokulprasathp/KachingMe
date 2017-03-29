@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/slider_serchEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="Search"
+        android:textColor="#fff"
+        android:visibility="gone" />
+
+    <android.support.v4.widget.DrawerLayout
+        android:id="@+id/drawer_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1">
+
+        <FrameLayout
+            android:id="@+id/main_layout_inner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/chatcount"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="@drawable/textcircle"
+                android:text="0"
+                android:textColor="@color/app_color_blue"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/groupcount"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_marginLeft="10dp"
+                android:background="@drawable/textcircle"
+                android:text="0"
+                android:textColor="@color/app_color_blue"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/contactcount"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:layout_marginLeft="20dp"
+                android:background="@drawable/textcircle"
+                android:text="3"
+                android:textColor="@color/app_color_blue"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
+            <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:id="@+id/home_corordinator_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <android.support.design.widget.AppBarLayout
+                    android:id="@+id/home_appbar_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+                    <android.support.v7.widget.Toolbar
+                        android:id="@+id/home_toolbar_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="#ffffffff"
+                        android:textAlignment="center"
+                        android:contentInsetLeft="0dp"
+                        android:contentInsetStart="0dp"
+                        app:contentInsetLeft="0dp"
+                        app:contentInsetStart="0dp"
+                        android:contentInsetRight="0dp"
+                        android:contentInsetEnd="0dp"
+                        app:contentInsetRight="0dp"
+                        app:contentInsetEnd="0dp"
+                        app:layout_scrollFlags="scroll|enterAlways">
+
+                        <LinearLayout
+                            android:id="@+id/slider_toolbarIconLayout"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:visibility="visible"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/left_menu"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/menu"
+                                android:visibility="gone" />
+
+                            <LinearLayout
+                                android:id="@+id/slider_logoLayout"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:id="@+id/slider_logo_image"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:src="@drawable/ic_launcher"
+                                    android:visibility="gone" />
+
+                                <ImageView
+                                    android:id="@+id/slider_logo"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/header_logo" />
+                            </LinearLayout>
+
+                            <ImageView
+                                android:id="@+id/right_menu_search"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/search"
+                                android:visibility="visible" />
+
+                            <ImageView
+                                android:id="@+id/right_menu_add"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/selector_for_add_contact"
+                                android:visibility="visible" />
+
+                            <LinearLayout
+                                android:id="@+id/slider_actionbarLayout"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:visibility="gone"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:id="@+id/slider_Headerlogo"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:background="@drawable/header_logo"
+                                    android:visibility="gone" />
+
+                                <ImageView
+                                    android:id="@+id/slider_backArrow"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:src="@drawable/selector_for_back_arrow_black" />
+
+                                <EditText
+                                    android:id="@+id/slider_editText"
+                                    android:layout_width="wrap_content"
+                                    android:textColor="@color/black"
+                                    android:hint="Search..."
+                                    android:singleLine="true"
+                                    android:textColorHint="@color/gray"
+                                    android:windowSoftInputMode="stateVisible"
+                                    android:background="@color/white"
+                                    android:layout_height="wrap_content" />
+
+                                <ImageView
+                                    android:id="@+id/slider_close"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:src="@drawable/cross_icon" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/slider_toolbarForwardLayout"
+                            android:layout_width="wrap_content"
+                            android:background="@color/kaching_color"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal">
+
+                            <ImageView
+                                android:id="@+id/slider_forwardBackImage"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/selector_for_back_arrow_black"
+                                android:visibility="visible" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:textColor="@color/white"
+                                android:id="@+id/slider_forwardTextView"
+                                android:textStyle="bold"
+                                android:text="Forward to..."/>
+
+                        </LinearLayout>
+
+                    </android.support.v7.widget.Toolbar>
+
+                    <android.support.design.widget.TabLayout
+                        android:id="@+id/home_tab_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/kaching_color" />
+
+                </android.support.design.widget.AppBarLayout>
+
+
+                <LinearLayout
+                    android:id="@+id/slider_pagerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+                    <android.support.v4.view.ViewPager
+                        android:id="@+id/home_viewpager"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/back_gray" />
+
+                </LinearLayout>
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/floatingbtn"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/selector_for_addchat"
+                    app:backgroundTint="@color/kaching_color" />
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/floatingbtnGroup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/selector_for_addchat"
+                    android:visibility="gone"
+                    app:backgroundTint="@color/kaching_color" />
+
+
+                <android.support.design.widget.FloatingActionButton
+                    android:id="@+id/floatingbtnRefresh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/selector_for_refresh"
+                    android:visibility="gone"
+                    app:backgroundTint="@color/kaching_color" />
+
+                <!--  <include layout="@layout/chat_home_bottom_menu"/>-->
+
+            </android.support.design.widget.CoordinatorLayout>
+
+            <LinearLayout
+                android:id="@+id/slider_shadowLeft"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical" />
+
+            <LinearLayout
+                android:id="@+id/slider_shadowRight"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical" />
+        </FrameLayout>
+
+    </android.support.v4.widget.DrawerLayout>
+
+    <View
+        android:id="@+id/slider_bottomView"
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@drawable/background_gradient_gray" />
+
+    <LinearLayout
+        android:id="@+id/sliderTesting_footer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/sliderTesting_footerChatLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/sliderTesting_footerChatImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/selectorfornewchat" />
+
+            <TextView
+                android:id="@+id/sliderTesting_footerChatText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bottom_chat"
+                android:textColor="@color/gray_to_black_selector" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/sliderTesting_footerBuxsLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/sliderTesting_footerBuxsImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+
+                android:src="@drawable/selectorfornewbux" />
+
+            <TextView
+                android:id="@+id/sliderTesting_footerBuxsText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bottom_buxs"
+                android:textColor="@color/gray_to_black_selector" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/sliderTesting_footerCartLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/sliderTesting_footerCartImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/selectorfornewcart" />
+
+            <TextView
+                android:id="@+id/sliderTesting_footerCartText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/bottom_cart"
+                android:textColor="@color/gray_to_black_selector" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

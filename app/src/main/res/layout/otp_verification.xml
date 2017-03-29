@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/otp_topMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="We've sent one time activiation code to your phone number"
+        android:textColor="@color/black" />
+
+    <EditText
+        android:id="@+id/otp_verification_code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/border_style_gray"
+        android:ems="10"
+        android:inputType="phone"
+        android:maxLength="5"
+        android:textCursorDrawable="@drawable/cursor_black" />
+
+    <LinearLayout
+        android:id="@+id/otp_nextLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/otp_resend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text="Send Again"
+            android:textColor="@color/red" />
+
+        <TextView
+            android:id="@+id/otp_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text="@string/next"
+            android:textColor="@color/red" />
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/otp_bottomText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/varification_note"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+</LinearLayout>

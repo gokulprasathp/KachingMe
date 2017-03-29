@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval" >
+
+    <!-- view background color -->
+    <solid android:color="@color/app_color_blue" >
+    </solid>
+
+    <!-- view border color and width -->
+    <stroke
+        android:width="0dp"
+        android:color="#1c1b20" >
+    </stroke>
+
+    <!-- If you want to add some padding -->
+    <padding
+        android:bottom="2dp"
+        android:left="2dp"
+        android:right="2dp"
+        android:top="2dp" >
+    </padding>
+ 
+
+    <corners android:radius="180dp" />
+ 
+
+</shape>

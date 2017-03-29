@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:appcompat="http://schemas.android.com/apk/res-auto" >
+
+    <item
+        android:id="@+id/menu_attachment"
+        android:icon="@drawable/ic_action_content_attachment"
+        android:orderInCategory="1"
+        appcompat:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/menu_capture"
+                android:icon="@drawable/ic_action_content_picture"
+                android:orderInCategory="0"
+                android:title="Gallery"/>
+            <item
+                android:id="@+id/menu_image"
+                android:icon="@drawable/ic_menu_image"
+                android:orderInCategory="1"
+                android:title="ShwT"/>
+            <item
+                android:id="@+id/menu_videos"
+                android:icon="@drawable/ic_menu_video"
+                android:orderInCategory="2"
+                android:title="VidZ"/>
+            <item
+                android:id="@+id/menu_location"
+                android:icon="@drawable/ic_menu_location"
+                android:orderInCategory="3"
+                android:title="WheR"/>
+            <item
+                android:id="@+id/menu_contact"
+                android:icon="@drawable/ic_menu_contact"
+                android:orderInCategory="4"
+                android:title="Contact"/>
+            <item
+                android:id="@+id/menu_file"
+                android:icon="@drawable/ic_menu_file"
+                android:orderInCategory="5"
+                android:title="Flip"/>
+             <item
+                android:id="@+id/audio_file"
+                android:icon="@drawable/ic_action_audio_play"
+                android:orderInCategory="5"
+                android:title="Audio"/>
+            <!--
+                 <item
+                android:id="@+id/menu_google_drive_file"
+                android:icon="@drawable/ic_action_google_drive"
+                android:orderInCategory="6"
+                android:title="Google Drive file"/>
+            -->
+
+        </menu>
+    </item>
+    <item
+        android:id="@+id/menu_overflow"
+        android:icon="@drawable/ic_action_core_overflow"
+        android:orderInCategory="2"
+        appcompat:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/menu_muc_menu"
+                android:icon="@drawable/ic_action_social_person_blue"
+                android:orderInCategory="1"
+                android:title="Group info"
+                appcompat:showAsAction="never">
+            </item>
+            <item
+                android:id="@+id/menu_muc_lock_chat"
+                android:orderInCategory="2"
+                android:title="@string/lock_chat"
+                appcompat:showAsAction="never">
+            </item>
+            <item
+                android:id="@+id/clear_chat"
+                android:icon="@drawable/ic_action_audio_play"
+                android:orderInCategory="3"
+                android:title="Clear Chat"/>
+
+            <!--
+                 <item
+                android:id="@+id/menu_karaoke"
+                android:icon="@drawable/ic_action_play"
+                android:orderInCategory="3"
+                android:title="karaoke"/>
+            -->
+            <!--
+                 <item
+                android:id="@+id/menu_zzle"
+                android:icon="@drawable/ic_action_flash_on"
+                android:orderInCategory="4"
+                android:title="Zzle"/>
+            -->
+        </menu>
+    </item>
+
+    <!--
+        <item
+        android:id="@+id/menu_muc_menu_opm"
+        android:title="Group info"
+        appcompat:showAsAction="never"
+        android:orderInCategory="1"></item>
+    -->
+
+</menu>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:enabled="true"
+        android:key="conversation_sound"
+        android:selectable="true"
+        android:summary="Play sounds for incoming and outgoing messages"
+        android:title="Conversation tones"
+        android:layout="@layout/alert_custom_checkbox"/>
+
+    <PreferenceCategory
+        android:key="notification"
+        android:title="Message notifications"
+        android:layout="@layout/alert_preference">
+
+        <RingtonePreference
+            android:defaultValue="content://settings/system/notification_sound"
+            android:key="notify_ringtone"
+            android:ringtoneType="all"
+            android:showDefault="true"
+            android:showSilent="true"
+            android:summary="Select a sound to play a new notification messages"
+            android:title="Notification tone"
+            android:layout="@layout/custom_preference_text"/>
+
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/vibrate_lengths"
+            android:entryValues="@array/vibrate_values"
+            android:key="notify_vibrate_length"
+            android:summary="Vibrate device when new message arrives while application is running."
+            android:title="Vibrate"
+            android:layout="@layout/custom_preference_text"/>
+
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/led_colors"
+            android:entryValues="@array/led_color_values"
+            android:key="notify_light_color"
+            android:summary="Choose a color to blink the notification light when a new message is received"
+            android:title="Light"
+            android:layout="@layout/custom_preference_text"/>
+
+    </PreferenceCategory>
+
+    <Preference
+        android:key="notification_reset"
+        android:summary="Reset your notification settings"
+        android:title="Reset"
+        android:layout="@layout/custom_preference_text"/>
+
+</PreferenceScreen>

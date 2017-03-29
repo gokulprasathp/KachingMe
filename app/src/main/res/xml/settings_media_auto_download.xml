@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <CheckBoxPreference
+        android:enabled="true"
+        android:key="media_auto_download_images"
+        android:selectable="true"
+        android:title="Image"
+        android:layout="@layout/alert_custome_checkone"/>
+
+    <CheckBoxPreference
+        android:enabled="true"
+        android:key="media_auto_download_videos"
+        android:selectable="true"
+        android:title="Video"
+        android:layout="@layout/alert_custome_checkone"/>
+
+    <CheckBoxPreference
+        android:enabled="true"
+        android:key="media_auto_download_audio"
+        android:selectable="true"
+        android:title="Audio"
+        android:layout="@layout/alert_custome_checkone"/>
+
+    <!--<CheckBoxPreference
+        android:enabled="true"
+        android:key="media_auto_download_files"
+        android:selectable="true"
+        android:title="Files"
+        android:layout="@layout/alert_custome_checkone"/>-->
+
+</PreferenceScreen>

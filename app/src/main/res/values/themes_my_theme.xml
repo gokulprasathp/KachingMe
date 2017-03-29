@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Generated with http://android-holo-colors.com -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <style name="My_Theme" parent="@style/_My_Theme"/>
+
+  <style name="_My_Theme" parent="Theme.AppCompat.Light.DarkActionBar">
+
+    <item name="android:editTextStyle">@style/EditTextMy_Theme</item>
+
+    <item name="android:textColorHighlight">#9900a0ff</item>
+
+    <item name="android:autoCompleteTextViewStyle">@style/AutoCompleteTextViewMy_Theme</item>
+
+    <item name="android:buttonStyle">@style/ButtonMy_Theme</item>
+
+    <item name="android:imageButtonStyle">@style/ImageButtonMy_Theme</item>
+
+    <item name="android:listViewStyle">@style/ListViewMy_Theme</item>
+
+    <item name="android:listViewWhiteStyle">@style/ListViewMy_Theme.White</item>
+
+<!--     <item name="android:spinnerItemStyle">@style/SpinnerItemMy_Theme</item> -->
+
+  </style>
+
+</resources>

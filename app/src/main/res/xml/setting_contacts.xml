@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+     <Preference
+         android:title="Tell a friend"
+         android:key="pre_tell_friend"
+         android:layout="@layout/custom_preference_txt"/>
+
+     <!--<Preference
+         android:title="Blocked contacts"
+         android:key="pre_blocked_contacts"
+         android:summary="List of contacts that you have blocked"
+         android:layout="@layout/custom_preference_text"/>-->
+
+</PreferenceScreen>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto"
+     >
+
+    <item
+        android:id="@+id/menu_view_profile"
+        android:icon="@drawable/ic_action_search"
+        android:orderInCategory="1"
+        appcompat:showAsAction="collapseActionView"
+        android:title="View Profile">
+    </item>
+    <item
+        android:id="@+id/menu_view_full_profile"
+        android:orderInCategory="2"
+        appcompat:showAsAction="collapseActionView"
+        android:title="View Full Profile">
+    </item>
+
+</menu>

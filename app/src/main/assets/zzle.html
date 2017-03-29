@@ -1,0 +1,233 @@
+<html>
+    <head>
+
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+
+
+
+
+
+    </head>
+    <body >
+        <div id="wrapper"  class="pslide">
+
+
+            <style type="text/css">
+                .canvasld
+                {
+                    -webkit-transform: rotate(90deg);
+                    -moz-transform: rotate(90deg);
+                    -o-transform: rotate(90deg);
+                    -ms-transform: rotate(90deg);
+                    transform: rotate(90deg);
+                    /* -webkit-box-shadow: inset 0px 0px 56px 10px rgba(0,0,0,0.5);
+                 -moz-box-shadow: inset 0px 0px 56px 10px rgba(0,0,0,0.5);
+                 box-shadow: inset 0px 0px 56px 10px rgba(0,0,0,0.5);*/
+                }
+            </style>
+
+            <div class="canvas_div">
+                <canvas class="canvasld"></canvas>
+            </div>
+
+
+        </div>  
+        
+          <script type="text/javascript">
+      localStorage.setItem('zzle_color', '#28D62B');
+      localStorage.setItem('zzle_shape', 'Circle');
+      localStorage.setItem('zzle_speed', '2');
+         
+         </script>
+        
+        <!-- Jquery lib  -->
+        <script type="text/javascript" src="jquery.min.js"></script>
+        <script type="text/javascript" src="jquery.leddisplay.js"></script>
+
+
+
+        <script language="javascript">
+
+            function gokul(msg) {
+
+                
+                 localStorage.setItem('zzle_text', msg);
+      localStorage.setItem('zzle_color', '#28D62B');
+      localStorage.setItem('zzle_shape', 'Circle');
+      localStorage.setItem('zzle_speed', '2');
+                
+                 
+              var zzleText = localStorage.getItem('zzle_text');
+            var zzleColor = localStorage.getItem('zzle_color');
+
+            var zzleShape = "Circle";
+            var zzletxtdelay = localStorage.getItem('zzle_speed');
+
+            //To render the zzle text
+            var wid = $(window).width();
+            var hei = $(window).height();
+
+            switch (true) {
+                case (wid <= 339):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 1;
+                    break;
+                case (wid >= 340 && wid <= 379):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 2;
+                    break;
+                case (wid >= 380 && wid <= 399):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 3;
+                    break;
+                case (wid >= 400 && wid <= 439):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 4;
+                    break;
+                case (wid >= 440 && wid <= 479):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 5;
+                    break;
+                case (wid >= 480 && wid <= 499):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 6;
+                    break;
+                case (wid >= 500 && wid <= 539):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 7;
+                    break;
+                case (wid >= 540 && wid <= 579):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 8;
+                    break;
+                case (wid >= 580 && wid <= 599):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 9;
+                    break;
+                case (wid >= 600 && wid <= 639):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 10;
+                    break;
+                case (wid >= 640 && wid <= 679):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 11;
+                    break;
+                case (wid >= 680 && wid <= 699):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 12;
+                    break;
+                case (wid >= 700 && wid <= 739):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 13;
+                    break;
+                case (wid >= 740 && wid <= 779):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 14;
+                    break;
+                case (wid >= 780 && wid <= 799):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 15;
+                    break;
+                case (wid >= 800 && wid <= 839):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 16;
+                    break;
+                case (wid >= 840 && wid <= 879):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 17;
+                    break;
+                case (wid >= 880 && wid <= 899):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 18;
+                    break;
+                case (wid >= 800 && wid <= 839):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 19;
+                    break;
+                case (wid >= 840 && wid <= 879):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 20;
+                    break;
+                case (wid >= 880 && wid <= 899):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 21;
+                    break;
+                case (wid >= 900 && wid <= 939):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 22;
+                    break;
+                case (wid >= 940 && wid <= 979):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 23;
+                    break;
+                case (wid >= 980 && wid <= 999):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 24;
+                    break;
+                case (wid >= 1000 && wid <= 1039):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 25;
+                    break;
+                case (wid >= 1040 && wid <= 1079):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 26;
+                    break;
+                case (wid >= 1080 && wid <= 1099):
+                    var pixden = Math.floor((wid / 20));
+                    var pixden = pixden / 5;
+                    pixden = Math.floor(pixden + pixden + pixden) - 27;
+                    break;
+            }
+            var options = {
+                pixelSize: 20,
+                stepDelay: zzletxtdelay,
+                horizontalPixelsCount: 100,
+                verticalPixelsCount: 20,
+                pixelRatio: .7
+            };
+
+
+            $('.canvasld').html(zzleText);
+            $('.canvasld, .crl').leddisplay($.extend(options, {pixelSize: pixden}));
+             
+
+            }
+
+
+        </script>
+
+        <script type="text/javascript">
+
+           
+
+
+        </script>
+
+    </body>
+</html>

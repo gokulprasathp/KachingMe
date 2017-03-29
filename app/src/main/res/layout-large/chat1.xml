@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+  
+    <LinearLayout
+        android:id="@+id/ll_chat"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"       
+       android:layout_alignParentBottom="true"
+       android:layout_alignParentLeft="true"
+       android:orientation="vertical"
+         >
+         <LinearLayout
+              android:layout_width="match_parent"
+        android:layout_height="wrap_content"   
+              >
+        <Button
+    android:id="@+id/btn_emo"
+    style="?android:attr/buttonStyleSmall"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+     android:layout_weight="0.3"
+    android:text="" />
+
+        
+
+        <EditText
+             android:id="@+id/edt_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.3"
+            android:ems="10" >
+
+            <requestFocus />
+        </EditText>
+
+         <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+          android:src="@drawable/ic_action_social_send_now"
+            android:id="@+id/sendButton"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"/>
+</LinearLayout>
+<GridView
+            android:id="@+id/gridView1"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            
+            android:numColumns="3" >
+        </GridView>
+
+    </LinearLayout>
+    
+
+        <ListView
+            android:layout_above="@+id/ll_chat"
+            android:id="@+id/convlist"
+            android:layout_weight="0.1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+       
+
+  
+
+
+
+</RelativeLayout>

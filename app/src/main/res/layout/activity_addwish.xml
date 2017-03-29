@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:id="@+id/ka_otp_scroll"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="start"
+        android:layout_weight="1"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/ka_otp_scrolllayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/recipientedit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Recipient"
+                android:textColor="#000" />
+
+            <TextView
+                android:id="@+id/occationtext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:text="Occation"
+                android:textColor="#000" />
+
+            <Spinner
+                android:id="@+id/wishspinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:dropDownWidth="fill_parent"
+                android:entries="@array/occation"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/datetext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:text="Date"
+                android:textColor="#000" />
+
+            <Button
+                android:id="@+id/selectdate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:background="@drawable/selectorgrey"
+                android:text="Select a Date"
+                android:textColor="#000" />
+
+            <TextView
+                android:id="@+id/timetext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:text="Time"
+                android:textColor="#000" />
+
+            <Button
+                android:id="@+id/selecttime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:background="@drawable/selectorgrey"
+                android:text="Select a Time"
+                android:textColor="#000" />
+
+            <TextView
+                android:id="@+id/remindertext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="2dp"
+                android:text="Reminder"
+                android:textColor="#000" />
+
+            <ToggleButton
+                android:id="@+id/toggleButton1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ToggleButton" />
+
+            <LinearLayout
+                android:id="@+id/wishbuttonlay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/wishcancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/selectorgrey"
+                    android:text="Cancel"
+                    android:textColor="#000" />
+
+                <Button
+                    android:id="@+id/wishsave"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/selectorforclick"
+                    android:text="Save"
+                    android:textColor="#000" />
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

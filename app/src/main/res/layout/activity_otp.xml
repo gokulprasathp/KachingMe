@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainscreen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:id="@+id/ka_otp_scroll"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="start"
+        android:layout_weight="1"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/ka_otp_scrolllayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/imglay"
+                android:layout_width="fill_parent"
+                android:layout_height="90dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg3"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <com.wifin.kachingme.util.RounderImageView
+                    android:id="@+id/login_ban"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:adjustViewBounds="true"
+                    android:background="@drawable/avatar84"
+                    android:gravity="center" />
+
+                <TextView
+                    android:id="@+id/selpic"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center"
+                    android:text="Select Your Profile Picture"
+                    android:textColor="#fff" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/headview"
+                android:layout_width="match_parent"
+                android:layout_height="3dp"
+                android:background="#fe0000" />
+
+            <TextView
+                android:id="@+id/Ka_otp_welcome"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:gravity="center"
+                android:text="Welcome"
+                android:textColor="#000"
+                android:textSize="18dp"
+                android:textStyle="italic|bold" />
+
+            <EditText
+                android:id="@+id/Ka_otp_phone"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/border_style"
+                android:digits="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz "
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:hint="Enter First Name"
+                android:inputType="text"
+                android:maxLength="30"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textCursorDrawable="@drawable/color_cursor"
+                android:textSize="17dp" />
+
+            <EditText
+                android:id="@+id/Ka_otp_mail"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/border_style"
+                android:digits="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz "
+                android:hint="Enter Last Name"
+                android:inputType="text"
+                android:maxLength="30"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textCursorDrawable="@drawable/color_cursor"
+                android:textSize="17dp" />
+
+            <RadioGroup
+                android:id="@+id/Ka_otp_gender"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <RadioButton
+                    android:id="@+id/Ka_otp_male"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:button="@drawable/radiobutton_selector"
+                    android:checked="true"
+                    android:padding="5dp"
+                    android:text="     Male"
+                    android:textSize="25dp" />
+
+                <RadioButton
+                    android:id="@+id/Ka_otp_female"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:button="@drawable/radiobutton_selector"
+                    android:checked="false"
+                    android:padding="5dp"
+                    android:text="     Female"
+                    android:textSize="25dp" />
+            </RadioGroup>
+
+            <EditText
+                android:id="@+id/Ka_otp_pass"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/border_style"
+                android:hint="Enter Password"
+                android:inputType="textPassword"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textCursorDrawable="@drawable/color_cursor"
+                android:textSize="17dp" />
+
+            <EditText
+                android:id="@+id/Ka_otp_retype"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/border_style"
+                android:hint="Retype Password"
+                android:inputType="textPassword"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textCursorDrawable="@drawable/color_cursor"
+                android:textSize="17dp" />
+
+            <TextView
+                android:id="@+id/Ka_otp_dob"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/border_style"
+                android:clickable="true"
+                android:cursorVisible="false"
+                android:drawableLeft="@drawable/calendar146"
+                android:editable="false"
+                android:gravity="center|left"
+                android:hint="       Date of birth"
+                android:inputType="none"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textCursorDrawable="@drawable/color_cursor"
+                android:textSize="17dp" />
+
+            <LinearLayout
+                android:id="@+id/Ka_otp_lay"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/otpBoxck"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:button="@drawable/check_box_selector"
+                    android:text="CheckBox" />
+
+                <TextView
+                    android:id="@+id/textViewotp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:text="TextView"
+                    android:textColor="#000" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/Ka_otp_lay2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/otpBoxck2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:button="@drawable/check_box_selector"
+                    android:text="CheckBox" />
+
+                <TextView
+                    android:id="@+id/textViewotp2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:clickable="true"
+                    android:text="TextView"
+                    android:textColor="#000" />
+            </LinearLayout>
+
+            <Button
+                android:id="@+id/Ka_otp_btn"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="10dp"
+                android:background="@drawable/selectorforclick"
+                android:gravity="center"
+                android:text="Continue"
+                android:textColor="#fff"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

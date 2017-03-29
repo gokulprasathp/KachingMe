@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:emojicon="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:descendantFocusability="blocksDescendants"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/txt_notice"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@color/app_chat_notification_bg"
+        android:focusable="false"
+        android:gravity="center"
+        android:paddingBottom="3dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:paddingTop="3dp"
+        android:text="sdfsdff"
+        android:textColor="@color/app_color_dark_gray"
+        android:textSize="12sp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/back_date"
+        android:layout_width="match_parent"
+        android:layout_height="25dp"
+        android:background="@drawable/back"
+        android:orientation="vertical"
+        android:visibility="gone"></LinearLayout>
+
+    <TextView
+        android:id="@+id/txt_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="4dp"
+        android:background="@color/app_chat_notification_bg"
+        android:focusable="false"
+        android:gravity="center"
+        android:paddingBottom="4dp"
+        android:paddingLeft="13dip"
+        android:paddingRight="13dip"
+        android:paddingTop="3dp"
+        android:text="Small Text"
+        android:textAllCaps="true"
+        android:textColor="@color/app_color_dark_gray"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:id="@+id/ll_main"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="#BFEAEAEA"
+        android:orientation="vertical"
+        android:paddingBottom="5dp"
+        android:paddingLeft="3dp">
+
+        <FrameLayout
+            android:id="@+id/ff_main"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="25dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/ll_txt_msg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left"
+                android:layout_marginLeft="55dp"
+                android:gravity="center_vertical"
+                android:orientation="vertical"
+                android:paddingLeft="20dp"
+                android:paddingRight="7dp"
+                android:visibility="gone"></LinearLayout>
+
+            <TextView
+                android:id="@+id/username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="55dp"
+                android:layout_marginRight="5dp"
+                android:alpha=".7"
+                android:focusable="false"
+                android:text="Large Text"
+                android:textColor="@color/black"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:visibility="visible" />
+
+            <com.wifin.kachingme.emojicons.emojicon.EmojiconTextView
+                android:id="@+id/txt_msg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="55dp"
+                android:layout_marginTop="10dp"
+                android:focusable="false"
+                android:gravity="center_vertical"
+                android:text="\u0023\u20e3\u0031\u20e3 hi hellooo"
+                android:textColor="@color/black"
+                android:textSize="21sp"
+                emojicon:emojiconSize="23sp" />
+
+            <com.wifin.kachingme.util.RounderImageView
+                android:id="@+id/img_avatar"
+                android:layout_width="45dp"
+                android:layout_height="45dp"
+                android:layout_gravity="left|center"
+                android:layout_marginBottom="5dp"
+                android:layout_marginTop="10dp"
+                android:focusable="false"
+                android:src="@drawable/ic_launcher2" />
+
+            <TextView
+                android:id="@+id/timer_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="123"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <LinearLayout
+            android:id="@+id/ll_status"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:gravity="left"
+            android:paddingLeft="20dp">
+
+            <TextView
+                android:id="@+id/txt_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="35dp"
+                android:layout_marginRight="5dp"
+                android:focusable="false"
+                android:text="12:12AM"
+                android:textColor="@color/app_color_dark_gray"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/profile_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginBottom="2dp"
+                android:layout_marginRight="40dp"
+                android:focusable="false"
+                android:text="profile name"
+                android:textColor="@color/app_color_dark_gray"
+                android:textSize="14sp"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/img_status"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:focusable="false"
+                android:src="@drawable/receipt_from_target" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout> <!-- </LinearLayout> -->
+
+
+    <!-- </merge> -->
+

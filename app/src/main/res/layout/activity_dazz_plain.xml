@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/linearDazzPlain"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/dazzAppBarPlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/dazzToolBarPlain"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/red"
+            android:padding="5dp"
+            android:textAlignment="center"
+            app:layout_scrollFlags="scroll|enterAlways">
+
+            <FrameLayout
+                android:id="@+id/dazzFramePlain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <ImageView
+                    android:id="@+id/imgDazzBackPlain"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:background="@drawable/back_arrow_white" />
+
+                <TextView
+                    android:id="@+id/header"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="DazZ" />
+
+                <ImageView
+                    android:id="@+id/imgDazzCopyPlain"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|center_vertical"
+                    android:background="@drawable/copy_img" />
+
+            </FrameLayout>
+
+        </android.support.v7.widget.Toolbar>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearDazzPlainHead"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="5dp"
+        android:weightSum="2">
+
+        <EditText
+            android:id="@+id/tvDazzPlain"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:id="@+id/imgDazzPlainEmoji"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/emoji_btn_normal"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearDazzTypePlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvDazzTypePlain"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:text="Dazz Type"
+            android:textColor="@color/bold_header" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gray_border_background"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/spDazzTypePlain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:background="@drawable/spinner_bg"
+                android:padding="3dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearDazzShapePlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvDazzShapePlain"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:text="Shape"
+            android:textColor="@color/bold_header" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gray_border_background"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/spDazzShapePlain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:background="@drawable/spinner_bg"
+                android:padding="3dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearTextSizePlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvDazzTextSizePlain"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:text="Text Size"
+            android:textColor="@color/bold_header" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gray_border_background"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/spTextSizePlain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:background="@drawable/spinner_bg"
+                android:padding="3dp" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearDazzBackPlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvDazzBackPlain"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:text="Background"
+            android:textColor="@color/bold_header" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gray_border_background"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/spDazzBackPlain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:background="@drawable/spinner_bg"
+                android:padding="3dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearDazzColorPlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvDazzColorPlain"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:text="Text Color"
+            android:textColor="@color/bold_header" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gray_border_background"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/spDazzColorPlain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:background="@drawable/spinner_bg"
+                android:padding="3dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearDazzSpeedPlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvDazzSpeedPlain"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:text="Speed"
+            android:textColor="@color/bold_header" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/gray_border_background"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:id="@+id/spDazzSpeedPlain"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="3dp"
+                android:background="@drawable/spinner_bg"
+                android:padding="3dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/linearDazzButtonPlain"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btDazzPreviewPlain"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:background="@drawable/button_selector_gray_to_red"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="Preview"
+            android:textColor="@drawable/nymn_selector" />
+
+        <Button
+            android:id="@+id/btDazzSendPlain"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_margin="3dp"
+            android:background="@drawable/button_selector_gray_to_red"
+            android:gravity="center"
+            android:padding="5dp"
+            android:text="Send"
+            android:textColor="@drawable/nymn_selector" />
+
+    </LinearLayout>
+
+</LinearLayout>

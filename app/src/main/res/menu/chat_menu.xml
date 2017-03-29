@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:appcompat="http://schemas.android.com/apk/res-auto" >
+
+    <item
+        android:id="@+id/menu_self_des"
+        android:icon="@drawable/ic_action_device_access_alarms"
+        android:orderInCategory="0"
+        android:title="Self Destruct Time"
+        android:visible="false"
+        appcompat:showAsAction="always"/>
+    <item
+        android:id="@+id/menu_star"
+        android:icon="@drawable/star1"
+        android:orderInCategory="1"
+        android:title="New Deel"
+        android:visible="false"
+        appcompat:showAsAction="always"/>
+    <item
+        android:id="@+id/menu_attachment"
+        android:icon="@drawable/ic_action_content_attachment"
+        android:orderInCategory="2"
+        appcompat:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/menu_capture"
+                android:icon="@drawable/ic_action_content_picture"
+                android:orderInCategory="0"
+                android:title="Gallery"/>
+            <item
+                android:id="@+id/menu_image"
+                android:icon="@drawable/ic_menu_image"
+                android:orderInCategory="1"
+                android:title="ShwT"/>
+            <item
+                android:id="@+id/menu_videos"
+                android:icon="@drawable/ic_menu_video"
+                android:orderInCategory="2"
+                android:title="VidZ"/>
+            <item
+                android:id="@+id/menu_location"
+                android:icon="@drawable/ic_menu_location"
+                android:orderInCategory="3"
+                android:title="WheR"/>
+            <item
+                android:id="@+id/menu_contact"
+                android:icon="@drawable/ic_menu_contact"
+                android:orderInCategory="4"
+                android:title="Contact"/>
+            <item
+                android:id="@+id/menu_file"
+                android:icon="@drawable/ic_menu_file"
+                android:orderInCategory="5"
+                android:title="Flip"/>
+            <item
+                android:id="@+id/audio_file"
+                android:icon="@drawable/ic_action_audio_play"
+                android:orderInCategory="5"
+                android:title="Audio"/>
+            <!--
+                 <item
+                android:id="@+id/menu_google_drive_file"
+                android:icon="@drawable/ic_action_google_drive"
+                android:orderInCategory="6"
+                android:title="Google Drive file"/>
+            -->
+        </menu>
+    </item>
+    <item
+        android:id="@+id/menu_overflow"
+        android:icon="@drawable/ic_action_core_overflow"
+        android:orderInCategory="3"
+        appcompat:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/menu_veiew_contact"
+                android:icon="@drawable/ic_action_social_person_blue"
+                android:orderInCategory="1"
+                android:title="View Contact"
+                appcompat:showAsAction="never">
+            </item>
+            <item
+                android:id="@+id/menu_block"
+                android:icon="@drawable/ic_action_social_person_blue_block"
+                android:orderInCategory="2"
+                android:title="Block"
+                appcompat:showAsAction="never">
+            </item>
+            <item
+                android:id="@+id/menu_call"
+                android:icon="@drawable/ic_action_device_access_call_blue"
+                android:orderInCategory="3"
+                android:title="Call"
+                appcompat:showAsAction="never">
+            </item>
+            <item
+                android:id="@+id/menu_lock_chat"
+                android:orderInCategory="4"
+                android:title="@string/lock_chat"
+                appcompat:showAsAction="never"/>
+            <item
+                android:id="@+id/clear_chat"
+                android:icon="@drawable/ic_action_audio_play"
+                android:orderInCategory="5"
+                android:title="Clear Chat"/>
+
+            <!--
+                 <item
+                android:id="@+id/menu_karaoke"
+                android:icon="@drawable/ic_action_play"
+                android:orderInCategory="5"
+                android:title="karaoke"/>
+            -->
+            <!--
+                 <item
+                android:id="@+id/menu_zzle"
+                android:icon="@drawable/ic_action_flash_on"
+                android:orderInCategory="6"
+                android:title="Zzle"/>
+            -->
+            <!--
+                 <item
+                android:id="@+id/menu_nym"
+                android:icon="@drawable/ic_action_chat"
+                android:orderInCategory="7"
+                android:title="Nym"/>
+            -->
+            <!--
+                  <item
+                android:id="@+id/menu_logo"
+                android:icon="@drawable/ic_action_content_picture"
+                android:orderInCategory="7"
+                android:title="Logo"/>
+            -->
+        </menu>
+    </item>
+
+    <!--
+      <item
+        android:id="@+id/menu_veiew_contact_opm"
+        android:title="View Contact"
+        appcompat:showAsAction="never"
+        android:orderInCategory="1"
+        android:icon="@drawable/ic_action_social_person_blue"
+        ></item>
+      <item
+        android:id="@+id/menu_block_opm"
+        android:title="Block"
+        appcompat:showAsAction="never"
+        android:icon="@drawable/ic_action_social_person_blue_block"
+        android:orderInCategory="2"></item>
+   
+      
+        <item
+        android:id="@+id/menu_call_opm"
+        android:title="Call"
+        appcompat:showAsAction="never"
+        android:icon="@drawable/ic_action_device_access_call_blue"
+        android:orderInCategory="3"></item>
+    -->
+
+</menu>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <CheckBoxPreference
+        android:enabled="true"
+        android:key="enter_is_send"
+        android:selectable="true"
+        android:summaryOff="Enter key will add new line"
+        android:summaryOn="Enter key will send message"
+        android:title="Enter key setting"
+        android:layout="@layout/alert_custom_checkbox"/>
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:enabled="true"
+        android:key="defualt_scroll"
+        android:selectable="true"
+        android:summaryOff="off"
+        android:summaryOn="on"
+        android:title="Default Scroll"
+        android:layout="@layout/alert_custom_checkbox"/>
+
+    <ListPreference
+        android:defaultValue="16"
+        android:entries="@array/syncFrequency"
+        android:entryValues="@array/syncFrequencyValues"
+        android:key="pref_font_size"
+        android:summary="@string/pref_sync_frequency_summary"
+        android:title="@string/pref_sync_frequency"
+        android:layout="@layout/custom_preference_text"/>
+
+    <Preference
+        android:key="media_auto_download"
+        android:title="Media auto-download"
+        android:layout="@layout/custom_preference_txt"/>
+
+    <Preference
+        android:enabled="true"
+        android:key="wallpaper"
+        android:title="@string/wallpaper"
+        android:layout="@layout/custom_preference_txt"/>
+
+    <!--<Preference
+        android:key="email_conversation"
+        android:title="Email Conversation" />-->
+
+    <Preference
+        android:key="delete_all_conversations"
+        android:title="Delete all conversations"
+        android:layout="@layout/custom_preference_txt"/>
+
+    <Preference
+        android:key="backup_conversation"
+        android:title="Backup conversation"
+        android:summary="Last backup: Never"
+        android:layout="@layout/custom_preference_text"/>
+
+    <Preference
+        android:key="email_backup_conversation"
+        android:title="Email backup conversation"
+        android:layout="@layout/custom_preference_txt"/>
+
+    <!--<Preference
+        android:key="cloud_backup_conversation"
+        android:title="Cloud backup conversation" />-->
+
+    <Preference
+        android:key="lock_list"
+        android:title="Lock List"
+        android:layout="@layout/custom_preference_txt"/>
+
+    <Preference
+        android:key="archive_list"
+        android:title="Blocked List"
+        android:layout="@layout/custom_preference_txt"/>
+
+</PreferenceScreen>

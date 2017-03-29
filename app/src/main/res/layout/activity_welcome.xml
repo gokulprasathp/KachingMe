@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:gravity="center|top"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/welcome_headtext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/kaching_color"
+        android:text="BuxS"
+        android:textColor="@color/white"
+        android:textStyle="bold" />
+
+    <ImageView
+        android:id="@+id/wel_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/success" />
+
+    <TextView
+        android:id="@+id/welc_txt1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="CONGRATULATIONS!"
+        android:textColor="@color/red_text"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/welc_txt2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/welc_txt3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text=""
+        android:textColor="@color/black"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/welc_txt4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text=""
+        android:textColor="@color/black"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/wel_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_selector_white_to_gray"
+        android:text="Start Messaging"
+        android:textColor="@color/red_text" />
+
+    <View
+        android:id="@+id/welcome_bottomView"
+        android:layout_width="wrap_content"
+        android:layout_height="2dp"
+        android:background="@color/red_bottom"
+        android:visibility="gone" />
+</LinearLayout>

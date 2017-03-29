@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/list_experience_lay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <EditText
+        android:id="@+id/serchEdit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/searchbox_background"
+        android:drawableRight="@drawable/ic_action_search"
+        android:hint="Search"
+        android:textColor="#000"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/unblock_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="unblock"
+        android:visibility="gone" />
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/contactList_recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+        <com.viethoa.RecyclerViewFastScroller
+            android:id="@+id/contactList_fast_scroller"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:visibility="gone" />
+
+        <com.l4digital.fastscroll.FastScrollRecyclerView
+            android:id="@+id/contactList_fastScrollerRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:bubbleColor="@color/kaching_color"
+            app:bubbleTextColor="#ffffff"
+            app:handleColor="#999999"
+            app:trackColor="#bbbbbb"
+            app:hideScrollbar="false"
+            app:showTrack="false"/>
+
+    </RelativeLayout>
+
+</LinearLayout>

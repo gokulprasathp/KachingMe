@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:emojicon="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/text_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/border"
+        android:orientation="horizontal">
+
+        <com.wifin.kachingme.emojicons.emojicon.EmojiconEditText
+            android:id="@+id/kons_edit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:hint="Enter Text here"
+            android:imeOptions="actionDone"
+            android:inputType="textNoSuggestions"
+            android:textColor="@color/black"
+            android:textStyle="italic" />
+
+        <ImageButton
+            android:id="@+id/btn_emo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:focusable="true"
+            android:src="@drawable/emoji_btn_normal"
+            android:text="">
+
+            <requestFocus />
+        </ImageButton>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <com.wifin.kachingme.emojicons.emojicon.EmojiconTextView
+            android:id="@+id/kons_preview"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/roundcornerbg"
+            android:gravity="center"
+            android:textColor="@color/black"></com.wifin.kachingme.emojicons.emojicon.EmojiconTextView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/cancel_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/selectorforclick"
+            android:text="Cancel"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/ok_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/selectorforclick"
+            android:text="Add"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/footer_for_emoticons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:visibility="gone"></LinearLayout>
+
+    <GridView
+        android:id="@+id/gridview_emo"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_x="0px"
+        android:layout_y="400px"
+        android:numColumns="7"
+        android:verticalSpacing="5dp"
+        android:visibility="gone"></GridView>
+
+    <LinearLayout
+        android:id="@+id/emoji_frag"
+        android:layout_width="match_parent"
+        android:layout_height="230dp"
+        android:layout_x="0px"
+        android:layout_y="400px"
+        android:visibility="gone">
+
+        <fragment
+            class="com.wifin.kachingme.emojicons.emojicon.LogoEmojiconsFragment"
+            android:layout_width="match_parent"
+            android:layout_height="220dp" />
+    </LinearLayout>
+
+</LinearLayout>

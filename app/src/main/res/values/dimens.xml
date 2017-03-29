@@ -1,0 +1,18 @@
+<resources>
+
+    <!-- Default screen margins, per the Android Design guidelines. -->
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="chat_media_image_width">68.0sp</dimen>
+    <dimen name="chat_media_image_height">68.0sp</dimen>
+    <dimen name="photo_crop_width">280dip</dimen>
+    <dimen name="photo_crop_stroke_width">1dip</dimen>
+    <dimen name="photo_preview_size">200dip</dimen>
+    <dimen name="abp__shadow_height">4dp</dimen>
+    <!-- Top margin for action bar subtitles -->
+    <dimen name="abc_action_bar_subtitle_top_margin_material">-3dp</dimen>
+    <!-- Bottom margin for action bar subtitles -->
+    <dimen name="abc_action_bar_subtitle_bottom_margin_material">5dp</dimen>
+    <dimen name="alphabet_width">30dp</dimen>
+    <dimen name="font_medium">15sp</dimen>
+</resources>

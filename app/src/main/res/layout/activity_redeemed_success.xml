@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical">
+<LinearLayout
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+    <ImageView
+        android:id="@+id/redeem_top_logo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/kaching_img" />
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <ImageView
+                android:id="@+id/success_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:src="@drawable/success" />
+
+            <TextView
+                android:id="@+id/congratulation_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="CONGRATULATION!"
+                android:textColor="@color/red" />
+
+            <TextView
+                android:id="@+id/successfully_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="You have successfully" />
+
+            <TextView
+                android:id="@+id/description_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Redeemed your Freebie" />
+
+            <View
+                android:id="@+id/success_top_view"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/wild_gray"></View>
+
+            <LinearLayout
+                android:id="@+id/redeemer_id_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/redeemer_id_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Redeemer ID                    : "
+
+                    android:textColor="@color/red" />
+
+                <TextView
+                    android:id="@+id/redeemer_id_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/red" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/customercare_num_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/customercare_num_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Customer Care Number :"
+                    android:textColor="@color/red" />
+
+                <TextView
+                    android:id="@+id/customercare_num_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="919715415487"
+
+                    android:textColor="@color/red" />
+            </LinearLayout>
+
+            <View
+                android:id="@+id/success_bottom_view"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/wild_gray" />
+
+            <Button
+                android:id="@+id/okay_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/button_selector_white_to_gray"
+                android:gravity="center"
+                android:text="Ok"
+                android:textColor="@color/red" />
+        </LinearLayout>
+    </ScrollView>
+</LinearLayout>
+    <View
+        android:id="@+id/success_footerBottomView"
+        android:layout_width="wrap_content"
+        android:layout_height="2dp"
+        android:background="@color/red_bottom" />
+</FrameLayout>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+      <CheckBoxPreference
+        android:title="Last seen"
+        android:summary="Enable or Disable your last seen status"
+        android:enabled="true"
+        android:selectable="true"
+        android:key="privacy_lastseen"
+        android:defaultValue="true"
+        />
+<CheckBoxPreference
+        android:title="Default Scroll"
+        android:summary="Enable or Disable your default scroll"
+        android:enabled="true"
+        android:selectable="true"
+        android:key="privacy_scroll"
+        android:defaultValue="true"
+        />
+</PreferenceScreen>

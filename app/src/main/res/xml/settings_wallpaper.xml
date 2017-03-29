@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <Preference
+        android:key="wallpaper_library"
+        android:title="Wall Paper Library" />
+    <Preference
+        android:layout="@layout/preferencetext"
+        android:title="Photos" />
+    <Preference
+        android:key="reset_wall_paper"
+        android:title="Reset Wall Paper" />
+
+</PreferenceScreen>

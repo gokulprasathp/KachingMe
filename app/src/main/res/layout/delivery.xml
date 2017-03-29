@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:id="@+id/scroll"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_gravity="start"
+        android:layout_weight="1"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:id="@+id/scrolllayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/heading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="20dp"
+                android:gravity="center"
+                android:text="Delivery Information"
+                android:textColor="#000"
+                android:textSize="18dp"
+                android:textStyle="italic|bold" />
+
+            <EditText
+                android:id="@+id/first"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/zborder_style"
+                android:hint="Enter First Name"
+                android:inputType="text"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textSize="17dp" />
+
+            <EditText
+                android:id="@+id/last"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/zborder_style"
+                android:hint="Enter Last Name"
+                android:inputType="text"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textSize="17dp" />
+
+            <EditText
+                android:id="@+id/mail"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/zborder_style"
+                android:hint="Enter Email"
+                android:inputType="textEmailAddress"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textSize="17dp" />
+
+            <EditText
+                android:id="@+id/phone"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/zborder_style"
+                android:hint="Enter Phonenumber"
+                android:inputType="number"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textSize="17dp" />
+
+            <EditText
+                android:id="@+id/address"
+                android:layout_width="match_parent"
+                android:layout_height="80dp"
+                android:layout_margin="14dp"
+                android:background="@drawable/zborder_style"
+                android:hint="Enter Address"
+                android:inputType="text"
+                android:paddingLeft="3dp"
+                android:singleLine="true"
+                android:textColor="#000"
+                android:textSize="17dp" />
+
+            <Button
+                android:id="@+id/sbbtn"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_margin="10dp"
+                android:gravity="center"
+                android:text="Next"
+                android:textColor="#fff"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

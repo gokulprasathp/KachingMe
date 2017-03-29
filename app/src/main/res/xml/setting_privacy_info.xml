@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
+
+    <PreferenceCategory
+        android:key="notification"
+        android:title="Who can see my personal info" >
+
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/lastseen_lengths"
+            android:entryValues="@array/lastseen_values"
+            android:key="notify_lastseen_length"
+            android:summary="Everyone"
+            android:title="Last Seen" />
+
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/lastseen_lengths"
+            android:entryValues="@array/lastseen_values"
+            android:key="notify_profile_pic_length"
+            android:summary="My contacts"
+            android:title="Profile Photo" />
+
+        <ListPreference
+            android:defaultValue="1"
+            android:entries="@array/lastseen_lengths"
+            android:entryValues="@array/lastseen_values"
+            android:key="notify_status_length"
+            android:summary="My contacts"
+            android:title="Status" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

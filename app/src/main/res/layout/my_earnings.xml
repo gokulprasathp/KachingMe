@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/main"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/name_text"
+            android:layout_width="160dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Siva "
+            android:textColor="@color/description_color" />
+
+        <View
+            android:id="@+id/earn_first_view"
+            android:layout_width="2dp"
+            android:layout_height="wrap_content"
+            android:background="@color/wild_gray" />
+
+        <TextView
+            android:id="@+id/date_text"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="Dec 17"
+            android:textColor="@color/description_color" />
+
+        <View
+            android:id="@+id/earn_second_view"
+            android:layout_width="2dp"
+            android:layout_height="wrap_content"
+            android:background="@color/wild_gray" />
+
+        <TextView
+            android:id="@+id/amount_text"
+            android:layout_width="90dp"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:text="0"
+            android:textColor="@color/description_color" />
+    </LinearLayout>
+
+</LinearLayout>

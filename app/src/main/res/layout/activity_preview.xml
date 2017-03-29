@@ -1,0 +1,129 @@
+<AbsoluteLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#fff">
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <AbsoluteLayout
+            android:id="@+id/moving_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#fff">
+
+            <ImageView
+                android:id="@+id/move_image"
+                android:layout_width="250dp"
+                android:layout_height="250dp"
+                android:layout_x="95px"
+                android:layout_y="190px"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/move_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="moving Text"
+                android:textSize="30sp"
+                android:visibility="gone" />
+
+            <EditText
+                android:id="@+id/edit_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:hint="movingtext"
+                android:textSize="30sp"
+                android:visibility="gone" />
+        </AbsoluteLayout>
+    </ScrollView>
+
+    <LinearLayout
+        android:id="@+id/footer_for_emoticons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:visibility="gone"></LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btn_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_x="5px"
+        android:layout_y="600px"
+        android:orientation="horizontal"
+        android:visibility="visible">
+
+        <Button
+            android:id="@+id/okay_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/message_selector"
+            android:text="Edit"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/emoji_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/message_selector"
+            android:text="Emoji"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/preview_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/message_selector"
+            android:text="Preview"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/send_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/message_selector"
+            android:text="Send"
+            android:textColor="#fff"
+            android:textStyle="bold"
+            android:visibility="visible" />
+    </LinearLayout>
+
+    <GridView
+        android:id="@+id/gridview_emo"
+        android:layout_width="match_parent"
+        android:layout_height="150dp"
+        android:layout_x="0px"
+        android:layout_y="400px"
+        android:numColumns="7"
+        android:verticalSpacing="5dp"
+        android:visibility="gone"></GridView>
+
+    <LinearLayout
+        android:id="@+id/emoji_frag"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_x="0px"
+        android:layout_y="400px"
+        android:visibility="gone">
+
+        <fragment
+            class="com.wifin.kachingme.emojicons.emojicon.LogoEmojiconsFragment"
+            android:layout_width="match_parent"
+            android:layout_height="220dp" />
+    </LinearLayout>
+
+</AbsoluteLayout>

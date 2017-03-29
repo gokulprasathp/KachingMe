@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto" 
+    >
+    
+ <item
+       android:id="@+id/menu_edit_profile_pic"
+        android:title=""
+        appcompat:showAsAction="always"
+        android:icon="@drawable/ic_action_content_edit_white"
+        android:orderInCategory="1"></item>
+
+</menu>

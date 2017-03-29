@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/list_experience_lay"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:orientation="vertical" >
+
+    <EditText
+        android:id="@+id/serchEdit"
+        android:layout_width="300dp"
+        android:layout_height="40dp"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/searchbox_background"
+        android:drawableRight="@drawable/ic_action_search"
+        android:hint="Search"
+        android:paddingLeft="5dp"
+        android:textColor="#000"
+        android:textSize="30px"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/unblock_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="unblock"
+        android:visibility="gone" />
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <ListView
+            android:id="@+id/list_experience"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/white"
+            android:divider="@color/list_devider"
+            android:visibility="gone"
+            android:dividerHeight="1px" >
+        </ListView>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/contactList_recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+
+       <!-- <com.wifin.kachingme.util.SideSelector
+            android:id="@+id/side_selector_contact"
+            android:layout_width="10dp"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true" />-->
+    </RelativeLayout>
+
+</LinearLayout>

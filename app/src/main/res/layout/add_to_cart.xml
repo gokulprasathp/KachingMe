@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:gravity="center|top"
+    android:orientation="vertical">
+
+
+    <TextView
+        android:id="@+id/addCart_headtext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/kaching_color"
+        android:text="Freebie"
+        android:textColor="@color/white"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/addCart_compayLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/border_gray_selector"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:id="@+id/startdes_imag"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/stub" />
+
+        <TextView
+            android:id="@+id/addCart_companyName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#ff0000"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+
+
+    <ImageView
+        android:id="@+id/startdes_primag"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/startdes_prod"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#ff0000"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/startdes_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Quarter Pounder with Cheese"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/web_link"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/startdes_cont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_selector_white_to_gray"
+        android:text="Add to Cart"
+        android:textColor="@color/red" />
+</LinearLayout>

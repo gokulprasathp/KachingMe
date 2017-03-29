@@ -1,0 +1,5 @@
+include ':app', ':FacebookSDK', ':MemorizingTrustManager'
+include ':imageShapeLib'
+include ':lib_view_pager_indicator'
+include ':aFileChooser'
+include ':multipleimageselect'

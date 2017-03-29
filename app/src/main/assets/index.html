@@ -1,0 +1,66 @@
+<html>
+    <head>
+        
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    </head>
+  <body >
+<div id="wrapper"  class="pslide">
+<div class="zzle_form">
+  <div>
+    <input type="text" class="zzle_text"  placeholder="&nbsp;&nbsp;Type text"/> <br/>
+    <div style="position: relative;">
+      <div id="small-selector" ></div>
+    </div>
+    <input type="color" class="zzle_color" />
+
+    <select class="zzle_shape">
+      <option value="">---Please select---</option>
+      <option value="circle">Circle</option>
+      <option value="star">Star</option>
+      <option value="square">Square</option>
+    </select>
+    <br/>
+        <select class="zzle_speed" >
+      <option value="">---Please select---</option>
+      <option value="10">1</option>
+      <option value="20">2</option>
+      <option value="30">3</option>
+      <option value="40">4</option>
+      <option value="50">5</option>
+      <option value="60">6</option>
+      <option value="70">7</option>
+      <option value="80">8</option>
+      <option value="90">9</option>
+      <option value="100">10</option>
+    </select>
+    <br/>
+
+    <input type="button" class="zzle_button" value="Send"  />
+  </div>
+  </div>
+
+</div>  
+<!-- Jquery lib  -->
+<script type="text/javascript" src="jquery.min.js"></script>
+<script type="text/javascript">
+  
+     $(".zzle_button").click(function() {
+      var zzle_text = $('.zzle_text').val();
+      var zzle_color = $('.zzle_color').val();
+      var zzle_shape = $('.zzle_shape').val();
+      var zzle_speed = $('.zzle_speed').val();
+
+alert(zzle_color);
+
+      localStorage.setItem('zzle_text', zzle_text);
+      localStorage.setItem('zzle_color', zzle_color);
+      localStorage.setItem('zzle_shape', zzle_shape);
+      localStorage.setItem('zzle_speed', zzle_speed);
+      window.location= "zzle.html";
+});
+
+
+</script>
+
+  </body>
+</html>

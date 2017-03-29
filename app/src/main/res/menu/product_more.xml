@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto" 
+    >
+
+    <item
+        android:id="@+id/menu_image"
+        android:orderInCategory="1"
+        android:title="Image"
+        appcompat:showAsAction="always">
+    </item>
+    <item
+        android:id="@+id/menu_video"
+        android:orderInCategory="2"
+        android:title="Video"
+        appcompat:showAsAction="always">
+    </item>
+    <item
+        android:id="@+id/menu_pdf"
+        android:orderInCategory="2"
+        android:title="Pdf"
+        appcompat:showAsAction="always">
+    </item>
+ <item
+        android:id="@+id/menu_remove"
+        android:orderInCategory="2"
+        android:title="Remove"
+        appcompat:showAsAction="always">
+    </item>
+    
+</menu>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="fill_parent"
+    android:layout_gravity="center"
+    android:background="#fff"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/wish_start_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="15dp"
+        android:background="@drawable/border_block"
+        android:gravity="center"
+        android:text="Use this wishlist to add,track and remind yourself of items you&apos;d like to purchase for yourself and your friends"
+        android:textColor="#000"
+        android:textSize="13dp"
+        android:textStyle="italic|bold" />
+
+    <LinearLayout
+        android:id="@+id/wishlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/wishname"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="12dp"
+            android:gravity="left"
+            android:hint="Add New Item"
+            android:textColor="#000"
+            android:textCursorDrawable="@drawable/color_cursor" />
+
+        <Button
+            android:id="@+id/wishbtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="2dp"
+            android:background="@drawable/receipt_from_server" />
+    </LinearLayout>
+
+</LinearLayout>

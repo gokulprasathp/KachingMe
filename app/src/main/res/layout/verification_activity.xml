@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ver_screen"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <com.wifin.kachingme.util.RounderImageView
+        android:id="@+id/ver_login_ban"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/user_profile" />
+
+
+    <TextView
+        android:id="@+id/ver_text1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="First Text Messaging App that Rewards You!"
+        android:textColor="@color/red"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/ver_text2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Connect with your friends and family by verifying your phone numbers"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/ver_text3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="You can add multiple phone numbers to one account."
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/ver_primaryBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_selector_white_to_gray"
+        android:text="Verify Primary Number"
+        android:textColor="@color/red" />
+
+    <TextView
+        android:id="@+id/ver_addSecondaryBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_selector_white_to_gray"
+        android:text="Add Secondary Numbers"
+        android:textColor="@color/red"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/ver_NextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_selector_white_to_gray"
+        android:text="Next"
+        android:textColor="@color/red"
+        android:visibility="gone" />
+
+
+</LinearLayout>

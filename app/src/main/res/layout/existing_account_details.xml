@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <ScrollView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/existingAccDetails_profile_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shopimg_bg"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/existingAccDetails_prof_pic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/existingAccDetails_merchant_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/red"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/existingAccDetails_merchant_website"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:textColor="@color/red"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/existingAccDetails_freebie_layout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@drawable/gray_border_background"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/existingAccDetails_freebie_img"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <View
+                    android:id="@+id/freebie_view"
+                    android:layout_width="1dp"
+                    android:layout_height="wrap_content"
+                    android:background="@color/wild_gray"></View>
+
+                <TextView
+                    android:id="@+id/existingAccDetails_freebie_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:gravity="center"
+                    android:text="freebie"
+                    android:textColor="@color/bold_header"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/existingAccDetails_shop_id_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Redeemer Id"
+                android:textColor="@color/bold_header"
+                android:textStyle="bold"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/existingAccDetails_shop_id_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/gray_border_background"
+                android:hint=""
+                android:inputType="text"
+                android:singleLine="true"
+                android:textColor="@color/description_color"
+                android:textCursorDrawable="@drawable/color_cursor"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/existingAccDetails_redeemer_name_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Redeemer Name"
+                android:textColor="@color/bold_header"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/existingAccDetails_redeemer_name_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/gray_border_background"
+                android:hint=""
+                android:inputType="text"
+                android:singleLine="true"
+                android:textColor="@color/description_color"
+                android:textCursorDrawable="@drawable/color_cursor" />
+
+            <TextView
+                android:id="@+id/existingAccDetails_email_id_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Email Id"
+                android:textColor="@color/bold_header"
+                android:textStyle="bold"
+                android:visibility="visible" />
+
+            <EditText
+                android:id="@+id/existingAccDetails_email_id_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/gray_border_background"
+                android:hint=""
+                android:inputType="textEmailAddress"
+                android:singleLine="true"
+                android:textColor="@color/description_color"
+                android:textCursorDrawable="@drawable/color_cursor"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/existingAccDetails_phone_number_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Phone Number"
+                android:textColor="@color/bold_header"
+                android:textStyle="bold"
+                android:visibility="visible" />
+
+            <EditText
+                android:id="@+id/existingAccDetails_phone_number_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/gray_border_background"
+                android:hint="Phone Number"
+                android:inputType="number"
+                android:singleLine="true"
+                android:maxLength="15"
+                android:textColor="@color/description_color"
+                android:textCursorDrawable="@drawable/color_cursor"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/existingAccDetails_address_line1_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="Redeemer Address"
+                android:textColor="@color/bold_header"
+                android:textStyle="bold" />
+
+            <EditText
+                android:id="@+id/existingAccDetails_address_line1_edit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/gray_border_background"
+                android:hint=""
+                android:inputType="textMultiLine"
+                android:textColor="@color/description_color"
+                android:textCursorDrawable="@drawable/color_cursor" />
+
+            <Button
+                android:id="@+id/existingAccDetails_submit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/red_border_background"
+                android:text="Redeem"
+                android:textColor="@color/red" />
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

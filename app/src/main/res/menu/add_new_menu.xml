@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:appcompat="http://schemas.android.com/apk/res-auto">
+    <!--  <item
+         android:id="@+id/menu_add_new"
+         android:icon="@drawable/ic_action_alerts_and_states_add_alarm"
+         android:showAsAction="ifRoom"
+         android:orderInCategory="2"></item> -->
+    <item android:id="@+id/contact_menu_search"
+        android:title="Search"
+        android:icon="@drawable/search"
+        appcompat:showAsAction="ifRoom|collapseActionView"
+        appcompat:actionViewClass="android.support.v7.widget.SearchView" />
+
+    <!--
+     <item
+         android:id="@+id/menu_refresh_contacts"
+         android:icon="@drawable/ic_action_navigation_refresh"
+         android:orderInCategory="1"
+         appcompat:showAsAction="always"/>
+ -->
+
+</menu>

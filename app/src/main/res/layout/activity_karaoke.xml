@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#fff"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/song_img"
+        android:layout_width="50dp"
+        android:layout_height="40dp" />
+
+    <TextView
+        android:id="@+id/karaoke_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:text=""
+        android:textStyle="italic|bold" />
+
+    <LinearLayout
+        android:id="@+id/karoake_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/play_karoake"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#9E0000"
+            android:gravity="center"
+            android:text="Play"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/pause_karoake"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#9E0000"
+            android:gravity="center"
+            android:text="Pause"
+            android:textColor="#fff" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/recording_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/recording"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#9E0000"
+            android:gravity="center"
+            android:text="Record"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/stop_recording"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_gravity="center"
+            android:background="#9E0000"
+            android:gravity="center"
+            android:text="Stop"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/play_recording"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#9E0000"
+            android:gravity="center"
+            android:text="Play"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/send_recording"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="#9E0000"
+            android:gravity="center"
+            android:text="Send"
+            android:textColor="#fff" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+     xmlns:appcompat="http://schemas.android.com/apk/res-auto" 
+    >   
+
+
+    <item
+        android:id="@+id/menu_search"
+        android:icon="@drawable/ic_action_search"
+        appcompat:showAsAction="always"
+        appcompat:actionViewClass="android.support.v7.widget.SearchView"
+        android:orderInCategory="1"></item>
+    <item
+        android:id="@+id/menu_contacts"
+        android:icon="@drawable/ic_action_social_add_person"
+       appcompat:showAsAction="always"
+            
+        android:title="Contacts"   
+        android:orderInCategory="2"></item>
+
+     <item
+        android:id="@+id/menu_sec_chat"
+        android:title="Start New Secret Chat"
+        appcompat:showAsAction="never"        
+        android:orderInCategory="3"></item>
+     
+    <item
+        android:id="@+id/menu_profile"
+        android:title="Profile"
+       appcompat:showAsAction="never"        
+        android:orderInCategory="4"></item>
+    
+	<item
+        android:id="@+id/menu_status"
+        android:title="Status"
+        appcompat:showAsAction="never"        
+        android:orderInCategory="5"></item>
+    
+
+     <item
+        android:id="@+id/menu_group"
+        android:title="New Group"
+        appcompat:showAsAction="never"        
+        android:orderInCategory="6"></item>
+     
+        <item
+        android:id="@+id/menu_new_broadcast"
+        android:title="New Broadcast"
+        appcompat:showAsAction="never"        
+        android:orderInCategory="7"></item>
+        
+     <item
+        android:id="@+id/menu_settings"
+        android:title="Settings"
+        appcompat:showAsAction="never"        
+        android:orderInCategory="8"></item>
+     
+        <item
+        android:id="@+id/menu_profile_1"
+        android:title="@string/personal_info"
+        appcompat:showAsAction="never"        
+        android:orderInCategory="9"
+        android:visible="false"
+        ></item>
+        
+         <item
+        android:id="@+id/menu_business_profile"
+        android:title="@string/business_profile"
+        appcompat:showAsAction="never"        
+        android:orderInCategory="10"
+        android:visible="false"
+        ></item>
+ 
+
+</menu>
