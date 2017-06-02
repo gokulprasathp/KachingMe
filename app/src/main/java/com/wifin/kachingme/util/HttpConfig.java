@@ -65,13 +65,16 @@ public class HttpConfig {
 				response.getEntity().getContent().close();
 				// throw new IOException(statusLine.getReasonPhrase());
 			}
-		} catch (ConnectTimeoutException e) {
+            Constant.printMsg("Exceptio mmmmmmmmmmresponseStringmmmmmmm....."+responseString);
+        } catch (ConnectTimeoutException e) {
 			responseString = null;
+            Constant.printMsg("Exceptio mmmmmmmmmmmmmmmmmmm....."+e);
 		} catch (Exception e) {
 			// TODO: handle exception
 			responseString = null;
 			// e.printStackTrace();
-		}
+            Constant.printMsg("Exceptio mmmmmmmmmmmmmmmmmmm....."+e);
+        }
 		return responseString;
 	}
 

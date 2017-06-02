@@ -2,20 +2,20 @@ package com.wifin.kachingme.pojo;
 
 public class FreebieDto {
 
-	String id;
-	String name;
-	String tagLine;
-	String photoPath;
-	String noOfFreebies;
-	String timePeriod;
-	String valid_until;
-	String qrCode;
-	String advertiser;
-	String language;
-	String valid_untilSrt;
-	String noOfDaysDisplayed;
-	String userId;
-	String qrCodePath;
+    private String id;
+	private String name;
+	private String tagLine;
+	private String photoPath;
+	private String noOfFreebies;
+	private String timePeriod;
+	private String valid_until;
+	private String qrCode;
+	private String advertiser;
+	private String language;
+	private String valid_untilSrt;
+	private String noOfDaysDisplayed;
+	private String userId;
+	private String qrCodePath;
 
 	public String getId() {
 		return id;

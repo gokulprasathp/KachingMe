@@ -39,14 +39,8 @@ import com.wifin.kachingme.util.Constant;
 import java.util.ArrayList;
 import java.util.Collections;
 
-/**
- * Created by Gokul on 22-09-2016.
- * <p/>
- * This class is used to view or send the kons
- */
-
-public class KonsHomeScreen extends Activity implements OnItemClickListenerInterface {
-
+public class KonsHomeScreen extends Activity implements OnItemClickListenerInterface
+{
     public static ArrayList<KonsDto> mKonsList = new ArrayList<KonsDto>();
     public static ArrayList<KonesCheckPojo> mKonsCheckList = new ArrayList<KonesCheckPojo>();
     int width = 0, height = 0;
@@ -68,161 +62,209 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
     public static KonsHomeScreen mActivity;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         this.requestWindowFeature(Window.FEATURE_NO_TITLE);
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
         setContentView(R.layout.kons_home_screen);
+
         mIntVariable();
         mScreenArrangement();
         mActivity=this;
 
-        mBackBtn_Img.setOnClickListener(new View.OnClickListener() {
+        mBackBtn_Img.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View v) {
+            public void onClick(View v)
+            {
                 Constant.mDelete = false;
-
-//                Intent intent = new Intent(KonsHomeScreen.this,
-//                        SliderTesting.class);
-//                startActivity(intent);
-
-
                 finish();
             }
         });
-        mKonsCalcelBtn.setOnClickListener(new View.OnClickListener() {
+
+        mKonsCalcelBtn.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View v) {
+            public void onClick(View v)
+            {
                 Constant.mDelete = false;
-                if (Constant.mKonsFromSlider) {
-//                    Constant.mKonsFromSlider = false;
-//                    startActivity(new Intent(KonsHomeScreen.this, SliderTesting.class));
-                    finish();
 
-                } else {
+                if (Constant.mKonsFromSlider)
+                {
                     finish();
-
+                }
+                else
+                {
+                    finish();
                 }
             }
         });
-        mKonsAdd_img.setOnClickListener(new View.OnClickListener() {
+
+        mKonsAdd_img.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View v) {
-
-                if (Constant.mDelete == true) {
-                    if (mKonsCheckList.size() > 0) {
+            public void onClick(View v)
+            {
+                if (Constant.mDelete == true)
+                {
+                    if (mKonsCheckList.size() > 0)
+                    {
                         deleteAlert();
-
-
-                    } else {
+                    }
+                    else
+                    {
                         Toast.makeText(getApplicationContext(), "Please select atleast one to delete", Toast.LENGTH_SHORT).show();
                     }
-                } else {
+                }
+                else
+                {
                     Intent in = new Intent(KonsHomeScreen.this, KonsActivity.class);
                     startActivity(in);
                 }
             }
         });
-        mKonsAttachBtn.setOnClickListener(new View.OnClickListener() {
+
+        /*mKonsAttachBtn.setOnClickListener(new View.OnClickListener()
+        {
             @Override
-            public void onClick(View v) {
+            public void onClick(View v)
+            {
                 Constant.printMsg("mflotingActionBtn");
                 Constant.printMsg("goododdodoo " + Constant.mDelete);
 
-//                Constant.mDelete = true;
-//                if (mKonsCount == 0) {
-//                    Toast.makeText(getApplicationContext(),
-//                            "No Kons are available.Click + to create kons",
-//                            Toast.LENGTH_SHORT).show();
-//                } else {
-                if (mKonsList.size() > 0) {
+                if (mKonsList.size() > 0)
+                {
                     Constant.mDelete = false;
 
-
                     Constant.printMsg("data konse size...." + mKonsCheckList.size());
-                    for (int i = 0; i < mKonsCheckList.size(); i++) {
+
+                    for (int i = 0; i < mKonsCheckList.size(); i++)
+                    {
                         Constant.printMsg("data konse size....1" + mKonsCheckList.size() + mKonsCheckList.get(i).isChecked());
 
-                        if (mKonsCheckList.get(i).isChecked()) {
-                            Constant.konsSelectedList.add(mKonsCheckList.get(i)
-                                    .getMessage().toString().trim());
-
-                            Constant.mKonsBackground = mKonsCheckList.get(i)
-                                    .getBackground().toString().trim();
+                        if (mKonsCheckList.get(i).isChecked())
+                        {
+                            Constant.konsSelectedList.add(mKonsCheckList.get(i).getMessage().toString().trim());
+                            Constant.mKonsBackground = mKonsCheckList.get(i).getBackground().toString().trim();
                             Constant.konsBackgroundList.add(Constant.mKonsBackground);
-
-                            Constant.mKonsColor = mKonsCheckList.get(i)
-                                    .getColor().toString().trim();
+                            Constant.mKonsColor = mKonsCheckList.get(i).getColor().toString().trim();
                             Constant.konsColorList.add(Constant.mKonsColor);
-                            Constant.printMsg("date konse in konzsd"
-                                    + mKonsCheckList.get(i).getMessage().toString()
-                                    .trim());
+                            Constant.printMsg("date konse in konzsd" + mKonsCheckList.get(i).getMessage().toString().trim());
                         }
-                        if (i + 1 == mKonsCheckList.size()) {
-                            forceActivity();
-                            Constant.printMsg("data  konse for size...."
-                                    + mKonsCheckList.size());
 
+                        if (i + 1 == mKonsCheckList.size())
+                        {
+                            forceActivity();
+                            Constant.printMsg("data  konse for size...." + mKonsCheckList.size());
                         }
                         Constant.printMsg("data konse i...." + Constant.konsSelectedList + Constant.konsBackgroundList + Constant.konsColorList);
-
                     }
-//                    }
-                } else {
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Please create KonS and send", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });*/
+
+        mKonsAttachBtn.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                Constant.printMsg("mflotingActionBtn");
+                Constant.printMsg("goododdodoo " + Constant.mDelete);
+
+                if (mKonsList.size() > 0)
+                {
+                    Constant.mDelete = false;
+
+                    Constant.printMsg("data konse size...." + mKonsCheckList.size());
+
+                    if (mKonsCheckList.size() > 0)
+                    {
+                        for (int i = 0; i < mKonsCheckList.size(); i++)
+                        {
+                            Constant.printMsg("data konse size....1" + mKonsCheckList.size() + mKonsCheckList.get(i).isChecked());
+
+                            if (mKonsCheckList.get(i).isChecked())
+                            {
+                                Constant.konsSelectedList.add(mKonsCheckList.get(i).getMessage().toString().trim());
+                                Constant.mKonsBackground = mKonsCheckList.get(i).getBackground().toString().trim();
+                                Constant.konsBackgroundList.add(Constant.mKonsBackground);
+                                Constant.mKonsColor = mKonsCheckList.get(i).getColor().toString().trim();
+                                Constant.konsColorList.add(Constant.mKonsColor);
+                                Constant.printMsg("date konse in konzsd" + mKonsCheckList.get(i).getMessage().toString().trim());
+                            }
+
+                            if (i + 1 == mKonsCheckList.size())
+                            {
+                                forceActivity();
+                                Constant.printMsg("data  konse for size...." + mKonsCheckList.size());
+                            }
+                            Constant.printMsg("data konse i...." + Constant.konsSelectedList + Constant.konsBackgroundList + Constant.konsColorList);
+                        }
+                    }
+                    else
+                    {
+                        Toast.makeText(getApplicationContext(), "Please Select KonS to Attach", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                else
+                {
                     Toast.makeText(getApplicationContext(), "Please create KonS and send", Toast.LENGTH_SHORT).show();
                 }
             }
         });
-
-
     }
 
-    protected void forceActivity() {
+    protected void forceActivity()
+    {
         // TODO Auto-generated method stub
 
         Constant.printMsg("testing acttt ");
 
-        if (Constant.konsSelectedList.size() > 0) {
-
-            if (Constant.mKonsFromSlider == true) {
+        if (Constant.konsSelectedList.size() > 0)
+        {
+            if (Constant.mKonsFromSlider)
+            {
                 Constant.mKons = true;
                 Constant.mKonsGroup = true;
-
-                Intent intent = new Intent(KonsHomeScreen.this,
-                        SliderTesting.class);
+                Intent intent = new Intent(KonsHomeScreen.this, SliderTesting.class);
                 startActivity(intent);
                 finish();
-            } else {
-
+            }
+            else
+            {
                 Constant.mDelete = false;
-                if (Constant.konsSelectedList.size() > 0) {
 
-                    if (Constant.mKonsFromChat) {
+                if (Constant.konsSelectedList.size() > 0)
+                {
+                    if (Constant.mKonsFromChat)
+                    {
                         Constant.mKons = true;
-//                    Constant.mKonsFromSlider = true;
-//                        Intent intent = new Intent(KonsHomeScreen.this,
-//                                ChatTest.class);
-//                        startActivity(intent);
                         Constant.mKonsFromChat = false;
                         finish();
-                    } else {
+                    }
+                    else
+                    {
                         Constant.mKonsGroup = true;
-//                    Constant.mKonsFromSlider = true;
-//                        Intent intent = new Intent(KonsHomeScreen.this,
-//                                MUCTest.class);
-//                        startActivity(intent);
                         finish();
                     }
                 }
             }
-        } else {
+        }
+        else
+        {
             Toast.makeText(getApplicationContext(),
                     "Please select atleast one kons", Toast.LENGTH_SHORT)
                     .show();
         }
     }
 
-    private void mIntVariable() {
+    private void mIntVariable()
+    {
         mKonsAttachLayout = (LinearLayout) findViewById(R.id.kons_attach_layout);
         mKonsCalcelBtn = (Button) findViewById(R.id.kons_cancel_btn);
         mKonsAttachBtn = (Button) findViewById(R.id.kons_attach_btn);
@@ -236,7 +278,6 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
         mAppBarLayout = (AppBarLayout) findViewById(R.id.kons_appbar_layout);
         mToolBar = (Toolbar) findViewById(R.id.kons_toolbar_layout);
 
-
         Constant.typeFace(this, mKons_Txt);
         Constant.typeFace(this, mKonsCalcelBtn);
         Constant.typeFace(this, mKonsAttachBtn);
@@ -248,7 +289,8 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
         KonsRecyclerView.addItemDecoration(new SpacesItemDecoration(spacingInPixels));
     }
 
-    private void mScreenArrangement() {
+    private void mScreenArrangement()
+    {
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         width = metrics.widthPixels;
@@ -256,8 +298,6 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
 
         Constant.screenWidth = width;
         Constant.screenHeight = height;
-
-//        Toast.makeText(getApplicationContext(), "" + width, Toast.LENGTH_LONG).show();
 
         AppBarLayout.LayoutParams mToolBarLayoutParams = new AppBarLayout.LayoutParams(
                 Toolbar.LayoutParams.WRAP_CONTENT,
@@ -308,7 +348,6 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
         mKonsRecyclerViewParams.topMargin = (int) height * 8 / 100;
         KonsRecyclerView.setLayoutParams(mKonsRecyclerViewParams);
 
-
         FrameLayout.LayoutParams mKonsbtnlayoutParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT);
@@ -324,7 +363,6 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
         mKonsAttachbtnParams.height = (int) height * 7 / 100;
         mKonsAttachbtnParams.leftMargin = (int) width * 5 / 100;
         mKonsAttachBtn.setLayoutParams(mKonsAttachbtnParams);
-
 
         LinearLayout.LayoutParams mKonsCancelbtnParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -342,48 +380,45 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
         floatingParams.gravity = Gravity.BOTTOM | Gravity.RIGHT;
         mFloatingActionBtn.setLayoutParams(floatingParams);
 
-//        android.support.design.widget.CoordinatorLayout.LayoutParams mKonsAttachLayoutParams = new android.support.design.widget.CoordinatorLayout.LayoutParams(
-//                LinearLayout.LayoutParams.WRAP_CONTENT,
-//                LinearLayout.LayoutParams.WRAP_CONTENT);
-//        mKonsAttachLayoutParams.width = (int) width;
-//        mKonsAttachLayoutParams.height = (int) height * 8 / 100;
-//        mKonsAttachLayoutParams.topMargin = (int) height * 74 / 100;
-//        mKonsAttachLayout.setLayoutParams(mKonsAttachLayoutParams);
-
-        if (width >= 600) {
+        if (width >= 600)
+        {
             mKons_Txt.setTextSize(19);
             mKonsCalcelBtn.setTextSize(17);
             mKonsAttachBtn.setTextSize(17);
-
-        } else if (width > 501 && width < 600) {
+        }
+        else if (width > 501 && width < 600)
+        {
             mKons_Txt.setTextSize(17);
             mKonsCalcelBtn.setTextSize(15);
             mKonsAttachBtn.setTextSize(15);
-        } else if (width > 331 && width < 500) {
+        }
+        else if (width > 331 && width < 500)
+        {
             mKons_Txt.setTextSize(15);
             mKonsCalcelBtn.setTextSize(14);
             mKonsAttachBtn.setTextSize(14);
-        } else if (width > 260 && width < 330) {
-            mKons_Txt.setTextSize(14);
-            mKonsCalcelBtn.setTextSize(13);
-            mKonsAttachBtn.setTextSize(13);
-        } else if (width <= 260) {
+        }
+        else if (width > 260 && width < 330)
+        {
             mKons_Txt.setTextSize(14);
             mKonsCalcelBtn.setTextSize(13);
             mKonsAttachBtn.setTextSize(13);
         }
-
-//        ChatHomeScreenActivity chatHomeScreenActivityObj=new ChatHomeScreenActivity();
-//        chatHomeScreenActivityObj.mBottomMenuMethod();
-
-//        mBottomMenuMethod();
+        else if (width <= 260)
+        {
+            mKons_Txt.setTextSize(14);
+            mKonsCalcelBtn.setTextSize(13);
+            mKonsAttachBtn.setTextSize(13);
+        }
     }
 
-    private ArrayList<KonsDto> collectData(String query) {
+    private ArrayList<KonsDto> collectData(String query)
+    {
         // TODO Auto-generated method stub
         Cursor c = null;
 
-        try {
+        try
+        {
             c = db.open().getDatabaseObj().rawQuery(query, null);
 
             Constant.printMsg("The selected elist activity count is ::::::"
@@ -435,7 +470,8 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
         Constant.printMsg("kons testttt111 " + isLongPress);
         mKonsAdd_img.setImageResource(R.drawable.delete);
 
-        if (isLongPress) {
+        if (isLongPress)
+        {
             Constant.printMsg("log presss on grid...............");
             state = "longpress";
             Constant.mselectedPosition = position;
@@ -448,89 +484,44 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
         }
     }
 
-    /*public void mBottomMenuMethod()
+    protected void deleteQuery(String delete_query)
     {
-        LinearLayout mBottomLayout, mBottomChatLayout, mBottomBuxsLayout, mBottomCartLayout;
-        ImageView mBottomChatImg, mBottomBuxsImg, mBottomCartImg;
-        TextView mBottomChatTxt, mBottomBuxsTxt, mBottomCartTxt;
-        View mGrayLine;
-
-        mBottomLayout = (LinearLayout) findViewById(R.id.bottom_layout);
-        mBottomChatLayout = (LinearLayout) findViewById(R.id.chat_layout);
-        mBottomBuxsLayout = (LinearLayout) findViewById(R.id.bux_layout);
-        mBottomCartLayout = (LinearLayout) findViewById(R.id.cart_layout);
-
-        mBottomChatImg = (ImageView) findViewById(R.id.chat_menu_img);
-        mBottomBuxsImg = (ImageView) findViewById(R.id.buxs_menu_img);
-        mBottomCartImg = (ImageView) findViewById(R.id.cart_menu_img);
-
-        mBottomChatTxt = (TextView) findViewById(R.id.chat_menu_txt);
-        mBottomBuxsTxt = (TextView) findViewById(R.id.buxs_menu_txt);
-        mBottomCartTxt = (TextView) findViewById(R.id.cart_menu_txt);
-
-        mGrayLine = (View) findViewById(R.id.gray_line);
-
-        LinearLayout.LayoutParams mLayoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        mLayoutParams.width = (int) width * 33 / 100;
-        mLayoutParams.height = (int) height * 9 / 100;
-        mLayoutParams.gravity = Gravity.CENTER;
-        mBottomChatLayout.setLayoutParams(mLayoutParams);
-        mBottomBuxsLayout.setLayoutParams(mLayoutParams);
-        mBottomCartLayout.setLayoutParams(mLayoutParams);
-
-        LinearLayout.LayoutParams mImageParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        mImageParams.width = (int) width * 10 / 100;
-        mImageParams.height = (int) height * 6 / 100;
-        mImageParams.gravity = Gravity.CENTER;
-        mBottomChatImg.setLayoutParams(mImageParams);
-        mBottomBuxsImg.setLayoutParams(mImageParams);
-        mBottomCartImg.setLayoutParams(mImageParams);
-
-        LinearLayout.LayoutParams mGrayLineParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        mGrayLineParams.width = (int) width;
-        mGrayLineParams.height = 3;
-        mGrayLineParams.bottomMargin = (int) height * 1 / 100;
-        mGrayLine.setLayoutParams(mGrayLineParams);
-    }*/
-
-    protected void deleteQuery(String delete_query) {
-        // TODO Auto-generated method stub
         Cursor c = null;
 
-        try {
+        try
+        {
             c = db.open().getDatabaseObj().rawQuery(delete_query, null);
             Constant.printMsg("No of updated rows in db delete::billllll:::"
                     + c.getCount());
-        } catch (SQLException e) {
-
-        } finally {
-
         }
-        c.close();
-        db.close();
+        catch (SQLException e)
+        {
 
+            e.printStackTrace();
+        }
+        finally
+        {
+            c.close();
+        }
+
+        db.close();
     }
 
-    private void deleteAlert() {
-
+    private void deleteAlert()
+    {
         AlertDialog.Builder b;
         b = new AlertDialog.Builder(this);
 
         b.setCancelable(false);
-        b.setMessage("Are you sure you want to delete").setCancelable(
-                false);
-
-        b.setNegativeButton("Yes", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-
-                for (int i = 0; i < mKonsCheckList.size(); i++) {
-                    if (mKonsCheckList.get(i).isChecked()) {
+        b.setMessage("Are you sure you want to delete").setCancelable(false);
+        b.setNegativeButton("Yes", new DialogInterface.OnClickListener()
+        {
+            public void onClick(DialogInterface dialog, int id)
+            {
+                for (int i = 0; i < mKonsCheckList.size(); i++)
+                {
+                    if (mKonsCheckList.get(i).isChecked())
+                    {
                         String delete_query = "DELETE FROM "
                                 + Dbhelper.TABLE_KONS + " Where msg = '"
                                 + mKonsCheckList.get(i).getMessage() + "'";
@@ -544,44 +535,47 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
                     }
                 }
                 Constant.mDelete = false;
-
-
             }
         });
-        b.setPositiveButton("NO", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
 
+        b.setPositiveButton("NO", new DialogInterface.OnClickListener()
+        {
+            public void onClick(DialogInterface dialog, int id)
+            {
+                dialog.dismiss();
             }
         });
+
         b.setCancelable(true);
-
         AlertDialog alert = b.create();
         alert.show();
-
     }
 
     @Override
-    public void onBackPressed() {
+    public void onBackPressed()
+    {
         Constant.mDelete = false;
 
-        if (Constant.mKonsFromSlider == true) {
+        if (Constant.mKonsFromSlider)
+        {
             Constant.mKonsFromSlider = false;
             Intent i = new Intent(KonsHomeScreen.this, SliderTesting.class);
             startActivity(i);
             finish();
-        } else {
-
-//            Intent i = new Intent(KonsHomeScreen.this, ChatTest.class);
-//            startActivity(i);
+        }
+        else
+        {
             finish();
         }
         super.onBackPressed();
     }
 
-    public class SpacesItemDecoration extends RecyclerView.ItemDecoration {
+    public class SpacesItemDecoration extends RecyclerView.ItemDecoration
+    {
         private int space;
 
-        public SpacesItemDecoration(int space) {
+        public SpacesItemDecoration(int space)
+        {
             this.space = space;
         }
 
@@ -592,17 +586,20 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
             outRect.bottom = space;
 
             // Add top margin only for the first item to avoid double space between items
-            if (parent.getChildLayoutPosition(view) == 0) {
+            if (parent.getChildLayoutPosition(view) == 0)
+            {
                 outRect.top = space;
-            } else {
+            }
+            else
+            {
                 outRect.top = 0;
             }
         }
     }
 
     @Override
-    protected void onResume() {
-
+    protected void onResume()
+    {
         mKonsList.clear();
         Constant.konsSelectedList.clear();
         db = new Dbhelper(getApplicationContext());
@@ -613,33 +610,19 @@ public class KonsHomeScreen extends Activity implements OnItemClickListenerInter
         Constant.konsSelectedList.clear();
         Constant.konsBackgroundList.clear();
         Constant.konsColorList.clear();
-//        Bundle extras = getIntent().getExtras();
-//        Bitmap bmp = (Bitmap) extras.getParcelable("imagebitmap");
-//        String txt = extras.getString("text");
-//        Toast.makeText(KonsHomeScreen.this, txt, Toast.LENGTH_SHORT).show();
-
-//        for (int i = 0; i < 11; i++) {
-//            mValueList.add(i);
-//        }
-
-//        if (!bmp.equals("")) {
-//            mValueList.add(bmp);
-//        }
-
-//        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this.getBaseContext());
-//        KonsRecyclerView.setHasFixedSize(true);
 
         GridLayoutManager lLayout;
         state = "normal";
         lLayout = new GridLayoutManager(this, 3);
         Constant.printMsg("sannata   " + mKonsList.size());
         KonsRecyclerView.setLayoutManager(lLayout);
-        if (mKonsList.size() > 0) {
+
+        if (mKonsList.size() > 0)
+        {
             mKonsadapter = new KonsAdaptor(KonsHomeScreen.this, mKonsList, state);
             KonsRecyclerView.setAdapter(mKonsadapter);
             mKonsadapter.notifyDataSetChanged();
         }
-
         super.onResume();
     }
 }

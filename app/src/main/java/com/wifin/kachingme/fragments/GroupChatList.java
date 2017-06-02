@@ -65,10 +65,13 @@ import org.jivesoftware.smackx.bookmarks.BookmarkManager;
 import org.jivesoftware.smackx.jiveproperties.JivePropertiesManager;
 import org.jivesoftware.smackx.muc.Affiliate;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jivesoftware.smackx.muc.MucEnterConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.xdata.Form;
 import org.jivesoftware.smackx.xdata.FormField;
 import org.json.JSONObject;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -89,6 +92,7 @@ public class GroupChatList extends Fragment {
     RecyclerView recyclerViewChat;
     Cursor cursor;
     DatabaseHelper dbAdapter;
+    int chatsCount = 0;
     int totalcount = 1;
     boolean mRunTempFetchChat = true;
     MultiUserChat muc;
@@ -102,33 +106,34 @@ public class GroupChatList extends Fragment {
                     || intent.getAction().equals(
                     Constant.BROADCAST_UPDATE_GROUP_ICON)) {
                 ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat(), val);
-            } else if (intent.getAction().equals("lastseen_broadcast")) {
-
-                Constant.printMsg("Chat List typing status GGG:");
-
-
-                String from = intent.getStringExtra("from");
-                String type = intent.getStringExtra("type");
-
-                try {
-
-                    for (int i = 0; i < chatlist.size(); i++) {
-
-                        if (chatlist.get(i).getJidId().equalsIgnoreCase(from)) {
-                            chatlist.get(i).setData(type);
-
-                            Constant.printMsg("siva called  Broadcast  ChatListgdgsdg GGG");
-
-                            GroupChatList.this.adapter.notifyDataSetChanged();
-                            break;
-                        }
-
-                    }
-                    pauseTypingThread();
-                } catch (Exception e) {
-
-                }
             }
+//            } else if (intent.getAction().equals("lastseen_broadcast")) {
+//
+//                Constant.printMsg("Chat List typing status GGG:");
+//
+//
+//                String from = intent.getStringExtra("from");
+//                String type = intent.getStringExtra("type");
+//
+//                try {
+//
+//                    for (int i = 0; i < chatlist.size(); i++) {
+//
+//                        if (chatlist.get(i).getJidId().equalsIgnoreCase(from)) {
+//                            chatlist.get(i).setData(type);
+//
+//                            Constant.printMsg("siva called  Broadcast  ChatListgdgsdg GGG");
+//
+//                            GroupChatList.this.adapter.notifyDataSetChanged();
+//                            break;
+//                        }
+//
+//                    }
+//                    pauseTypingThread();
+//                } catch (Exception e) {
+//
+//                }
+//            }
 
         }
 
@@ -330,6 +335,8 @@ public class GroupChatList extends Fragment {
 
     @Override
     public void onResume() {
+
+        chatsCount = 0;
         Constant.printMsg("siva called onResume Group.............................");
         super.onResume();
 //        mProfileImagesList = new ArrayList<Bitmap>();
@@ -425,16 +432,32 @@ public class GroupChatList extends Fragment {
 
                 try {
                     muc = TempConnectionService.MUC_MANAGER
-                            .getMultiUserChat(Constant.mJid);
-                    DiscussionHistory history = new DiscussionHistory();
-                    history.setSince(Utils.getBookmarkDate(sp.getString(
+                            .getMultiUserChat(JidCreate.entityBareFrom(Constant.mJid));
+//                    DiscussionHistory history = new DiscussionHistory();
+//                    history.setSince(Utils.getBookmarkDate(sp.getString(
+//                            Constant.LAST_REFRESH_TIME + "_"
+//                                    + Constant.mJid,
+//                            Utils.getBookmarkTime())));
+                    MucEnterConfiguration.Builder build = muc.getEnterConfigurationBuilder(Resourcepart.from(KachingMeApplication.getUserID()
+                            + KachingMeApplication.getHost()));
+
+                    build.requestHistorySince(Utils.getBookmarkDate(sp.getString(
                             Constant.LAST_REFRESH_TIME + "_"
                                     + Constant.mJid,
                             Utils.getBookmarkTime())));
-                    muc.join(
-                            KachingMeApplication.getUserID()
-                                    + KachingMeApplication.getHost(), null,
-                            history, 30000L);
+//                    build.requestMaxStanzasHistory(0);
+//                    build.requestMaxCharsHistory(0);
+                    build.timeoutAfter(6000000L);
+
+                    MucEnterConfiguration musOb = build.build();
+
+
+//                if (!muc.isJoined()) {
+                    muc.join(musOb);
+//                    muc.join(
+//                            KachingMeApplication.getUserID()
+//                                    + KachingMeApplication.getHost(), null,
+//                            history, 30000L);
                     muc.addMessageListener(TempConnectionService.muc_messageListener);
                     muc.addSubjectUpdatedListener(new MUC_SubjectChangeListener(
                             getActivity()));
@@ -512,7 +535,7 @@ public class GroupChatList extends Fragment {
                                         }
                                     })
 
-                                    // Do nothing on no
+                            // Do nothing on no
                             .show();
                 } else {
                     Remove_Meber(Constant.mJid);
@@ -565,7 +588,7 @@ public class GroupChatList extends Fragment {
         try {
             BookmarkManager bm = BookmarkManager
                     .getBookmarkManager(TempConnectionService.connection);
-            bm.removeBookmarkedConference(jid);
+            bm.removeBookmarkedConference(JidCreate.entityBareFrom(jid));
         } catch (Exception e) {
             // ACRA.getErrorReporter().handleException(e);
             // TODO: handle exception
@@ -576,14 +599,14 @@ public class GroupChatList extends Fragment {
 
         try {
 
-            muc.revokeOwnership(KachingMeApplication.getjid());
+            muc.revokeOwnership(JidCreate.from(KachingMeApplication.getjid()));
             String mem_list = null;
             Collection<Affiliate> owner = muc.getOwners();
 
             int i = 0;
             for (Affiliate affiliate : owner) {
                 if (i == 0) {
-                    mem_list = affiliate.getJid();
+                    mem_list = affiliate.getJid().toString();
                 } else {
                     mem_list = mem_list + "," + affiliate.getJid();
                 }
@@ -591,9 +614,9 @@ public class GroupChatList extends Fragment {
                 Log.d("MUC_info", "Owner::" + affiliate.getJid());
             }
 
-            dbAdapter.deleteGroupMembers(muc.getRoom(), jid_mem);
+            dbAdapter.deleteGroupMembers(muc.getRoom().toString(), jid_mem);
 
-            Message msg = new Message(jid_mem, Type.groupchat);
+            Message msg = new Message(JidCreate.from(jid_mem), Type.groupchat);
             // msg.setSubject("Remove");
             msg.setBody(mem_list);
 
@@ -740,7 +763,7 @@ public class GroupChatList extends Fragment {
         try {
             dbAdapter = KachingMeApplication.getDatabaseAdapter();
 
-            Chat_list_GetSet chat_list = dbAdapter.getChat_List(muc.getRoom());
+            Chat_list_GetSet chat_list = dbAdapter.getChat_List(muc.getRoom().toString());
             Form f1 = muc.getConfigurationForm();
             List<String> admin = new ArrayList<String>();
             admin.add(new_admin);
@@ -787,8 +810,8 @@ public class GroupChatList extends Fragment {
 
             try {
 
-                muc.revokeOwnership(KachingMeApplication.getUserID()
-                        + KachingMeApplication.getHost());
+                muc.revokeOwnership(JidCreate.from(KachingMeApplication.getUserID()
+                        + KachingMeApplication.getHost()));
 
 				/* muc.sendConfigurationForm(f1); */
                 String mem_list = null;
@@ -797,7 +820,7 @@ public class GroupChatList extends Fragment {
                 int i = 0;
                 for (Affiliate affiliate : owner) {
                     if (i == 0) {
-                        mem_list = affiliate.getJid();
+                        mem_list = affiliate.getJid().toString();
                     } else {
                         mem_list = mem_list + "," + affiliate.getJid();
                     }
@@ -805,8 +828,8 @@ public class GroupChatList extends Fragment {
                     Log.d("MUC_info", "Owner::" + affiliate.getJid());
                 }
 
-                dbAdapter.updateGroupMembers(muc.getRoom(), new_admin, 1);
-                dbAdapter.deleteGroupMembers(muc.getRoom(),
+                dbAdapter.updateGroupMembers(muc.getRoom().toString(), new_admin, 1);
+                dbAdapter.deleteGroupMembers(muc.getRoom().toString(),
                         KachingMeApplication.getjid());
 
                 Message msg = new Message(muc.getRoom(), Type.groupchat);
@@ -851,15 +874,15 @@ public class GroupChatList extends Fragment {
 	 */
 
     public void Delete_Local() {
-        editor.remove(muc.getRoom());
+        editor.remove(muc.getRoom().toString());
         editor.remove(muc.getRoom() + "_admin");
 
         editor.commit();
 
-        dbAdapter.setDeleteContact(muc.getRoom());
-        dbAdapter.setDeleteMessages(muc.getRoom());
-        dbAdapter.setDeleteChatList(muc.getRoom());
-        dbAdapter.deleteGroup(muc.getRoom());
+        dbAdapter.setDeleteContact(muc.getRoom().toString());
+        dbAdapter.setDeleteMessages(muc.getRoom().toString());
+        dbAdapter.setDeleteChatList(muc.getRoom().toString());
+        dbAdapter.deleteGroup(muc.getRoom().toString());
         try {
             BookmarkManager bm = BookmarkManager.getBookmarkManager(TempConnectionService.connection);
             bm.removeBookmarkedConference(muc.getRoom());
@@ -1043,7 +1066,7 @@ public class GroupChatList extends Fragment {
         protected void onPreExecute() {
 
             Constant.printMsg("GroupChatList GG");
-
+            chatsCount = 0;
             super.onPreExecute();
         }
 
@@ -1068,6 +1091,10 @@ public class GroupChatList extends Fragment {
                         chatData.setJidId(cursor.getString(8));
                         chatData.setKeyId(cursor.getInt(9));
                         chatData.setStatus10(cursor.getString(10));
+
+                        if (cursor.getInt(7) > 0)
+                            chatsCount++;
+
                         chatlist.add(chatData);
 //                            }
                     } while (cursor.moveToNext());
@@ -1091,6 +1118,11 @@ public class GroupChatList extends Fragment {
 //                        chatlist.addAll(s);
 
 //                        mProfileImagesList = new ArrayList<Bitmap>();
+
+                        //  Constant.mChatCounts.set(1,String.valueOf(chatsCount));
+                        //  SliderTesting.updateHedder();
+
+
                         adapter = new UserChatListAdapter(getActivity(), chatlist, false, "group");
                         recyclerViewChat.setAdapter(adapter);
                         GroupChatList.this.adapter.notifyDataSetChanged();
@@ -1114,7 +1146,7 @@ public class GroupChatList extends Fragment {
 
         @Override
         protected void onPreExecute() {
-
+            chatsCount = 0;
             super.onPreExecute();
         }
 
@@ -1140,6 +1172,11 @@ public class GroupChatList extends Fragment {
                         chatData.setJidId(cursor.getString(8));
                         chatData.setKeyId(cursor.getInt(9));
                         chatData.setStatus10(cursor.getString(10));
+
+                        if (cursor.getInt(7) > 0)
+                            chatsCount++;
+
+
                         tempchatlist.add(chatData);
 //                            }
                     } while (cursor.moveToNext());
@@ -1158,6 +1195,9 @@ public class GroupChatList extends Fragment {
             if (result != null) {
                 try {
                     if (tempchatlist.size() > 0) {
+
+//                        Constant.mChatCounts.set(1,String.valueOf(chatsCount));
+//                        SliderTesting.updateHedder();
 
                         chatlist.clear();
                         chatlist.addAll(tempchatlist);
@@ -1222,6 +1262,8 @@ public class GroupChatList extends Fragment {
                         chatData.setJidId(cursor.getString(8));
                         chatData.setKeyId(cursor.getInt(9));
                         chatData.setStatus10(cursor.getString(10));
+
+
                         chatlist.add(chatData);
 //                            }
                     } while (cursor.moveToNext());
@@ -1243,6 +1285,8 @@ public class GroupChatList extends Fragment {
                 try {
 //                    if (chatlist.size() > 0) {
 //                        mProfileImagesList = new ArrayList<Bitmap>();
+
+
                     adapter = new UserChatListAdapter(getActivity(), chatlist, false, "group");
                     recyclerViewChat.setAdapter(adapter);
                     GroupChatList.this.adapter.notifyDataSetChanged();

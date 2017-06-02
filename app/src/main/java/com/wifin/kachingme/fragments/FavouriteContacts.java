@@ -68,11 +68,30 @@ public class FavouriteContacts extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals("contact_update")) {
+                SliderTesting.progressBarRefresh.setVisibility(View.GONE);
+                SliderTesting.mFloatingActionBtnRefresh.setVisibility(View.VISIBLE);
+                SliderTesting.mRightSliderMenu_Add.setVisibility(View.VISIBLE);
+                SliderTesting.mRightSliderMenu_Search.setVisibility(View.VISIBLE);
                 ConcurrentAsyncTaskExecutor.executeConcurrently(new loadContactFromDb());
             }
         }
     };
-
+    BroadcastReceiver contact_firebase_update = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getAction().equals("contact_firebase_update")) {
+//                if (users!=null && users.size()>0){
+//                    contactFastScrollRecyclerView.setHideScrollbar(false);
+//                    adapter = new FavouriteContactsAdapter(mContext, R.layout.contactlistitem, users);
+//                    contactFastScrollRecyclerView.setAdapter(adapter);
+//                    //contactRecyclerView.smoothScrollToPosition(1);
+//                    adapter.notifyDataSetChanged();
+//                }else{
+                    ConcurrentAsyncTaskExecutor.executeConcurrently(new loadContactFromDb());
+//                }
+            }
+        }
+    };
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -154,6 +173,9 @@ public class FavouriteContacts extends Fragment {
             IntentFilter filter = new IntentFilter();
             filter.addAction("contact_update");
             getActivity().registerReceiver(contact_update, filter);
+            IntentFilter filterFirebase = new IntentFilter();
+            filterFirebase.addAction("contact_firebase_update");
+            getActivity().registerReceiver(contact_firebase_update, filterFirebase);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -177,6 +199,8 @@ public class FavouriteContacts extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         getActivity().unregisterReceiver(contact_update);
+        getActivity().unregisterReceiver(contact_firebase_update);
+
         Constant.printMsg("siva test contact onDestroy");
     }
 

@@ -26,6 +26,8 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.EditText;
@@ -92,7 +94,6 @@ import static com.facebook.FacebookSdk.getApplicationContext;
  * Created by siva(wifin) on 21/09/2016
  */
 public class SliderFragment extends Fragment implements View.OnClickListener, OnConnectionFailedListener {
-    // Store instance variables
     private String title;
     private int page;
     EditText sEmailEdit;
@@ -100,21 +101,12 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
     ImageView sInfoImageOne, sInfoImageTwo, sInfoImageThree, sInfoImageFour, sInfoImageFive;
     LinearLayout sSocialMediaLayout, sViewLayout, sInfoLayoutOne, sInfoLayoutTwo, sInfoLayoutThree, sInfoLayoutFour, sInfoLayoutFive;
     static Dbhelper db;
-    //    SignInButton sGPlusLogin;
-    //    LoginButton sFbLogin;
-    //siva
     ImageView sFbImage;
     ImageView sGPlusImage;
     View sOrView1, sOrView2;
     public static boolean fbCheck, gplusCheck, fbGpluscheck;
-    String user_id, username, provider, useremail, image;
     public static final int RC_SIGN_IN = 1992;
-    private boolean mSignInClicked;
-    private boolean mIntentInProgress;
     public static GoogleApiClient mGoogleApiClient;
-    //    private UiLifecycleHelper uiHelper;//siva
-    public static final int WEBVIEW_OFFLINE_CODE = 200;
-    public static final int WEBVIEW_REQUEST_CODE = 100;
     public static CallbackManager mCallbackManager;
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor editor;
@@ -160,18 +152,18 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
                     .requestScopes(new Scope(Scopes.PROFILE))
                     .requestProfile()
                     .requestScopes(new Scope(Scopes.PLUS_LOGIN))
-//                    .requestScopes(new Scope("https://www.googleapis.com/auth/user.birthday.read"))
-//                    .requestScopes (new Scope("https://www.googleapis.com/auth/userinfo.profile"))
+                    //.requestScopes(new Scope("https://www.googleapis.com/auth/user.birthday.read"))
+                    //.requestScopes (new Scope("https://www.googleapis.com/auth/userinfo.profile"))
                     .build();
 
             mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
-//                    .enableAutoManage(getActivity(), this)
+                    //.enableAutoManage(getActivity(), this)
                     .addOnConnectionFailedListener(this)
                     .addApi(Auth.GOOGLE_SIGN_IN_API, gso)
                     .addApi(Plus.API)
                     .addScope(new Scope(Scopes.PROFILE))
-//                    .addScope(new Scope("https://www.googleapis.com/auth/user.birthday.read"))
-//                    .addScope(new Scope("https://www.googleapis.com/auth/userinfo.profile"))
+                    //.addScope(new Scope("https://www.googleapis.com/auth/user.birthday.read"))
+                    //.addScope(new Scope("https://www.googleapis.com/auth/userinfo.profile"))
                     .build();
 
             Constant.printMsg("Logged google client present.......");
@@ -203,7 +195,6 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
 //                                              editor.putString("facebookPicture","http://graph.facebook.com/" + JSONUser.getString("id")+"/picture?type=large");
                                                 editor.commit();
 //                                               profilePicture="http://graph.facebook.com/"+JSONUser.getString("id")+"/picture?type=large";
-
                                                 JSONObject jsonPicture = new JSONObject(JSONUser.getJSONObject("picture").getJSONObject("data").toString());
                                                 Constant.printMsg("Logged json puicture........." + jsonPicture.getString("url"));
 //                                              strProfilePicture=jsonPicture.getString("url");
@@ -254,7 +245,7 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
 
                     @Override
                     public void onCancel() {
-                        Toast.makeText(getActivity(), "Login Cancel", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getActivity(), "Login Failed", Toast.LENGTH_LONG).show();
                         Constant.printMsg("Logged Cancel");
                     }
 
@@ -266,7 +257,6 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
                 });
     }
 
-    // Inflate the view for the fragment based on layout XML
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -282,14 +272,18 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
                 view = inflater.inflate(R.layout.slide_feature, container, false);
                 konsInitialization(view);
                 konsScreenArrange();
+                Constant.printMsg("Swipe konsScreenArrange.......");
                 break;
             case 2:
                 view = inflater.inflate(R.layout.slide_nynm, container, false);
                 nynmScreenArrange(view);
+                hideKeyboard(getActivity());
+                Constant.printMsg("Swipe nynmScreenArrange.......");
                 break;
             case 3:
                 view = inflater.inflate(R.layout.slide_dazz, container, false);
                 dazzScreenArrange(view);
+                Constant.printMsg("Swipe dazzScreenArrangedazzScreenArrange.......");
                 break;
 //            case 4:
 //                view = inflater.inflate(R.layout.slide_6, container, false);
@@ -363,10 +357,6 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
                                     "Please check your internet connection", Toast.LENGTH_LONG).show();
                         }
                     }
-                } else {
-                    //  fetchFrom();
-                    //  startActivity(new Intent(getActivity(), RegisterActivity.class));
-                    //  getActivity().finish();
                 }
                 break;
 
@@ -378,8 +368,8 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
                     LoginManager.getInstance().logInWithReadPermissions(getActivity(),
                             Arrays.asList("public_profile", "email", "user_birthday"));
                 } else {
-                    new AlertUtils().Toast_call(getContext(), getResources().getString(
-                            R.string.no_internet_connection));
+                    Toast.makeText(getActivity(),
+                            "Please check your internet connection", Toast.LENGTH_LONG).show();
                 }
                 break;
 
@@ -391,9 +381,8 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
                 if (Connectivity.isConnected(getContext())) {
                     signIn();
                 } else {
-                    new AlertUtils().Toast_call(getContext(), getResources().getString(
-                            R.string.no_internet_connection));
-                }
+                    Toast.makeText(getActivity(),
+                            "Please check your internet connection", Toast.LENGTH_LONG).show();                }
                 break;
         }
     }
@@ -433,6 +422,17 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
         Constant.typeFace(getActivity(), mKonKrokText);
         Constant.typeFace(getActivity(), mKonKrokDivider);
         Constant.typeFace(getActivity(), mKonKrokRes);
+    }
+
+    public static void hideKeyboard(Activity activity) {
+        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        //Find the currently focused view, so we can grab the correct window token from it.
+        View view = activity.getCurrentFocus();
+        //If no view currently has focus, create a new one, just so we can grab a window token from it
+        if (view == null) {
+            view = new View(activity);
+        }
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
     }
 
     private static void finalSubmissionProcess() {
@@ -546,7 +546,7 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
     }
 
     public static void handleSignInResult(GoogleSignInResult result) {
-        if (result.isSuccess()) {
+        if (result!=null && result.isSuccess()) {
             // Signed in successfully, show authenticated UI.
             GoogleSignInAccount acct = result.getSignInAccount();
             Constant.printMsg("Logged gplus acct......" + result + "...." + acct);
@@ -593,6 +593,15 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
 
         } else {
             Constant.printMsg("Logged gplus acct..else...." + result);
+            Toast.makeText(getApplicationContext(),"Login Failed",Toast.LENGTH_SHORT).show();
+
+            try {
+                Constant.printMsg("Logged gplus acct 12..else...." + result.getStatus());
+                Constant.printMsg("Logged gplus acct. 23.else...." + result.isSuccess());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
             // Signed out, show unauthenticated UI.
             // updateUI(false);
         }
@@ -624,58 +633,32 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
     @Override
     public void onResume() {
         super.onResume();
-//        uiHelper.onResume();
-        Constant.printMsg("Logged fragment onResume called...");
     }
 
     @Override
     public void onPause() {
         super.onPause();
-//        uiHelper.onPause();
     }
 
     @Override
     public void onStart() {
         super.onStart();
-//        OptionalPendingResult<GoogleSignInResult> opr = Auth.GoogleSignInApi.silentSignIn(mGoogleApiClient);
-//        if (opr.isDone()) {
-//            // If the user's cached credentials are valid, the OptionalPendingResult will be "done"
-//            // and the GoogleSignInResult will be available instantly.
-//            Constant.printMsg("Logged fragment onStart Got cached sign-in...");
-//            GoogleSignInResult result = opr.get();
-//            handleSignInResult(result);
-//        } else {
-//            // If the user has not previously signed in on this device or the sign-in has expired,
-//            // this asynchronous branch will attempt to sign in the user silently.  Cross-device
-//            // single sign-on will occur in this branch.
-//            opr.setResultCallback(new ResultCallback<GoogleSignInResult>() {
-//                @Override
-//                public void onResult(GoogleSignInResult googleSignInResult) {
-//                    Constant.printMsg("Logged fragment onStart Got googleSignInResult sign-in..."+googleSignInResult);
-//                    handleSignInResult(googleSignInResult);
-//                }
-//            });
-//        }
+
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        Constant.printMsg("Logged fragment onstop called...");
-//        mGoogleApiClient.stopAutoManage(getActivity());
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-//        uiHelper.onDestroy();
-        Constant.printMsg("Logged fragment onDestroy ...");
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-//        uiHelper.onSaveInstanceState(outState);
     }
 
     private void loginProcess(View view) {
@@ -712,42 +695,6 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
             }
         });
     }
-
-
-//    private void checkMailUsingVolley() {
-////        String tag_json_obj = "json_obj_req";
-//
-//        String url = KachingMeConfig.Email_Verification +"emailid="+ Constant.manualmail;
-//
-//        final ProgressDialog pDialog = new ProgressDialog(getActivity());
-//        pDialog.setMessage("Loading...");
-//        pDialog.show();
-//
-//        StringRequest jsonObjReq = new StringRequest(Request.Method.GET,
-//                url, null,
-//                new Response.Listener<StringRequest>() {
-//
-//                    @Override
-//                    public void onResponse(String response) {
-//                        pDialog.hide();
-//                        Constant.printMsg("response..volley......"+response);
-//                    }
-//                }, new Response.ErrorListener() {
-//
-//            @Override
-//            public void onErrorResponse(VolleyError error) {
-//                // hide the progress dialog
-//                pDialog.hide();
-//                Constant.printMsg("response..volley....error.." + error);
-//            }
-//        });
-//        RequestQueue queue = Volley.newRequestQueue(getActivity());
-//        jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(10000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-//                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-//        jsonObjReq.setShouldCache(false);
-//        queue.getCache().remove(url);
-//        queue.add(jsonObjReq);
-//    }
 
     private static class getBitmapFromURL extends AsyncTask<String, Void, Bitmap> {
         @Override
@@ -832,6 +779,8 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
                         finalSubmissionProcess();
                     } else {
                         Constant.printMsg("Logged Gplu and fb intent");
+                        Constant.loginOtp=null;
+                        Constant.Otp=null;
                         activity.startActivity(new Intent(getApplicationContext(), RegisterActivity.class));
                         activity.finish();
                     }
@@ -856,7 +805,7 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
                 }
             } else {
                 Toast.makeText(activity,
-                        "Server Down Try Again Later", Toast.LENGTH_LONG)
+                        "Network Error.! Try Again Later.", Toast.LENGTH_LONG)
                         .show();
             }
 
@@ -895,41 +844,6 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
         } finally {
             db.close();
         }
-    }
-
-    public void fetchFrom() {
-
-        String namet = null, mailt = null, phtt = null;
-
-        Dbhelper db = new Dbhelper(getActivity());
-        Cursor c = null;
-        try {
-            c = db.open()
-                    .getDatabaseObj()
-                    .query(Dbhelper.TABLE_SOCIAL, null, null, null, null, null,
-                            null);
-            int nm = c.getColumnIndex("name");
-            int ml = c.getColumnIndex("mail");
-            int ph = c.getColumnIndex("photo");
-
-            Constant.printMsg("The pending cart list in db ::::"
-                    + c.getCount());
-            while (c.moveToNext()) {
-                namet = c.getString(nm);
-                mailt = c.getString(ml);
-                phtt = c.getString(ph);
-
-            }
-        } catch (SQLException e) {
-
-            Constant.printMsg("Sql exception in pending shop details ::::"
-                    + e.toString());
-        } finally {
-            c.close();
-            db.close();
-        }
-        Constant.profilename = namet;
-        Constant.printMsg("Google Plus Test222");
     }
 
     private void nynmScreenArrange(View view) {
@@ -1152,7 +1066,6 @@ public class SliderFragment extends Fragment implements View.OnClickListener, On
             mKonKrokRes.setTextSize(10);
         }
     }
-
 
     private void loginScreenArrange() {
         DisplayMetrics displayMetrics = new DisplayMetrics();

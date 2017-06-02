@@ -310,73 +310,91 @@ public class NewGroup_MemberList extends Fragment {
 
                 if (Connectivity.isOnline(getActivity())) {
 
-                    if(Connectivity.isTempConnection()) {
 
-                        Constant.printMsg("Group Subject::"
-                                + NewGroup_Info.txt_subject.getText().toString());
-                        Constant.printMsg("Group Type::" + NewGroup_Info.group_type);
-                        Constant.printMsg("Group Question::"
-                                + NewGroup_Info.txt_questions.getText().toString());
 
-                        for (String string : NewGroup_Info.ar_list_option) {
+                    if(TempConnectionService.connection!=null) {
 
-                            Log.d(TAG, "Group Question Options::" + string);
-                        }
+                        Constant.printMsg("Connection satisfication"
+                                + Connectivity.isTempConnection());
 
-                        if (NewGroup_Info.txt_subject.getText().toString().trim().length() == 0) {
-                            new AlertManager().showAlertDialog(
-                                    getActivity(),
-                                    getResources().getString(
-                                            R.string.please_enter_room_subject), true);
-                        } else if (NewGroup_Info.group_type == -1) {
-                            new AlertManager().showAlertDialog(
-                                    getActivity(),
-                                    getResources().getString(
-                                            R.string.please_select_group_type), true);
-                        } else if (NewGroup_Info.group_type > 0
-                                && NewGroup_Info.txt_questions.getText().toString().trim()
-                                .length() == 0) {
-                            new AlertManager().showAlertDialog(
-                                    getActivity(),
-                                    getResources().getString(
-                                            R.string.please_enter_group_question), true);
-                        } else if (NewGroup_Info.group_type >= 4
-                                && (NewGroup_Info.ar_list_option.size() == 0 || NewGroup_Info.ar_list_option
-                                .size() == 1)) {
-                            new AlertManager().showAlertDialog(
-                                    getActivity(),
-                                    getResources().getString(
-                                            R.string.please_give_more_than_two_options),
-                                    true);
-                        } else {
+                        if(TempConnectionService.connection.isAuthenticated() && TempConnectionService.connection.isConnected()) {
 
-                            // new CreateRoom().execute();\
+                            Constant.printMsg("Group Subject::"
+                                    + NewGroup_Info.txt_subject.getText().toString());
+                            Constant.printMsg("Group Type::" + NewGroup_Info.group_type);
+                            Constant.printMsg("Group Question::"
+                                    + NewGroup_Info.txt_questions.getText().toString());
 
-                            try {
-                                if (selected_users.size() > 0) {
-                                    try {
-                                        progressdialog.show();
-                                    } catch (Exception e) {
+                            for (String string : NewGroup_Info.ar_list_option) {
+
+                                Log.d(TAG, "Group Question Options::" + string);
+                            }
+
+                            if (NewGroup_Info.txt_subject.getText().toString().trim().length() == 0) {
+                                new AlertManager().showAlertDialog(
+                                        getActivity(),
+                                        getResources().getString(
+                                                R.string.please_enter_room_subject), true);
+                            } else if (NewGroup_Info.group_type == -1) {
+                                new AlertManager().showAlertDialog(
+                                        getActivity(),
+                                        getResources().getString(
+                                                R.string.please_select_group_type), true);
+                            } else if (NewGroup_Info.group_type > 0
+                                    && NewGroup_Info.txt_questions.getText().toString().trim()
+                                    .length() == 0) {
+                                new AlertManager().showAlertDialog(
+                                        getActivity(),
+                                        getResources().getString(
+                                                R.string.please_enter_group_question), true);
+                            } else if (NewGroup_Info.group_type >= 4
+                                    && (NewGroup_Info.ar_list_option.size() == 0 || NewGroup_Info.ar_list_option
+                                    .size() == 1)) {
+                                new AlertManager().showAlertDialog(
+                                        getActivity(),
+                                        getResources().getString(
+                                                R.string.please_give_more_than_two_options),
+                                        true);
+                            } else {
+
+                                // new CreateRoom().execute();\
+
+                                try {
+                                    if (selected_users.size() > 0) {
+                                        try {
+                                            progressdialog.show();
+                                        } catch (Exception e) {
+                                        }
+                                        room_subject = NewGroup_Info.txt_subject.getText().toString()
+                                                .trim();
+
+                                        if (room_subject != null) {
+                                            Intent i = new Intent(getActivity(), Group_CreateIntentService.class);
+                                            i.putExtra("room_subject", room_subject);
+                                            getActivity().startService(i);
+                                        }
+                                        Constant.printMsg("group createddd ::::::::::");
+                                    } else {
+                                        Constant.printMsg("group nottt createddd ::::::::::");
+                                        Toast.makeText(getActivity(),
+                                                "At least 1 contact must be selected",
+                                                Toast.LENGTH_SHORT).show();
                                     }
-                                    room_subject = NewGroup_Info.txt_subject.getText().toString()
-                                            .trim();
+                                } catch (Exception e) {
 
-                                    if (room_subject != null) {
-                                        Intent i = new Intent(getActivity(), Group_CreateIntentService.class);
-                                        i.putExtra("room_subject", room_subject);
-                                        getActivity().startService(i);
-                                    }
-                                    Constant.printMsg("group createddd ::::::::::");
-                                } else {
-                                    Constant.printMsg("group nottt createddd ::::::::::");
-                                    Toast.makeText(getActivity(),
-                                            "At least 1 contact must be selected",
-                                            Toast.LENGTH_SHORT).show();
                                 }
+
+                            }
+                        }else
+                        {
+                            try {
+                                getActivity().stopService(new Intent(getActivity(), TempConnectionService.class));
+                                GlobalBroadcast.stopService(getActivity());
+                                getActivity().startService(new Intent(getActivity(), TempConnectionService.class));
                             } catch (Exception e) {
 
                             }
-
+                            new AlertUtils().Toast_call(getActivity(),"Please check your internet connection and try again later.");
                         }
                     }else
                     {
@@ -387,7 +405,7 @@ public class NewGroup_MemberList extends Fragment {
                         } catch (Exception e) {
 
                         }
-                        new AlertUtils().Toast_call(getActivity(),"Something went wrong. Try again later.");
+                        new AlertUtils().Toast_call(getActivity(),"Please check your internet connection and try again later.");
                     }
 
                 } else {
@@ -506,7 +524,7 @@ public class NewGroup_MemberList extends Fragment {
 
                             if (users.get(j).getJid().equals(selected[i])) {
                                 selected_users.add(users.get(j));
-                                select_adapter.notifyDataSetChanged();
+                             //   select_adapter.notifyDataSetChanged();
                                 select_adapter = new UserListAdapter(
                                         getActivity(),
                                         R.layout.add_grm_mem_item,
@@ -591,7 +609,7 @@ public class NewGroup_MemberList extends Fragment {
             addGrmLayout.gravity = Gravity.CENTER;
             grmLayout.setLayoutParams(addGrmLayout);
             grmLayout.setGravity(Gravity.CENTER | Gravity.LEFT);
-
+//
             FrameLayout.LayoutParams circularImage = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -840,349 +858,349 @@ public class NewGroup_MemberList extends Fragment {
 
     }
 
-    private class CreateRoom extends AsyncTask<String, String, String> {
-
-        String mem_list;
-        JSONObject main_job = new JSONObject();
-        JSONObject json_tags = new JSONObject();
-        MessageGetSet msg = new MessageGetSet();
-        String icon_url = "";
-
-        @Override
-        protected void onPreExecute() {
-
-            progressdialog.show();
-
-            room_subject = NewGroup_Info.txt_subject.getText().toString()
-                    .trim();
-            super.onPreExecute();
-
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            Date timestamp = new Date();
-            int k = 0;
-            String question_options = null;
-            for (String string : NewGroup_Info.ar_list_option) {
-                if (k == 0) {
-                    question_options = string;
-                } else {
-                    question_options = question_options + "," + string;
-                }
-                k++;
-            }
-
-            try {
-
-                json_tags.put(
-                        Constant.GROUP_ADMIN,
-                        KachingMeApplication.getUserID()
-                                + KachingMeApplication.getHost());
-                json_tags.put(Constant.GROUP_TYPE, ""
-                        + NewGroup_Info.group_type);
-                json_tags.put(Constant.GROUP_TOPIC,
-                        NewGroup_Info.txt_questions.getText());
-                json_tags.put(Constant.TOPIC_OPTION, question_options);
-                json_tags.put(Constant.TIMESTAMP,
-                        "" + System.currentTimeMillis() / 1000L);
-                main_job.put("data", json_tags);
-                Log.d(TAG, "JSON String::" + main_job.toString());
-            } catch (JSONException e1) {
-
-                e1.printStackTrace();
-            }
-            Constant.printMsg("create room ::::: @conference."
-                    + KachingMeApplication.getHost_12());
-            grp_id = KachingMeApplication.getUserID() + "-" + timestamp.getTime()
-                    + "@conference." + KachingMeApplication.getHost_12();
-
-            // muc = TempConnectionEstablishment.MUC_MANAGER
-            // .getMultiUserChat(grp_id);
-
-            MultiUserChatManager multiUserChatManager = MultiUserChatManager
-                    .getInstanceFor(TempConnectionService.connection);
-
-            /* = multiUserChatManager
-                    .getMultiUserChat(grp_id);*/
-
-            MultiUserChat multiUserChat = TempConnectionService.MUC_MANAGER.getMultiUserChat(grp_id);
-
-            // Constant.printMsg("BM Group ID::" + grp_id + " Subject::" +
-            // room_subject);
-
-            try {
-
-                Constant.printMsg("FFFFFFFFFFFFF1");
-
-                multiUserChat.create(room_subject);
-                Constant.printMsg("FFFFFFFFFFFFF2");
-
-                Form form = multiUserChat.getConfigurationForm();
-                Form submitForm = form.createAnswerForm();
-                submitForm.setAnswer("muc#roomconfig_roomname", room_subject);
-                submitForm.setAnswer("muc#roomconfig_persistentroom", true);
-                submitForm.setAnswer("muc#roomconfig_membersonly", true);
-                submitForm.setAnswer("muc#roomconfig_allowinvites", true);
-                submitForm.setAnswer("muc#roomconfig_moderatedroom", true);
-                submitForm.setAnswer("muc#roomconfig_changesubject", true);
-                submitForm.setAnswer("allow_query_users", true);
-                submitForm.setAnswer("public_list", true);
-                List<String> admin = new ArrayList<String>();
-                admin.add(KachingMeApplication.getjid());
-                submitForm.setAnswer("muc#roomconfig_roomdesc",
-                        main_job.toString());
-                multiUserChat.sendConfigurationForm(submitForm);
-                multiUserChat.join(KachingMeApplication.getjid());
-
-                SharedPreferences sp_1 = getActivity().getSharedPreferences(
-                        KachingMeApplication.getPereference_label(),
-                        Activity.MODE_PRIVATE);
-                String Bookmarked_time = Utils.getBookmarkTime();
-                Editor editor = sp_1.edit();
-                editor.putString(Constant.LAST_REFRESH_TIME + "_" + grp_id,
-                        Bookmarked_time);
-                editor.commit();
-
-                BookmarkManager bm = BookmarkManager
-                        .getBookmarkManager(TempConnectionService.connection);
-
-                bm.addBookmarkedConference(room_subject, grp_id, true,
-                        Utils.getBookmarkTime(), "");
-
-            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-                e.printStackTrace();
-
-                Constant.printMsg("FFFFFFFFFFFFF3" + e.toString());
-            }
-
-            try {
-                if (multiUserChat.isJoined()) {
-
-                    Constant.printMsg("FFFFFFFFFFFFF4" + multiUserChat.isJoined());
-                    Log.d("Room",
-                            "Selected Member size::" + selected_users.size());
-
-                    group_partcipant_getset = new GroupParticipantGetSet();
-                    group_partcipant_getset.setAdmin(1);
-                    group_partcipant_getset.setGjid(grp_id);
-                    group_partcipant_getset.setJid(KachingMeApplication.getjid());
-                    dbAdapter.addGroupMembers(group_partcipant_getset);
-
-                    for (int j = 0; j < selected_users.size(); j++) {
-
-                        if (j == 0) {
-                            mem_list = selected_users.get(j).getJid();
-                        } else {
-                            mem_list = mem_list + ","
-                                    + selected_users.get(j).getJid();
-                        }
-
-                        group_partcipant_getset = new GroupParticipantGetSet();
-                        group_partcipant_getset.setAdmin(0);
-                        group_partcipant_getset.setGjid(grp_id);
-                        group_partcipant_getset.setJid(selected_users.get(j)
-                                .getJid());
-                        dbAdapter.addGroupMembers(group_partcipant_getset);
-
-                        multiUserChat.grantOwnership(selected_users.get(j)
-                                .getJid().toString());
-                    }
-
-                    for (int i = 0; i < selected_users.size(); i++) {
-
-                        try {
-
-                            multiUserChat.invite(
-                                    selected_users.get(i).getJid(), "");
-                            Log.d("MUC Create", "Invited Memebrs::"
-                                    + selected_users.get(i).getJid());
-                        } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-                            e.printStackTrace();
-                            // TODO: handle exception
-                        }
-
-                    }
-
-                }
-
-            } catch (SmackException e) {
-                e.printStackTrace();
-                // TODO: handle exception
-            } catch (XMPPErrorException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            msg.setData(room_subject);
-            msg.setKey_from_me(0);
-            msg.setKey_id("" + new Date().getTime());
-            msg.setKey_remote_jid(grp_id);
-            msg.setMedia_wa_type("9");
-            msg.setNeeds_push(0);
-            msg.setStatus(0);
-            msg.setTimestamp(new Date().getTime());
-            msg.setRemote_resource(KachingMeApplication.getUserID()
-                    + KachingMeApplication.getHost());
-            dbAdapter.setInsertMessages(msg);
-
-            try {
-                SharedPreferences sp = getActivity().getSharedPreferences(
-                        KachingMeApplication.getPereference_label(),
-                        Activity.MODE_PRIVATE);
-                Editor editor = sp.edit();
-                editor.putString(grp_id,
-                        mem_list + "," + KachingMeApplication.getUserID()
-                                + KachingMeApplication.getHost());
-                editor.putString(
-                        grp_id + "_admin",
-                        KachingMeApplication.getUserID()
-                                + KachingMeApplication.getHost());
-                editor.putString(grp_id + "_group_type",
-                        json_tags.getString(Constant.GROUP_TYPE));
-                editor.putString(grp_id + "_group_question",
-                        json_tags.getString(Constant.GROUP_TOPIC));
-
-                if (json_tags.getString(Constant.GROUP_TYPE).equals("4")
-                        || json_tags.getString(Constant.GROUP_TYPE)
-                        .equals("5")) {
-                    editor.putString(grp_id + "_group_question_options",
-                            json_tags.getString(Constant.TOPIC_OPTION));
-                }
-                editor.commit();
-            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-                e.printStackTrace();
-            }
-            // mBoundService.setMUC_Listeners(muc);
-            multiUserChat
-                    .addMessageListener(TempConnectionService.muc_messageListener);
-            multiUserChat
-                    .addSubjectUpdatedListener(new MUC_SubjectChangeListener(
-                            getActivity()));
-
-            boolean success = (new File(KachingMeApplication.PROFILE_PIC_DIR))
-                    .mkdirs();
-            RequestParams request_params = new RequestParams();
-            FileOutputStream fos;
-            try {
-                if (NewGroup_Info.img_byte == null) {
-                    NewGroup_Info.img_byte = new Utils()
-                            .getGroupRandomeIcon(getActivity());
-
-                }
-
-                fos = new FileOutputStream(new File(
-                        KachingMeApplication.PROFILE_PIC_DIR + grp_id.split("@")[0]
-                                + ".png"));
-                fos.write(NewGroup_Info.img_byte);
-                fos.close();
-                request_params.put("uploaded_file", new File(
-                        KachingMeApplication.PROFILE_PIC_DIR + grp_id.split("@")[0]
-                                + ".png"));
-                request_params.put("filename", grp_id.split("@")[0]);
-
-
-                icon_url = KachingMeConfig.UPLOAD_GROUP_ICON_FOLDER_PNG_PHP + grp_id.split("@")[0] + ".png";
-
-				/*
-                 * byte[] randome=new
-				 * Utils().getGroupRandomeIcon(getActivity()); Bitmap myBitmap =
-				 * BitmapFactory.decodeByteArray( randome, 0, randome.length);
-				 * FileOutputStream stream = new FileOutputStream(new
-				 * File(KachingMeApplication
-				 * .PROFILE_PIC_DIR+grp_id.split("@")[0]+".png"));
-				 *
-				 * ByteArrayOutputStream outstream = new
-				 * ByteArrayOutputStream();
-				 * myBitmap.compress(Bitmap.CompressFormat.PNG, 85, outstream);
-				 * byte[] byteArray = outstream.toByteArray();
-				 *
-				 * stream.write(byteArray); stream.close();
-				 */
-
-            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-
-            AsyncHttpClient client = new AsyncHttpClient();
-            client.setTimeout(60000);
-            client.post(KachingMeConfig.UPLOAD_GROUP_ICON_PHP,
-                    request_params,
-                    new AsyncHttpResponseHandler(Looper.getMainLooper()) {
-
-                        @Override
-                        public void onFailure(int arg0, Header[] arg1,
-                                              byte[] arg2, Throwable arg3) {
-                            // TODO Auto-generated method stub
-//                            Log.d(TAG, "Group icon onFailure::"
+//    private class CreateRoom extends AsyncTask<String, String, String> {
+//
+//        String mem_list;
+//        JSONObject main_job = new JSONObject();
+//        JSONObject json_tags = new JSONObject();
+//        MessageGetSet msg = new MessageGetSet();
+//        String icon_url = "";
+//
+//        @Override
+//        protected void onPreExecute() {
+//
+//            progressdialog.show();
+//
+//            room_subject = NewGroup_Info.txt_subject.getText().toString()
+//                    .trim();
+//            super.onPreExecute();
+//
+//        }
+//
+//        @Override
+//        protected String doInBackground(String... params) {
+//            Date timestamp = new Date();
+//            int k = 0;
+//            String question_options = null;
+//            for (String string : NewGroup_Info.ar_list_option) {
+//                if (k == 0) {
+//                    question_options = string;
+//                } else {
+//                    question_options = question_options + "," + string;
+//                }
+//                k++;
+//            }
+//
+//            try {
+//
+//                json_tags.put(
+//                        Constant.GROUP_ADMIN,
+//                        KachingMeApplication.getUserID()
+//                                + KachingMeApplication.getHost());
+//                json_tags.put(Constant.GROUP_TYPE, ""
+//                        + NewGroup_Info.group_type);
+//                json_tags.put(Constant.GROUP_TOPIC,
+//                        NewGroup_Info.txt_questions.getText());
+//                json_tags.put(Constant.TOPIC_OPTION, question_options);
+//                json_tags.put(Constant.TIMESTAMP,
+//                        "" + System.currentTimeMillis() / 1000L);
+//                main_job.put("data", json_tags);
+//                Log.d(TAG, "JSON String::" + main_job.toString());
+//            } catch (JSONException e1) {
+//
+//                e1.printStackTrace();
+//            }
+//            Constant.printMsg("create room ::::: @conference."
+//                    + KachingMeApplication.getHost_12());
+//            grp_id = KachingMeApplication.getUserID() + "-" + timestamp.getTime()
+//                    + "@conference." + KachingMeApplication.getHost_12();
+//
+//            // muc = TempConnectionEstablishment.MUC_MANAGER
+//            // .getMultiUserChat(grp_id);
+//
+//            MultiUserChatManager multiUserChatManager = MultiUserChatManager
+//                    .getInstanceFor(TempConnectionService.connection);
+//
+//            /* = multiUserChatManager
+//                    .getMultiUserChat(grp_id);*/
+//
+//            MultiUserChat multiUserChat = TempConnectionService.MUC_MANAGER.getMultiUserChat(grp_id);
+//
+//            // Constant.printMsg("BM Group ID::" + grp_id + " Subject::" +
+//            // room_subject);
+//
+//            try {
+//
+//                Constant.printMsg("FFFFFFFFFFFFF1");
+//
+//                multiUserChat.create(room_subject);
+//                Constant.printMsg("FFFFFFFFFFFFF2");
+//
+//                Form form = multiUserChat.getConfigurationForm();
+//                Form submitForm = form.createAnswerForm();
+//                submitForm.setAnswer("muc#roomconfig_roomname", room_subject);
+//                submitForm.setAnswer("muc#roomconfig_persistentroom", true);
+//                submitForm.setAnswer("muc#roomconfig_membersonly", true);
+//                submitForm.setAnswer("muc#roomconfig_allowinvites", true);
+//                submitForm.setAnswer("muc#roomconfig_moderatedroom", true);
+//                submitForm.setAnswer("muc#roomconfig_changesubject", true);
+//                submitForm.setAnswer("allow_query_users", true);
+//                submitForm.setAnswer("public_list", true);
+//                List<String> admin = new ArrayList<String>();
+//                admin.add(KachingMeApplication.getjid());
+//                submitForm.setAnswer("muc#roomconfig_roomdesc",
+//                        main_job.toString());
+//                multiUserChat.sendConfigurationForm(submitForm);
+//                multiUserChat.join(KachingMeApplication.getjid());
+//
+//                SharedPreferences sp_1 = getActivity().getSharedPreferences(
+//                        KachingMeApplication.getPereference_label(),
+//                        Activity.MODE_PRIVATE);
+//                String Bookmarked_time = Utils.getBookmarkTime();
+//                Editor editor = sp_1.edit();
+//                editor.putString(Constant.LAST_REFRESH_TIME + "_" + grp_id,
+//                        Bookmarked_time);
+//                editor.commit();
+//
+//                BookmarkManager bm = BookmarkManager
+//                        .getBookmarkManager(TempConnectionService.connection);
+//
+//                bm.addBookmarkedConference(room_subject, grp_id, true,
+//                        Utils.getBookmarkTime(), "");
+//
+//            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+//                e.printStackTrace();
+//
+//                Constant.printMsg("FFFFFFFFFFFFF3" + e.toString());
+//            }
+//
+//            try {
+//                if (multiUserChat.isJoined()) {
+//
+//                    Constant.printMsg("FFFFFFFFFFFFF4" + multiUserChat.isJoined());
+//                    Log.d("Room",
+//                            "Selected Member size::" + selected_users.size());
+//
+//                    group_partcipant_getset = new GroupParticipantGetSet();
+//                    group_partcipant_getset.setAdmin(1);
+//                    group_partcipant_getset.setGjid(grp_id);
+//                    group_partcipant_getset.setJid(KachingMeApplication.getjid());
+//                    dbAdapter.addGroupMembers(group_partcipant_getset);
+//
+//                    for (int j = 0; j < selected_users.size(); j++) {
+//
+//                        if (j == 0) {
+//                            mem_list = selected_users.get(j).getJid();
+//                        } else {
+//                            mem_list = mem_list + ","
+//                                    + selected_users.get(j).getJid();
+//                        }
+//
+//                        group_partcipant_getset = new GroupParticipantGetSet();
+//                        group_partcipant_getset.setAdmin(0);
+//                        group_partcipant_getset.setGjid(grp_id);
+//                        group_partcipant_getset.setJid(selected_users.get(j)
+//                                .getJid());
+//                        dbAdapter.addGroupMembers(group_partcipant_getset);
+//
+//                        multiUserChat.grantOwnership(selected_users.get(j)
+//                                .getJid().toString());
+//                    }
+//
+//                    for (int i = 0; i < selected_users.size(); i++) {
+//
+//                        try {
+//
+//                            multiUserChat.invite(
+//                                    selected_users.get(i).getJid(),"");
+//                            Log.d("MUC Create", "Invited Memebrs::"
+//                                    + selected_users.get(i).getJid());
+//                        } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+//                            e.printStackTrace();
+//                            // TODO: handle exception
+//                        }
+//
+//                    }
+//
+//                }
+//
+//            } catch (SmackException e) {
+//                e.printStackTrace();
+//                // TODO: handle exception
+//            } catch (XMPPErrorException e) {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
+//
+//            msg.setData(room_subject);
+//            msg.setKey_from_me(0);
+//            msg.setKey_id("" + new Date().getTime());
+//            msg.setKey_remote_jid(grp_id);
+//            msg.setMedia_wa_type("9");
+//            msg.setNeeds_push(0);
+//            msg.setStatus(0);
+//            msg.setTimestamp(new Date().getTime());
+//            msg.setRemote_resource(KachingMeApplication.getUserID()
+//                    + KachingMeApplication.getHost());
+//            dbAdapter.setInsertMessages(msg);
+//
+//            try {
+//                SharedPreferences sp = getActivity().getSharedPreferences(
+//                        KachingMeApplication.getPereference_label(),
+//                        Activity.MODE_PRIVATE);
+//                Editor editor = sp.edit();
+//                editor.putString(grp_id,
+//                        mem_list + "," + KachingMeApplication.getUserID()
+//                                + KachingMeApplication.getHost());
+//                editor.putString(
+//                        grp_id + "_admin",
+//                        KachingMeApplication.getUserID()
+//                                + KachingMeApplication.getHost());
+//                editor.putString(grp_id + "_group_type",
+//                        json_tags.getString(Constant.GROUP_TYPE));
+//                editor.putString(grp_id + "_group_question",
+//                        json_tags.getString(Constant.GROUP_TOPIC));
+//
+//                if (json_tags.getString(Constant.GROUP_TYPE).equals("4")
+//                        || json_tags.getString(Constant.GROUP_TYPE)
+//                        .equals("5")) {
+//                    editor.putString(grp_id + "_group_question_options",
+//                            json_tags.getString(Constant.TOPIC_OPTION));
+//                }
+//                editor.commit();
+//            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+//                e.printStackTrace();
+//            }
+//            // mBoundService.setMUC_Listeners(muc);
+//            multiUserChat
+//                    .addMessageListener(TempConnectionService.muc_messageListener);
+//            multiUserChat
+//                    .addSubjectUpdatedListener(new MUC_SubjectChangeListener(
+//                            getActivity()));
+//
+//            boolean success = (new File(KachingMeApplication.PROFILE_PIC_DIR))
+//                    .mkdirs();
+//            RequestParams request_params = new RequestParams();
+//            FileOutputStream fos;
+//            try {
+//                if (NewGroup_Info.img_byte == null) {
+//                    NewGroup_Info.img_byte = new Utils()
+//                            .getGroupRandomeIcon(getActivity());
+//
+//                }
+//
+//                fos = new FileOutputStream(new File(
+//                        KachingMeApplication.PROFILE_PIC_DIR + grp_id.split("@")[0]
+//                                + ".png"));
+//                fos.write(NewGroup_Info.img_byte);
+//                fos.close();
+//                request_params.put("uploaded_file", new File(
+//                        KachingMeApplication.PROFILE_PIC_DIR + grp_id.split("@")[0]
+//                                + ".png"));
+//                request_params.put("filename", grp_id.split("@")[0]);
+//
+//
+//                icon_url = KachingMeConfig.UPLOAD_GROUP_ICON_FOLDER_PNG_PHP + grp_id.split("@")[0] + ".png";
+//
+//				/*
+//                 * byte[] randome=new
+//				 * Utils().getGroupRandomeIcon(getActivity()); Bitmap myBitmap =
+//				 * BitmapFactory.decodeByteArray( randome, 0, randome.length);
+//				 * FileOutputStream stream = new FileOutputStream(new
+//				 * File(KachingMeApplication
+//				 * .PROFILE_PIC_DIR+grp_id.split("@")[0]+".png"));
+//				 *
+//				 * ByteArrayOutputStream outstream = new
+//				 * ByteArrayOutputStream();
+//				 * myBitmap.compress(Bitmap.CompressFormat.PNG, 85, outstream);
+//				 * byte[] byteArray = outstream.toByteArray();
+//				 *
+//				 * stream.write(byteArray); stream.close();
+//				 */
+//
+//            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
+//
+//            AsyncHttpClient client = new AsyncHttpClient();
+//            client.setTimeout(60000);
+//            client.post(KachingMeConfig.UPLOAD_GROUP_ICON_PHP,
+//                    request_params,
+//                    new AsyncHttpResponseHandler(Looper.getMainLooper()) {
+//
+//                        @Override
+//                        public void onFailure(int arg0, Header[] arg1,
+//                                              byte[] arg2, Throwable arg3) {
+//                            // TODO Auto-generated method stub
+////                            Log.d(TAG, "Group icon onFailure::"
+////                                    + new String(arg2));
+//
+//                        }
+//
+//                        @Override
+//                        public void onSuccess(int arg0, Header[] arg1,
+//                                              byte[] arg2) {
+//                            // TODO Auto-generated method stub
+//                            Log.d(TAG, "Group icon onSuccess::"
 //                                    + new String(arg2));
-
-                        }
-
-                        @Override
-                        public void onSuccess(int arg0, Header[] arg1,
-                                              byte[] arg2) {
-                            // TODO Auto-generated method stub
-                            Log.d(TAG, "Group icon onSuccess::"
-                                    + new String(arg2));
-                        }
-
-                    });
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
-            NewGroup_Info.img_byte = null;
-
-            DatabaseHelper dbadapter = KachingMeApplication.getDatabaseAdapter();
-            int msg_id = dbadapter.getLastMsgid_chat_grp(grp_id);
-
-            try {
-
-                if (!dbadapter.isjidExist(grp_id)) {
-
-                    ContactsGetSet contact = new ContactsGetSet();
-                    contact.setIs_niftychat_user(1);
-                    contact.setJid(grp_id);
-                    contact.setPhone_label(room_subject);
-                    contact.setDisplay_name(room_subject);
-                    contact.setPhoto_ts(new Utils()
-                            .getGroupRandomeIcon(getActivity()));
-                    dbadapter.insertContacts(contact);
-                    dbadapter.setInsertChat_list(grp_id, msg_id,
-                            json_tags.getString(Constant.TIMESTAMP));
-                }
-            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-                // TODO: handle exception
-            }
-
-            SendWeb_Group.Add_Group_on_web(getActivity(), grp_id, room_subject,
-                    KachingMeApplication.getjid(),
-                    mem_list + "," + KachingMeApplication.getUserID()
-                            + KachingMeApplication.getHost(),
-                    "" + msg.getTimestamp() / 1000, icon_url);
-
-            Intent login_broadcast = new Intent("chat");
-            login_broadcast.putExtra("jid", "" + grp_id);
-            getActivity().sendBroadcast(login_broadcast);
-            try {
-                progressdialog.cancel();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            Constant.mFromMemberList = true;
-            Intent i = new Intent(getActivity(), SliderTesting.class);
-            startActivity(i);
-            getActivity().finish();
-
-        }
-
-    }
+//                        }
+//
+//                    });
+//
+//            return null;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String result) {
+//            // TODO Auto-generated method stub
+//            super.onPostExecute(result);
+//            NewGroup_Info.img_byte = null;
+//
+//            DatabaseHelper dbadapter = KachingMeApplication.getDatabaseAdapter();
+//            int msg_id = dbadapter.getLastMsgid_chat_grp(grp_id);
+//
+//            try {
+//
+//                if (!dbadapter.isjidExist(grp_id)) {
+//
+//                    ContactsGetSet contact = new ContactsGetSet();
+//                    contact.setIs_niftychat_user(1);
+//                    contact.setJid(grp_id);
+//                    contact.setPhone_label(room_subject);
+//                    contact.setDisplay_name(room_subject);
+//                    contact.setPhoto_ts(new Utils()
+//                            .getGroupRandomeIcon(getActivity()));
+//                    dbadapter.insertContacts(contact);
+//                    dbadapter.setInsertChat_list(grp_id, msg_id,
+//                            json_tags.getString(Constant.TIMESTAMP));
+//                }
+//            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+//                // TODO: handle exception
+//            }
+//
+//            SendWeb_Group.Add_Group_on_web(getActivity(), grp_id, room_subject,
+//                    KachingMeApplication.getjid(),
+//                    mem_list + "," + KachingMeApplication.getUserID()
+//                            + KachingMeApplication.getHost(),
+//                    "" + msg.getTimestamp() / 1000, icon_url);
+//
+//            Intent login_broadcast = new Intent("chat");
+//            login_broadcast.putExtra("jid", "" + grp_id);
+//            getActivity().sendBroadcast(login_broadcast);
+//            try {
+//                progressdialog.cancel();
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//            Constant.mFromMemberList = true;
+//            Intent i = new Intent(getActivity(), SliderTesting.class);
+//            startActivity(i);
+//            getActivity().finish();
+//
+//        }
+//
+//    }
 
 
 }

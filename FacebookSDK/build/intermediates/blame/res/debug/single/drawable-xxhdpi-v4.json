@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\build\\intermediates\\res\\merged\\debug\\drawable-xxhdpi-v4\\com_facebook_button_like_pressed.png",
+        "source": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\res\\drawable-xxhdpi\\com_facebook_button_like_pressed.png"
+    },
+    {
+        "merged": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\build\\intermediates\\res\\merged\\debug\\drawable-xxhdpi-v4\\com_facebook_button_like_background_selected.png",
+        "source": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\res\\drawable-xxhdpi\\com_facebook_button_like_background_selected.png"
+    },
+    {
+        "merged": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\build\\intermediates\\res\\merged\\debug\\drawable-xxhdpi-v4\\com_facebook_button_like_icon_selected.png",
+        "source": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\res\\drawable-xxhdpi\\com_facebook_button_like_icon_selected.png"
+    },
+    {
+        "merged": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\build\\intermediates\\res\\merged\\debug\\drawable-xxhdpi-v4\\com_facebook_button_like_background.png",
+        "source": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\res\\drawable-xxhdpi\\com_facebook_button_like_background.png"
+    },
+    {
+        "merged": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\build\\intermediates\\res\\merged\\debug\\drawable-xxhdpi-v4\\com_facebook_button_like_icon.png",
+        "source": "D:\\CurrentProjects\\Studio_Workspace\\KachingMe\\FacebookSDK\\res\\drawable-xxhdpi\\com_facebook_button_like_icon.png"
+    }
+]

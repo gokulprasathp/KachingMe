@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:text="We've sent one time activiation code to your phone number"
+        android:text="@string/otp_varification_note"
         android:textColor="@color/black" />
 
     <EditText
@@ -21,6 +21,8 @@
         android:ems="10"
         android:inputType="phone"
         android:maxLength="5"
+        android:hint="@string/otp_varification_hint"
+        android:textColorHint="@color/bold_header"
         android:textCursorDrawable="@drawable/cursor_black" />
 
     <LinearLayout
@@ -34,7 +36,14 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/button_selector_white_to_gray"
-            android:text="Send Again"
+            android:text="Call Again"
+            android:textColor="@color/red" />
+        <TextView
+            android:id="@+id/otp_resendTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text=""
             android:textColor="@color/red" />
 
         <TextView

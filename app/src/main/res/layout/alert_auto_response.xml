@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tvInfoAutoResponse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/auto_response_title"
+        android:textColor="@color/app_color_blue"
+        android:layout_margin="5dp"/>
+
+    <EditText
+        android:id="@+id/etAutoResponseMsg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/border_style_gray"
+        android:ems="5"
+        android:hint="@string/auto_response_hint"
+        android:inputType="textCapWords"
+        android:textColor="@color/black"
+        android:textCursorDrawable="@drawable/color_cursor"
+        android:layout_margin="5dp"
+        android:padding="5dp"/>
+
+    <LinearLayout
+        android:id="@+id/linearConfirmAutoResp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/tvAutoRespDismiss"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text="@string/auto_resp_dismiss"
+            android:textColor="@color/red"
+            android:layout_margin="5dp"
+            android:padding="5dp"/>
+
+        <TextView
+            android:id="@+id/tvAutoRespProceed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text="@string/auto_resp_proceed"
+            android:textColor="@color/red"
+            android:layout_margin="5dp"
+            android:padding="5dp"/>
+
+    </LinearLayout>
+
+</LinearLayout>

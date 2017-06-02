@@ -1,5 +1,6 @@
 package com.wifin.kachingme.settings;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
@@ -8,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.net.Uri;
@@ -36,6 +38,8 @@ import com.wifin.kachingme.util.Utils;
 import com.wifin.kachingme.util.encry_decry;
 
 import org.jivesoftware.smackx.bookmarks.BookmarkManager;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -89,49 +93,43 @@ public class Chat_Settings extends PreferenceFragment {
                 String query = "select jid_name,jid from " + Dbhelper.TABLE_LOCK;
                 lock_status(query);
 
-                if (mCountOfLockedList > 0) {
-
+                if (mCountOfLockedList > 0)
+                {
                     Intent i = new Intent(context, LockScreen.class);
                     startActivity(i);
-                } else {
-
-                    callAlertIfListIsEmpty("There is no locked user");
-
                 }
-
-
+                else
+                {
+                    callAlertIfListIsEmpty("There is no locked user");
+                }
                 return false;
             }
         });
 
         archive_list.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
-            public boolean onPreferenceClick(Preference preference) {
+            public boolean onPreferenceClick(Preference preference)
+            {
                 // TODO Auto-generated method stub
-                //
-
                 ArrayList<String> blocked = KachingMeApplication.getBlocked_user();
 
-
                 Constant.printMsg("size of list :::::: " + blocked.size());
-                if (blocked.size() > 0) {
+                if (blocked.size() > 0)
+                {
                     Intent i = new Intent(context, blocked_users.class);
                     startActivity(i);
-
-                } else {
+                } else
+                {
                     callAlertIfListIsEmpty("There is no blocked user");
-
                 }
-
-
                 return false;
             }
         });
 
         final CharSequence[] options = {
                 getResources().getString(R.string.set_wallpaper),
-                getResources().getString(R.string.no_wallpaper),
-                getResources().getString(R.string.default_wallpaper)};
+                getResources().getString(R.string.default_wallpaper),
+                getResources().getString(R.string.no_wallpaper)};
 
         wallpaper.setOnPreferenceClickListener(new OnPreferenceClickListener() {
             @Override
@@ -140,27 +138,40 @@ public class Chat_Settings extends PreferenceFragment {
                 builder.setTitle(getResources().getString(R.string.wallpaper));
                 builder.setItems(options, new DialogInterface.OnClickListener() {
                     @Override
-                    public void onClick(DialogInterface dialog, int item) {
-                        if (item == 0) {
-                            String data = "file";
-                            ed = sp.edit();
-                            ed.putString("wallpaper_type", data);
-                            ed.commit();
+                    public void onClick(DialogInterface dialog, int item)
+                    {
+                        if (item == 0)
+                        {
+                            if (Constant.checkPermission(context, Manifest.permission.READ_EXTERNAL_STORAGE))
+                            {
+                                String data = "file";
+                                ed = sp.edit();
+                                ed.putString("wallpaper_type", data);
+                                ed.commit();
 
-                            Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                            photoPickerIntent.setType("image/*");
-                            startActivityForResult(photoPickerIntent, 0);
-                        } else if (item == 1) {
-                            if (KachingMeApplication.getsharedpreferences().contains("wallpaper"))
-                                KachingMeApplication.getsharedpreferences_Editor().remove("wallpaper").commit();
-                        } else if (item == 2) {
+                                Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                                photoPickerIntent.setType("image/*");
+                                startActivityForResult(photoPickerIntent, 0);
+                            }
+                            else
+                            {
+                                Constant.permissionRequest(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                            }
+                        }
+                        else if (item == 1)
+                        {
                             String data = "image";
                             ed = sp.edit();
                             ed.putString("wallpaper_type", data);
-                            ed.commit();
+                            ed.apply();
 
                             Intent i = new Intent(context, Wallpaper_Activity.class);
                             startActivity(i);
+                        }
+                        else if (item == 2)
+                        {
+                            if (KachingMeApplication.getsharedpreferences().contains("wallpaper"))
+                                KachingMeApplication.getsharedpreferences_Editor().remove("wallpaper").commit();
                         }
                     }
                 });
@@ -238,8 +249,8 @@ public class Chat_Settings extends PreferenceFragment {
                                         bm1 = BookmarkManager
                                                 .getBookmarkManager(TempConnectionService.connection);
 
-                                        bm1.addBookmarkedConference(cursor.getString(8), cursor.getString(8), true,
-                                                Bookmarked_time, "");
+                                        bm1.addBookmarkedConference(cursor.getString(8), JidCreate.entityBareFrom(cursor.getString(8)), true,
+                                                Resourcepart.from(Bookmarked_time), "");
 
 
                                     } catch (Exception e1) {
@@ -459,5 +470,24 @@ public class Chat_Settings extends PreferenceFragment {
         AlertDialog alert = b.create();
         alert.show();
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case 1004:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(context, "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
     }
 }

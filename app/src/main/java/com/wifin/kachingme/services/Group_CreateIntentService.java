@@ -31,6 +31,9 @@ import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.xdata.Form;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -49,7 +52,7 @@ public class Group_CreateIntentService extends IntentService {
     JSONObject main_job = new JSONObject();
     JSONObject json_tags = new JSONObject();
     MessageGetSet msg = new MessageGetSet();
-    String icon_url = "";
+  //  String icon_url = "";
     String room_subject, grp_id;
     GroupParticipantGetSet group_partcipant_getset;
     DatabaseHelper dbAdapter;
@@ -117,11 +120,11 @@ public class Group_CreateIntentService extends IntentService {
         // room_subject);
 
         try {
-            multiUserChat = MultiUserChatManager.getInstanceFor(TempConnectionService.connection).getMultiUserChat(grp_id);
+            multiUserChat = MultiUserChatManager.getInstanceFor(TempConnectionService.connection).getMultiUserChat(JidCreate.entityBareFrom(grp_id));
 
             Constant.printMsg("FFFFFFFFFFFFF1");
 
-            multiUserChat.create(room_subject);
+            multiUserChat.create(Resourcepart.from(room_subject));
             Constant.printMsg("FFFFFFFFFFFFF2");
 
             Form form = multiUserChat.getConfigurationForm();
@@ -139,7 +142,7 @@ public class Group_CreateIntentService extends IntentService {
             submitForm.setAnswer("muc#roomconfig_roomdesc",
                     main_job.toString());
             multiUserChat.sendConfigurationForm(submitForm);
-            multiUserChat.join(KachingMeApplication.getjid());
+            multiUserChat.join(Resourcepart.from(KachingMeApplication.getjid()));
             Constant.printMsg("FFFFFFFFFFFFF7");
 
             new Thread(new Runnable() {
@@ -158,8 +161,8 @@ public class Group_CreateIntentService extends IntentService {
                         BookmarkManager bm = BookmarkManager
                                 .getBookmarkManager(TempConnectionService.connection);
 
-                        bm.addBookmarkedConference(room_subject, grp_id, true,
-                                Utils.getBookmarkTime(), "");
+                        bm.addBookmarkedConference(room_subject, JidCreate.entityBareFrom(grp_id), true,
+                                Resourcepart.from(Utils.getBookmarkTime()), "");
                         Constant.printMsg("FFFFFFFFFFFFF9412");
                     } catch (Exception e) {
 
@@ -205,8 +208,8 @@ public class Group_CreateIntentService extends IntentService {
                             .getJid());
                     dbAdapter.addGroupMembers(group_partcipant_getset);
 
-                    multiUserChat.grantOwnership(selected_users.get(j)
-                            .getJid().toString());
+                    multiUserChat.grantOwnership(JidCreate.from(selected_users.get(j)
+                            .getJid().toString()));
                 }
 
                 new Thread(new Runnable() {
@@ -217,7 +220,7 @@ public class Group_CreateIntentService extends IntentService {
                             try {
 
                                 multiUserChat.invite(
-                                        selected_users.get(i).getJid(), "");
+                                        JidCreate.entityBareFrom(selected_users.get(i).getJid()), "");
                                 Log.d("MUC Create", "Invited Memebrs::"
                                         + selected_users.get(i).getJid());
                             } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
@@ -237,6 +240,10 @@ public class Group_CreateIntentService extends IntentService {
             // TODO: handle exception
         } catch (XMPPException.XMPPErrorException e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (XmppStringprepException e) {
             e.printStackTrace();
         }
 
@@ -311,13 +318,24 @@ public class Group_CreateIntentService extends IntentService {
                             + ".png"));
             fos.write(NewGroup_Info.img_byte);
             fos.close();
-            request_params.put("uploaded_file", new File(
+            request_params.setUseJsonStreamer(false);
+
+
+            request_params.put("primaryNo", "" + KachingMeApplication.getUserID().split("@")[0]);
+            request_params.put("fileType",  "5");
+            request_params.put("fileName",  "");
+            request_params.put("latitude",  "0");
+            request_params.put("longitude", "0");
+            request_params.put("reciverId", "1");
+            request_params.put("groupId", grp_id.split("@")[0]);
+            request_params.put("msgId", "");
+            request_params.put("file",new File(
                     KachingMeApplication.PROFILE_PIC_DIR + grp_id.split("@")[0]
                             + ".png"));
-            request_params.put("filename", grp_id.split("@")[0]);
 
 
-            icon_url = KachingMeConfig.UPLOAD_GROUP_ICON_FOLDER_PNG_PHP + grp_id.split("@")[0] + ".png";
+
+           //icon_url = KachingMeConfig.UPLOAD_GROUP_ICON_FOLDER_PNG_PHP + grp_id.split("@")[0] + ".png";
 
 				/*
                  * byte[] randome=new
@@ -342,28 +360,42 @@ public class Group_CreateIntentService extends IntentService {
 
         AsyncHttpClient client = new AsyncHttpClient();
         client.setTimeout(60000);
-        client.post(KachingMeConfig.UPLOAD_GROUP_ICON_PHP,
-                request_params,
+        client.post(this,
+                KachingMeConfig.UPLOAD_MEDIA,
+                null,
+                request_params,"multipart/form-data",
                 new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
                     @Override
                     public void onFailure(int arg0, Header[] arg1,
                                           byte[] arg2, Throwable arg3) {
                         // TODO Auto-generated method stub
-//                            Log.d(TAG, "Group icon onFailure::"
-//                                    + new String(arg2));
+                        Constant.printMsg("GGrrrr ee" + new String(arg2) + " " + arg3.getMessage());
 
                     }
 
                     @Override
                     public void onSuccess(int arg0, Header[] arg1,
                                           byte[] arg2) {
-//                        // TODO Auto-generated method stub
-//                        Log.d(TAG, "Group icon onSuccess::"
-//                                + new String(arg2));
+                        // TODO Auto-generated method stub
+
+                        try {
+                            Constant.printMsg("GGrrrr " + new String(arg2));
+
+                            String content = new String(arg2);
+
+                            JSONObject jsonObject_Image = new JSONObject(content);
+//
+                            final String  url = jsonObject_Image.getString("url");
+
+
+                        } catch (Exception e) {
+
+                        }
                     }
 
                 });
+
 
 
         NewGroup_Info.img_byte = null;

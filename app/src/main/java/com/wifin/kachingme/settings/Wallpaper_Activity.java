@@ -35,15 +35,11 @@ public class Wallpaper_Activity extends Activity implements OnItemClickListener 
 
 		initialize();
 		screenArrange();
-		list.add(R.drawable.flower_falling);
-		list.add(R.drawable.birds);
-		list.add(R.drawable.nature);
-		list.add(R.drawable.sunset);
-		list.add(R.drawable.rotate_earth);
-		list.add(R.drawable.smiley);
-		list.add(R.drawable.love);
-		list.add(R.drawable.elephant);
-		list.add(R.drawable.cat);
+		list.add(R.drawable.ic_gif_one);
+		list.add(R.drawable.ic_gif_two);
+		list.add(R.drawable.ic_gif_three);
+		list.add(R.drawable.ic_gif_four);
+		list.add(R.drawable.ic_gif_five);
 
 		mAdapter = new WallpaperAdapter(Wallpaper_Activity.this, list);
 
@@ -97,7 +93,7 @@ public class Wallpaper_Activity extends Activity implements OnItemClickListener 
 			KachingMeApplication.getsharedpreferences_Editor()
 					.putString("wallpaper", "earth_rotation").commit();
 		}
-		if (position == 5) {
+		/*if (position == 5) {
 			KachingMeApplication.getsharedpreferences_Editor()
 					.putString("wallpaper", "smiley").commit();
 		}
@@ -112,7 +108,7 @@ public class Wallpaper_Activity extends Activity implements OnItemClickListener 
 		if (position == 8) {
 			KachingMeApplication.getsharedpreferences_Editor()
 					.putString("wallpaper", "cat").commit();
-		}
+		}*/
 		Toast.makeText(getApplicationContext(), "Wallpaper Applied",
 				Toast.LENGTH_SHORT).show();
 

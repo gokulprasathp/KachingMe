@@ -1,40 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:id="@+id/add_grmLayout"
-    android:orientation="horizontal">
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
 
-    <FrameLayout
+    <LinearLayout
+        android:id="@+id/add_grmLayout"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:layout_width="67dp"
+                android:layout_height="67dp"
+                android:src="@drawable/button"
+                android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/avtarimg"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/avtar" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:text="Narendra Dodiya"
+            android:textColor="@color/app_color_blue" />
 
         <ImageView
-            android:layout_width="67dp"
-            android:layout_height="67dp"
-            android:src="@drawable/button"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/avtarimg"
+            android:id="@+id/img_remove"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/avtar" />
-    </FrameLayout>
-
-    <TextView
-        android:id="@+id/name"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:singleLine="true"
-        android:text="Narendra Dodiya"
-        android:textColor="@color/app_color_blue" />
-
-    <ImageView
-        android:id="@+id/img_remove"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_action_content_remove" />
-
+            android:src="@drawable/ic_action_content_remove" />
+    </LinearLayout>
 </LinearLayout>

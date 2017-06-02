@@ -12,10 +12,12 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.wifin.kachingme.chat_home.SliderTesting;
-import com.wifin.kachingme.util.Constant;
 import com.wifin.kaching.me.ui.R;
+import com.wifin.kachingme.chat_home.SliderTesting;
+import com.wifin.kachingme.util.Connectivity;
+import com.wifin.kachingme.util.Constant;
 
 
 public class WelcomeActivity extends Activity {
@@ -40,27 +42,27 @@ public class WelcomeActivity extends Activity {
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
-//				Intent intent11 = new Intent(WelcomeActivity.this,
-//						Contact_Re_Sync_Service.class);
-//				startService(intent11);
+                if (Connectivity.isConnected(WelcomeActivity.this)) {
+                    progressDialog = ProgressDialog.show(WelcomeActivity.this,
+                            getResources().getString(R.string.please_wait),
+                            "Contact Syncing", false);
+                    progressDialog.show();
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            // TODO Auto-generated method stub
+                            progressDialog.dismiss();
+                            Intent i = new Intent(WelcomeActivity.this,
+                                    SliderTesting.class);
+                            startActivity(i);
+                            finish();
 
-                progressDialog = ProgressDialog.show(WelcomeActivity.this,
-                        getResources().getString(R.string.please_wait),
-                        "Contact Syncing", false);
-                progressDialog.show();
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        // TODO Auto-generated method stub
-                        progressDialog.dismiss();
-						Intent i = new Intent(WelcomeActivity.this,
-								SliderTesting.class);
-						startActivity(i);
-						finish();
-
-                    }
-                }, 3000);
+                        }
+                    }, 3000);
+                } else {
+                    Toast.makeText(WelcomeActivity.this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
+                }
             }
         });
     }
@@ -72,7 +74,7 @@ public class WelcomeActivity extends Activity {
         mDescription = (TextView) findViewById(R.id.welc_txt2);
         mStartMesasage = (TextView) findViewById(R.id.wel_btn);
         mThumbImage = (ImageView) findViewById(R.id.wel_logo);
-        mBottomView=(View)findViewById(R.id.welcome_bottomView);
+        mBottomView = (View) findViewById(R.id.welcome_bottomView);
 
         Constant.typeFace(this, mCongratulation);
         Constant.typeFace(this, mHeader);
@@ -118,8 +120,8 @@ public class WelcomeActivity extends Activity {
         LinearLayout.LayoutParams descriptionParama = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        descriptionParama.width=width*70/100;
-        descriptionParama.topMargin=height*2/100;
+        descriptionParama.width = width * 70 / 100;
+        descriptionParama.topMargin = height * 2 / 100;
         descriptionParama.gravity = Gravity.CENTER;
         mDescription.setLayoutParams(descriptionParama);
         mDescription.setGravity(Gravity.CENTER);

@@ -12,6 +12,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TabHost;
@@ -26,7 +27,7 @@ import com.wifin.kachingme.util.Utils;
 
 import java.util.ArrayList;
 
-public class NewGroup_FragmentActivity extends SherlockFragmentBaseActivity
+public class NewGroup_FragmentActivity extends AppCompatActivity
         implements ActionBar.TabListener {
 
     public static ViewPager mViewPager;

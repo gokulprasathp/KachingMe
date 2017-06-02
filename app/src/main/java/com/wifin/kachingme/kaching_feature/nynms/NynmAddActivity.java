@@ -56,7 +56,7 @@ public class NynmAddActivity extends HeaderActivity implements View.OnClickListe
         mHeaderImg.setVisibility(View.VISIBLE);
         mHeaderImg.setImageResource(R.drawable.nymn);
 
-        mFooterLayout.setVisibility(View.VISIBLE);
+        mFooterLayout.setVisibility(View.GONE);
         init();
         nynmScreen();
 
@@ -256,6 +256,7 @@ public class NynmAddActivity extends HeaderActivity implements View.OnClickListe
 
                 if (head.equalsIgnoreCase("add")) {
 
+                    Constant.printMsg("sdklfkldf" + Constant.mNynmMeaningList + "   " + etNynmMessage.getText().toString());
 
                     if (NynmAddActivity.this.etNynmTitle.getText().toString()
                             .length() <= 0
@@ -295,30 +296,39 @@ public class NynmAddActivity extends HeaderActivity implements View.OnClickListe
                             } else {
                                 txt1 = txt;
                             }
-                            Constant.printMsg("abbs::" + abbS + abbs);
-                            NymsPojo np = new NymsPojo();
-                            np.setText(txt1);
-                            np.setMeaning(abbs);
-                            Constant.addedNyms.add(0, np);
 
-                            Constant.printMsg("Dilip Nynm vales ::" + txt1 + abbs);
-                            ContentValues cv = new ContentValues();
-                            cv.put(PeopleColumns.NAME, txt1);
-                            cv.put("meaning", abbs);
-                            NynmAddActivity.this.insertDB(cv);
-                            Constant.NewNyms.add(0, np);
-                            Constant.bux = Long.valueOf(NynmAddActivity.this.sp.getLong(
-                                    "buxvalue", 0));
-                            Long buxval = Long.valueOf(Constant.bux.longValue()
-                                    + ((long) Constant.nympoints));
-                            Constant.bux = buxval;
-                            Editor e = NynmAddActivity.this.sp.edit();
-                            e.putLong("buxvalue", buxval.longValue());
-                            e.commit();
+                            if (!Constant.mNynmMeaningList.contains(abbs)) {
+
+                                Constant.printMsg("abbs::" + abbS + abbs);
+                                NymsPojo np = new NymsPojo();
+                                np.setText(txt1);
+                                np.setMeaning(abbs);
+                                Constant.addedNyms.add(0, np);
+
+                                Constant.printMsg("Dilip Nynm vales ::" + txt1 + abbs);
+
+
+                                ContentValues cv = new ContentValues();
+                                cv.put(PeopleColumns.NAME, txt1);
+                                cv.put("meaning", abbs);
+                                NynmAddActivity.this.insertDB(cv);
+                                Constant.NewNyms.add(0, np);
+                                Constant.bux = Long.valueOf(NynmAddActivity.this.sp.getLong(
+                                        "buxvalue", 0));
+                                Long buxval = Long.valueOf(Constant.bux.longValue()
+                                        + ((long) Constant.nympoints));
+                                Constant.bux = buxval;
+                                Editor e = NynmAddActivity.this.sp.edit();
+                                e.putLong("buxvalue", buxval.longValue());
+                                e.commit();
 //                            NynmAddActivity.this.startActivity(new Intent(
 //                                    NynmAddActivity.this, NynmActivity.class));
-                            NynmAddActivity.this.finish();
-                            return;
+                                NynmAddActivity.this.finish();
+                                return;
+                            } else {
+                                Toast.makeText(NynmAddActivity.this.getApplicationContext(),
+                                        "NynM  Meaning is already existed.", Toast.LENGTH_SHORT).show();
+                            }
                         } else
                             Toast.makeText(NynmAddActivity.this.getApplicationContext(),
                                     "NynM  Message is already existed.", Toast.LENGTH_SHORT).show();
@@ -326,6 +336,7 @@ public class NynmAddActivity extends HeaderActivity implements View.OnClickListe
                     } else
                         Toast.makeText(NynmAddActivity.this.getApplicationContext(),
                                 "NynM is Already Existed 3 Times", Toast.LENGTH_SHORT).show();
+
                 } else {
                     if (etNynmTitle.getText().toString().length() > 0
                             && etNynmMessage.getText().toString().length() > 0) {
@@ -361,50 +372,55 @@ public class NynmAddActivity extends HeaderActivity implements View.OnClickListe
 
                             txt1 = txt;
                         }
+                        if (!Constant.mNynmMeaningList.contains(abbs)) {
 
-                        NymsPojo np = new NymsPojo();
-                        np.setText(txt1);
-                        np.setMeaning(abbs);
-                        Constant.addedNyms.add(Constant.NymPosition, np);
+                            NymsPojo np = new NymsPojo();
+                            np.setText(txt1);
+                            np.setMeaning(abbs);
+                            Constant.addedNyms.add(Constant.NymPosition, np);
 
-                        // ContentValues cv = new ContentValues();
-                        //
-                        // cv.put("name", txt1);
-                        // cv.put("meaning", abbs);
-                        //
-                        // insertDB(cv);
-                        // String qry = "UPDATE " + Dbhelper.TABLE_NYM +
-                        // " SET name='"
-                        // + txt1 + "' WHERE meaning='" + abbs + "'";
+                            // ContentValues cv = new ContentValues();
+                            //
+                            // cv.put("name", txt1);
+                            // cv.put("meaning", abbs);
+                            //
+                            // insertDB(cv);
+                            // String qry = "UPDATE " + Dbhelper.TABLE_NYM +
+                            // " SET name='"
+                            // + txt1 + "' WHERE meaning='" + abbs + "'";
 
-                        String qry = "UPDATE " + Dbhelper.TABLE_NYM + " SET name="
-                                + txt1 + ", meaning=" + abbs + " WHERE name = '"
-                                + Constant.message + "' AND meaning='" + Constant.abbreviation
-                                + "'";
+                            String qry = "UPDATE " + Dbhelper.TABLE_NYM + " SET name="
+                                    + txt1 + ", meaning=" + abbs + " WHERE name = '"
+                                    + Constant.message + "' AND meaning='" + Constant.abbreviation
+                                    + "'";
 
-                        Constant.printMsg("edit qryyy:" + qry);
+                            Constant.printMsg("edit qryyy:" + qry);
 
-                        Constant.printMsg("query::" + qry);
-                        // updateMsg(qry);
+                            Constant.printMsg("query::" + qry);
+                            // updateMsg(qry);
 
-                        updateMsg(txt1, abbs);
+                            updateMsg(txt1, abbs);
 
 //                        Intent i1 = new Intent(NynmAddActivity.this, NynmActivity.class);
 //                        startActivity(i1);
-                        finish();
+                            finish();
 
-                        // } else {
-                        //
-                        // Toast.makeText(getApplicationContext(),
-                        // "Text Given is Already Existing",
-                        // Toast.LENGTH_SHORT).show();
-                        //
-                        // }
+                            // } else {
+                            //
+                            // Toast.makeText(getApplicationContext(),
+                            // "Text Given is Already Existing",
+                            // Toast.LENGTH_SHORT).show();
+                            //
+                            // }
+                        } else
+                            Toast.makeText(NynmAddActivity.this.getApplicationContext(),
+                                    "NynM  Message is already existed.", Toast.LENGTH_SHORT).show();
                     } else {
 
                         Toast.makeText(getApplicationContext(),
                                 "Please fill the NynM", Toast.LENGTH_SHORT).show();
                     }
+
                 }
                 break;
         }

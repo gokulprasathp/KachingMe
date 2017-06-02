@@ -19,7 +19,7 @@ import com.wifin.kachingme.util.Constant;
 import com.wifin.kachingme.util.KachingMeConfig;
 import com.wifin.kachingme.util.Log;
 
-import org.acra.ACRA;
+//import org.acra.ACRA;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -169,7 +169,7 @@ public class KachingMeApplication extends Application {
     public void reCreate() {
         Constant.printMsg("VVVVVVVVVVV KachingMeApplication inside : "
                 + Constant.isNiftyApplicationRunning);
-        ACRA.init(this);
+//        ACRA.init(this);
 
         try {
 
@@ -196,7 +196,7 @@ public class KachingMeApplication extends Application {
             if (!isMyServiceRunning(TempConnectionService.class)) {
                 Constant.printMsg("DDDDDDDDDDDD" + "Nifty");
 
-                startService(new Intent(this, TempConnectionService.class));
+                 startService(new Intent(this, TempConnectionService.class));
 
             } else {
                 Log.d("Service", "Service already runnnig...");
@@ -217,7 +217,7 @@ public class KachingMeApplication extends Application {
         // TODO Auto-generated method stub
         super.onCreate();
         SSLCertificateHandler.nuke();
-        ACRA.init(this);
+//        ACRA.init(this);
 
         PACKAGE_NAME = this.getApplicationContext().getPackageName();
         PROFILE_PIC_DIR = "/data/data/"

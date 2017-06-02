@@ -1110,11 +1110,42 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public Cursor getMessagesCursor_Chat(String jid, int is_sec_chat) {
 
         Cursor cursor = myDataBase.rawQuery(
-                "Select * from messages where key_remote_jid='" + jid
+                "Select * from messages where key_remote_jid like '" + jid
                         + "' and is_sec_chat=" + is_sec_chat + "", null);
 
         return cursor;
     }
+
+    public Cursor getMessagesCursor_Chat(String jid, int is_sec_chat,int limit_offset) {
+
+
+        String qry = null;
+
+        if(limit_offset!=0)
+        {
+            qry = "Select * from messages where key_remote_jid like '" + jid
+                    + "' and is_sec_chat=" + is_sec_chat +" order by _id desc limit 40 offset "+limit_offset+"";
+        }else
+        {
+//          qry =  "Select * from messages where key_remote_jid='" + jid
+//                    + "' and is_sec_chat=" + is_sec_chat +" order by timestamp desc limit 15 ";
+
+            qry =  "Select t.* from (Select * from messages where key_remote_jid like '" + jid
+                    + "' and is_sec_chat=" + is_sec_chat +" order by _id desc limit 20) t order by t._id asc ";
+
+
+        }
+
+
+        Cursor cursor = myDataBase.rawQuery(
+                qry , null);
+
+
+        Constant.printMsg("count currrr " +  limit_offset);
+
+        return cursor;
+    }
+
 
     public Cursor getMessagesCursor(String jid) {
 
@@ -1124,6 +1155,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
         return cursor;
     }
+
+//    public int getUnreadMessages_Count(String jid) {
+//
+//        int count = 0;
+//        Cursor cursor = myDataBase.rawQuery(
+//                "Select * from messages where key_remote_jid='" + jid
+//                        + "' and status!=-1 and key_from_me=1", null);
+//
+//                if(cursor)
+//    }
 
     public ArrayList<MessageGetSet> getUnreadMessages(String jid) {
         ArrayList<MessageGetSet> list = new ArrayList<MessageGetSet>();
@@ -1679,7 +1720,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             cursor = myDataBase
                     .rawQuery(
                             "Select ch._id,c.display_name,c.photo_ts,m.data,m.timestamp,m.status,m.needs_push,ch.unseen_msg_count," +
-                                    " c.jid,m.key_from_me ,m.media_wa_type,m.is_sec_chat,m.is_owner,c.is_niftychat_user,m.flag from chat_list ch," +
+                                    " c.jid,m.key_from_me ,m.media_wa_type,m.is_sec_chat,m.is_owner,c.is_niftychat_user,m.flag,c.unseen_msg_count from chat_list ch," +
                                     "contacts c,messages m where" +
                                     " m._id=ch.message_table_id " +
                                     "and  ch.key_remote_jid =c.jid " +
@@ -1697,7 +1738,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         } else {
             cursor = myDataBase
                     .rawQuery("Select ch._id,c.display_name,c.photo_ts,m.data,m.timestamp,m.status,m.needs_push,ch.unseen_msg_count," +
-                                    "c.jid,m.key_from_me ,m.media_wa_type,m.is_sec_chat,m.is_owner,c.is_niftychat_user from chat_list ch," +
+                                    "c.jid,m.key_from_me ,m.media_wa_type,m.is_sec_chat,m.is_owner,c.is_niftychat_user,m.flag,c.unseen_msg_count from chat_list ch," +
                                     "contacts c,messages m where c.display_name like '"
                                     + value + "%' and m._id=ch.message_table_id and  ch.key_remote_jid =c.jid "
                                     + "OR c.number like '%"
@@ -2202,7 +2243,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         values.put("status", status);
         values.put("needs_push", 0);
 
-        String wheres = "key_remote_jid=? and key_id=?";
+        String wheres = "key_remote_jid=? and key_id=? and key_from_me=0";
         String IDS = String.valueOf(jid);
         String[] whereArgs = {IDS.toString(), key_id};
         long rawId = myDataBase.update(TABLE_MESSAGES, values, wheres,
@@ -2627,12 +2668,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 //        }
         if (photoUrl != null) {
             values.put("phone_label", photoUrl);
-            try {
-                MemoryCacheUtils.removeFromCache(photoUrl, ImageLoader.getInstance().getMemoryCache());
-                DiskCacheUtils.removeFromCache(photoUrl, ImageLoader.getInstance().getDiscCache());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+//            try {
+//                MemoryCacheUtils.removeFromCache(photoUrl, ImageLoader.getInstance().getMemoryCache());
+//                DiskCacheUtils.removeFromCache(photoUrl, ImageLoader.getInstance().getDiscCache());
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
         }
         if (status != null && !status.isEmpty()) {
             values.put("status", status);
@@ -2951,7 +2992,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                                     cursor.getBlob(10).length, options);
 
                         } catch (OutOfMemoryError e) {
-                            android.util.Log.e("Map", "Tile Loader (241) Out Of Memory Error " + e.getLocalizedMessage());
+                            Log.e("Map", "Tile Loader (241) Out Of Memory Error " + e.getLocalizedMessage());
                             System.gc();
                         }
                         usd.setPhoto_bitmap(bmp);

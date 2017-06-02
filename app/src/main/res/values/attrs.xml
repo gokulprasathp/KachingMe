@@ -23,7 +23,14 @@
     <attr name="in_animation" format="reference" />
     <attr name="out_animation" format="reference" />
 
-    <!--
+
+
+    <!-- <declare-styleable name="OverscrollView">
+        <attr name="oslvMaxOverScrollDistance" format="dimension"/>
+        <attr name="oslvSlowEffect" format="boolean" />
+        <attr name="oslvAnimationTime" format="integer" />
+        <attr name="oslvSlowCoefficient" format="float" />
+    </declare-styleable>
     <declare-styleable name="Emojicon">
         <attr name="emojiconSize" format="dimension" />
     </declare-styleable>

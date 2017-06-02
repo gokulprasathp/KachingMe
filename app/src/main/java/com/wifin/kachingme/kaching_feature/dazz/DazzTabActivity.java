@@ -39,6 +39,7 @@ public class DazzTabActivity extends HeaderActivity implements TabLayout.OnTabSe
         mHeading.setText("Library");
         mHeaderImg.setImageResource(R.drawable.dazz);
         mNextBtn.setVisibility(View.GONE);
+        mFooterLayout.setVisibility(View.GONE);
         mDazzTabActivity = this;
         screenResolution();
         //Initializing the tablayout

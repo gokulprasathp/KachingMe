@@ -22,6 +22,7 @@ import android.util.Log;
 
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.applications.KachingMeApplication;
 import com.wifin.kachingme.chat.muc_chat.MUCTest;
@@ -34,6 +35,7 @@ import com.wifin.kachingme.pojo.MessageGetSet;
 import com.wifin.kachingme.services.TempConnectionService;
 import com.wifin.kachingme.util.Constant;
 import com.wifin.kachingme.util.NetworkSharedPreference;
+import com.wifin.kachingme.util.NotificationSharedPreference;
 import com.wifin.kachingme.util.Utils;
 import com.wifin.kachingme.util.KachingMeConfig;
 
@@ -43,6 +45,7 @@ import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.bookmarks.BookmarkManager;
 import org.jivesoftware.smackx.muc.Affiliate;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jivesoftware.smackx.muc.MucEnterConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.receipts.DeliveryReceipt;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
@@ -51,6 +54,9 @@ import org.jivesoftware.smackx.xdata.Form;
 import org.jivesoftware.smackx.xdata.FormField;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -77,6 +83,7 @@ public class MUC_ListenerMethods {
     Editor editor;
     String status_lock = "check";
     Dbhelper db;
+    NotificationCompat.Builder notification;
     String contact_msg = "Received message from";
     SharedPreferences pref;
 
@@ -93,6 +100,8 @@ public class MUC_ListenerMethods {
 
         Constant.printMsg("print ....>> " + jid);
 
+        final Bitmap invit_bitmap ;
+
         try {
 
             Constant.printMsg("CCCCCCCCCC1");
@@ -103,7 +112,7 @@ public class MUC_ListenerMethods {
 
             BookmarkManager bm = BookmarkManager
                     .getBookmarkManager(TempConnectionService.connection);
-            bm.addBookmarkedConference(jid, jid, true, Utils.getBookmarkTime(),
+            bm.addBookmarkedConference(jid, JidCreate.entityBareFrom(jid), true, Resourcepart.from(Utils.getBookmarkTime()),
                     "");
             String room_admin = null, createtion_time = null;
             String list = null;
@@ -119,7 +128,7 @@ public class MUC_ListenerMethods {
                     Bookmarked_time);
             editor1.commit();
             Constant.printMsg("CCCCCCCCCC2");
-            muc = TempConnectionService.MUC_MANAGER.getMultiUserChat(jid);
+            muc = TempConnectionService.MUC_MANAGER.getMultiUserChat(JidCreate.entityBareFrom(jid));
             Constant.printMsg("CCCCCCCCCC211");
             muc.addMessageListener(TempConnectionService.muc_messageListener);
             Constant.printMsg("CCCCCCCCCC2222");
@@ -129,8 +138,20 @@ public class MUC_ListenerMethods {
             DiscussionHistory history = new DiscussionHistory();
             history.setSeconds(0);
             Constant.printMsg("CCCCCCCCCC2444");
-            muc.join(KachingMeApplication.getUserID() + KachingMeApplication.getHost(),
-                    null, history, timeout);
+
+
+            MucEnterConfiguration.Builder build =  muc.getEnterConfigurationBuilder(Resourcepart.from(KachingMeApplication.getUserID() + KachingMeApplication.getHost()));
+
+            build.requestHistorySince(new Date());
+            build.requestMaxStanzasHistory(0);
+            build.requestMaxCharsHistory(0);
+            build.timeoutAfter(6000000L);
+
+            MucEnterConfiguration musOb =  build.build();
+
+
+//                if (!muc.isJoined()) {
+            muc.join(musOb);
             Constant.printMsg("CCCCCCCCCC33333");
 
 //------------------------------------
@@ -141,7 +162,7 @@ public class MUC_ListenerMethods {
 
             for (Affiliate affiliate : owner) {
                 if (i == 0) {
-                    list = affiliate.getJid();
+                    list = affiliate.getJid().toString();
                 } else {
                     list = list + "," + affiliate.getJid();
                 }
@@ -150,7 +171,7 @@ public class MUC_ListenerMethods {
                 group_partcipant_getset.setAdmin(0);
 
                 group_partcipant_getset.setGjid(jid);
-                group_partcipant_getset.setJid(affiliate.getJid());
+                group_partcipant_getset.setJid(affiliate.getJid().toString());
                 dbadapter.addGroupMembers(group_partcipant_getset);
 
 				/*
@@ -182,19 +203,37 @@ public class MUC_ListenerMethods {
                     s = am.next();
 
                 }
+
+                Constant.printMsg("CCCCCCCCCC subjec 002" + field.getVariable());
+
                 if (field.getVariable().equals("muc#roomconfig_roomname")) {
-                    room_subject = s;
-                    Constant.printMsg("CCCCCCCCCC subjec " + room_subject);
-                    long l = dbadapter.setUpdateSubject(jid, room_subject);
+
+                    Constant.printMsg("CCCCCCCCCC subjec 001" + room_subject);
+
+                        room_subject = s;
+
+
+                        try {
+                            if (!room_subject.equalsIgnoreCase("") && room_subject.length() > 0) {
+                                Constant.printMsg("CCCCCCCCCC subjec " + room_subject);
+                                long l = dbadapter.setUpdateSubject(jid, room_subject);
+                            }
+                        } catch (Exception e) {
+                            Constant.printMsg("CCCCCCCCCC subjec expppp" + e.toString());
+                        }
+
+
                 }
                 if (field.getVariable().equals("muc#roomconfig_roomdesc")) {
 
                     try {
 
-
+                        Constant.printMsg("CCCCCCCCCC subjec 00233" + s);
                         room_admin = s;
                         JSONObject json = new JSONObject(s);
                         JSONObject j_obj = json.getJSONObject("data");
+
+                        Constant.printMsg("CCCCCCCCCC subjec 00" + room_subject);
 
                         if(room_subject!=null) {
                             if (room_subject.equalsIgnoreCase("")) {
@@ -260,11 +299,14 @@ public class MUC_ListenerMethods {
                 // Constant.printMsg("Form Field::"+field.getLabel()+"::"+field.getVariable()+"::"+s);
             }
             Constant.printMsg("CCCCCCCCCC4");
+            byte[] avatar = null ;
             if (!dbadapter.isjidExist(jid)) {
                 VCard vc_new = new VCard();
 
                 vc_new = VCardManager.getInstanceFor(
-                        TempConnectionService.connection).loadVCard(jid);
+                        TempConnectionService.connection).loadVCard(JidCreate.entityBareFrom(jid));
+
+                avatar = vc_new.getAvatar();
 
                 ContactsGetSet contact = new ContactsGetSet();
                 contact.setIs_niftychat_user(1);
@@ -334,101 +376,174 @@ public class MUC_ListenerMethods {
             client.setTimeout(60000);
             String[] allowedContentTypes = new String[]{"image/png",
                     "image/jpeg"};
-            client.get(KachingMeConfig.UPLOAD_GROUP_ICON_FOLDER_JPEG_PHP + jid.split("@")[0] + ".jpeg",
+
+
+            RequestParams request_params = new RequestParams();
+
+            request_params.put("groupId", "" + jid1.split("@")[0]);
+
+            final String intviter_final = inviter;
+            final String room_subject_final = room_subject;
+            final String jid_final = jid;
+            final String data_final = msg.getData();
+
+
+
+
+            client.get(KachingMeConfig.GET_GROUP_PROFILE, request_params,
                     new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
+                        boolean isSuccess = false;
+
                         @Override
-                        public void onFailure(int statusCode, Header[] headers,
-                                              byte[] binaryData, Throwable error) {
+                        public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                            String url = new String(bytes);
+                            Constant.printMsg("CCCCCCCCCC888 " + url);
+                            Constant.printMsg("FFFFFFFFF 1111111"  );
+                            if(url!=null) {
 
-                            try {
-                                byte[] randome = new Utils()
-                                        .getGroupRandomeIcon(context);
-                                Bitmap myBitmap = BitmapFactory
-                                        .decodeByteArray(randome, 0,
-                                                randome.length);
-                                FileOutputStream stream = new FileOutputStream(
-                                        new File(
-                                                KachingMeApplication.PROFILE_PIC_DIR
-                                                        + jid1.split("@")[0]
-                                                        + ".png"));
+                                isSuccess = true;
 
-                                ByteArrayOutputStream outstream = new ByteArrayOutputStream();
-                                myBitmap.compress(Bitmap.CompressFormat.PNG,
-                                        85, outstream);
-                                byte[] byteArray = outstream.toByteArray();
+                                AsyncHttpClient client = new AsyncHttpClient();
+                                client.setTimeout(60000);
+                                client.get(url,
+                                        new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
-                                stream.write(byteArray);
-                                stream.close();
 
-                            } catch (Exception e) {
-                                // ACRA.getErrorReporter().handleException(e);
-                                // TODO: handle exception
+                                            Bitmap imageBitmap = null;
+
+                                            @Override
+                                            public void onFailure(int statusCode, Header[] headers,
+                                                                  byte[] binaryData, Throwable error) {
+
+                                                try {
+                                                    byte[] randome = new Utils()
+                                                            .getGroupRandomeIcon(context);
+                                                    Bitmap myBitmap = BitmapFactory
+                                                            .decodeByteArray(randome, 0,
+                                                                    randome.length);
+                                                    FileOutputStream stream = new FileOutputStream(
+                                                            new File(
+                                                                    KachingMeApplication.PROFILE_PIC_DIR
+                                                                            + jid1.split("@")[0]
+                                                                            + ".png"));
+
+                                                    ByteArrayOutputStream outstream = new ByteArrayOutputStream();
+                                                    myBitmap.compress(Bitmap.CompressFormat.PNG,
+                                                            85, outstream);
+                                                    byte[] byteArray = outstream.toByteArray();
+
+                                                    stream.write(byteArray);
+                                                    stream.close();
+
+                                                } catch (Exception e) {
+                                                    // ACRA.getErrorReporter().handleException(e);
+                                                    // TODO: handle exception
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onFinish() {
+
+
+                                                Intent login_broadcast = new Intent("group_list");
+                                                login_broadcast.putExtra("jid", "" + jid);
+                                                context.sendBroadcast(login_broadcast);
+
+                                                Intent login_broadcast_Chat = new Intent("lastseen_broadcast");
+                                                login_broadcast_Chat.putExtra("from", jid);
+                                                login_broadcast_Chat.putExtra("type",data_final );
+                                                context.sendBroadcast(login_broadcast_Chat);
+
+
+                                                if (intviter_final != null && !Utils.isActivityIsFront(context, SliderTesting.class.getCanonicalName().toString())) {
+
+                                                    issue_notification_invitation(intviter_final, room_subject_final, jid, imageBitmap);
+
+                                                }
+
+
+                                                Intent login_broadcast1 = new Intent(
+                                                        Constant.BROADCAST_UPDATE_GROUP_ICON);
+                                                login_broadcast.putExtra("jid", "" + jid);
+                                                context.sendBroadcast(login_broadcast1);
+                                                super.onFinish();
+                                            }
+
+
+
+                                            @Override
+                                            public void onSuccess(int arg0, Header[] arg1,
+                                                                  byte[] fileData) {
+                                                try {
+                                                    Bitmap myBitmap = BitmapFactory
+                                                            .decodeByteArray(fileData, 0,
+                                                                    fileData.length);
+
+                                                    imageBitmap = myBitmap;
+
+                                                    FileOutputStream stream = new FileOutputStream(
+                                                            new File(
+                                                                    KachingMeApplication.PROFILE_PIC_DIR
+                                                                            + jid1.split("@")[0]
+                                                                            + ".png"));
+
+                                                    //invit_bitmap = myBitmap;
+
+                                                    ByteArrayOutputStream outstream = new ByteArrayOutputStream();
+                                                    myBitmap.compress(Bitmap.CompressFormat.PNG,
+                                                            85, outstream);
+                                                    byte[] byteArray = outstream.toByteArray();
+
+                                                    stream.write(byteArray);
+                                                    stream.close();
+
+                                                } catch (Exception e) {
+                                                    // ACRA.getErrorReporter().handleException(e);
+                                                    // TODO: handle exception
+                                                }
+
+                                            }
+                                        });
                             }
+
                         }
 
                         @Override
                         public void onFinish() {
-                            // TODO Auto-generated method stub
-                            Intent login_broadcast = new Intent(
-                                    Constant.BROADCAST_UPDATE_GROUP_ICON);
-                            login_broadcast.putExtra("jid", "" + jid);
-                            context.sendBroadcast(login_broadcast);
                             super.onFinish();
-                        }
 
-						/*
-                         * @Override public void onSuccess(byte[] fileData) {
-						 *
-						 * try { Bitmap myBitmap =
-						 * BitmapFactory.decodeByteArray( fileData, 0,
-						 * fileData.length); FileOutputStream stream = new
-						 * FileOutputStream(new
-						 * File(KachingMeApplication.PROFILE_PIC_DIR
-						 * +jid1.split("@")[0]+".png"));
-						 *
-						 * ByteArrayOutputStream outstream = new
-						 * ByteArrayOutputStream();
-						 * myBitmap.compress(Bitmap.CompressFormat.PNG, 85,
-						 * outstream); byte[] byteArray =
-						 * outstream.toByteArray();
-						 *
-						 * stream.write(byteArray); stream.close();
-						 *
-						 *
-						 * } catch (Exception e) { // TODO: handle exception }
-						 *
-						 * }
-						 */
+                            if(!isSuccess) {
+                                Intent login_broadcast = new Intent("group_list");
+                                login_broadcast.putExtra("jid", "" + jid);
+                                context.sendBroadcast(login_broadcast);
 
-                        @Override
-                        public void onSuccess(int arg0, Header[] arg1,
-                                              byte[] fileData) {
-                            try {
-                                Bitmap myBitmap = BitmapFactory
-                                        .decodeByteArray(fileData, 0,
-                                                fileData.length);
-                                FileOutputStream stream = new FileOutputStream(
-                                        new File(
-                                                KachingMeApplication.PROFILE_PIC_DIR
-                                                        + jid1.split("@")[0]
-                                                        + ".png"));
+                                Intent login_broadcast_Chat = new Intent("lastseen_broadcast");
+                                login_broadcast_Chat.putExtra("from", jid);
+                                login_broadcast_Chat.putExtra("type",data_final );
+                                context.sendBroadcast(login_broadcast_Chat);
 
-                                ByteArrayOutputStream outstream = new ByteArrayOutputStream();
-                                myBitmap.compress(Bitmap.CompressFormat.PNG,
-                                        85, outstream);
-                                byte[] byteArray = outstream.toByteArray();
+                                if (intviter_final != null && !Utils.isActivityIsFront(context, SliderTesting.class.getCanonicalName().toString())) {
 
-                                stream.write(byteArray);
-                                stream.close();
+                                    issue_notification_invitation(intviter_final, room_subject_final, jid, null);
 
-                            } catch (Exception e) {
-                                // ACRA.getErrorReporter().handleException(e);
-                                // TODO: handle exception
+                                }
+
+
                             }
 
+                            Constant.printMsg("FFFFFFFFF "  );
+                        }
+
+                        @Override
+                        public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+
+                            Constant.printMsg("FFFFFFFFF 2222"  );
                         }
                     });
+
+
+
             Constant.printMsg("CCCCCCCCCC8");
             int msg_id = dbadapter.getLastMsgid(jid);
 
@@ -438,25 +553,14 @@ public class MUC_ListenerMethods {
                 dbadapter.setUpdateChat_lits(jid, msg_id);
             }
 
-            Intent login_broadcast = new Intent("group_list");
-            login_broadcast.putExtra("jid", "" + jid);
-            context.sendBroadcast(login_broadcast);
 
-            Intent login_broadcast_Chat = new Intent("lastseen_broadcast");
-            login_broadcast_Chat.putExtra("from", jid);
-            login_broadcast_Chat.putExtra("type", msg.getData());
-            context.sendBroadcast(login_broadcast_Chat);
 
             Constant.printMsg("Room::BookMarked succesfully::" + jid);
 
             Log.d("MUC_invitation", "Subject::" + muc.getSubject());
             Constant.printMsg("CCCCCCCCCC9");
 
-            if (inviter != null && !Utils.isActivityIsFront(context, SliderTesting.class.getCanonicalName().toString())) {
 
-                    issue_notification_invitation(inviter, room_subject, jid);
-
-            }
 
             // add_Listeners()
             //
@@ -476,7 +580,10 @@ public class MUC_ListenerMethods {
     }
 
     public void issueNotification_Room(String key_id) {
-
+        boolean isNotifiy = false;
+        Editor edNotify;
+        String senderValue = null;
+        int senderCount = 0;
         try {
 
             SharedPreferences preference = PreferenceManager
@@ -512,6 +619,7 @@ public class MUC_ListenerMethods {
                         .split("@")[0];
             }
             Constant.printMsg("locked group " + status_lock);
+
 
             if (status_lock.equalsIgnoreCase("lock")) {
 
@@ -560,9 +668,10 @@ public class MUC_ListenerMethods {
                                 Constant.printMsg("called8::::::4::"
                                         + notification_label.toString());
                                 contact_msg = "Received message from";
-                                // notification_label =
-                                // text.toString().substring(3);
-                                notification_label = "DazZ";
+//                                String dazzle = notification_label.toString()
+//                                        .substring(3);
+//                                String[] parts = dazzle.split("-");
+                                notification_label ="DazZ";
 
                                 System.out
                                         .println("called8:1:::::::groupgroupgroup"
@@ -579,16 +688,11 @@ public class MUC_ListenerMethods {
                             } else if (s1 == 'x' && s2 == '>') {
                                 Constant.printMsg("called8:::11:::::"
                                         + notification_label.toString());
-                                String dazzle = notification_label.toString()
-                                        .substring(3);
-                                String[] parts = dazzle.split("-");
-                                String part1 = parts[0];
-                                String part2 = parts[1];
-                                String part3 = parts[2];
-                                String part4 = parts[3];
-                                String part5 = parts[4];
-                                // notification_label = part5;
-                                notification_label = "DazZ";
+//                                String dazzle = notification_label.toString()
+//                                        .substring(3);
+//                                String[] parts = dazzle.split("-");
+
+                                notification_label ="DazZ";
 
                                 contact_msg = "Received message from";
                                 Constant.printMsg("called8:1:::::::"
@@ -660,8 +764,62 @@ public class MUC_ListenerMethods {
                 }
             }
             msg_label = sender_label + ": " + notification_label;
-            Intent intent = new Intent(context, MUCTest.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            //----------------------------------------------------------------------------
+
+            NotificationSharedPreference notify_Pref = new NotificationSharedPreference(context);
+
+            int count_msg = notify_Pref.getMsg_Count();
+
+            senderValue = notify_Pref.getMsg_SentDetails();
+
+            if(senderValue!=null)
+            {
+                if(!senderValue.contains(contact.getDisplay_name()))
+                {
+                    senderValue = senderValue+","+contact.getDisplay_name();
+                    notify_Pref.setMsg_SenderData(senderValue);
+                    String dataTot[] = senderValue.split(",");
+                    senderCount = dataTot.length;
+
+                    Constant.printMsg("Notification...1111 " + senderCount+ " " + senderValue);
+                }else
+                {
+                    String dataTot[] = senderValue.split(",");
+                    senderCount = dataTot.length;
+                }
+            }else
+            {
+                notify_Pref.setMsg_SenderData(contact.getDisplay_name());
+                senderCount =1;
+            }
+
+            Constant.printMsg("Notification...2222 " + senderCount+ " " + senderValue);
+
+
+            if(count_msg>0)
+            {
+
+                isNotifiy = true;
+
+                notify_Pref.setMsg_Count(count_msg+1);
+
+
+            }else
+            {
+                notify_Pref.setMsg_Count(1);
+            }
+
+
+
+//--------------------------------------------
+            Intent intent;
+            if(isNotifiy && senderCount>1) {
+                intent  = new Intent(context, SliderTesting.class);
+            }else
+            {
+                intent = new Intent(context, MUCTest.class);
+            }
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
             intent.putExtra("jid", msggetset.getKey_remote_jid());
             intent.putExtra("name", contact.getDisplay_name());
             /* intent.putExtra("avatar", contact.getPhoto_ts()); */
@@ -669,20 +827,69 @@ public class MUC_ListenerMethods {
                     "Notification Room jid::" + msggetset.getKey_remote_jid()
                             + " Name::" + contact.getDisplay_name());
             PendingIntent pIntent = PendingIntent.getActivity(context,
-                    msggetset.get_id(), intent, 0);
+                    0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
             // Constant.printMsg("jid::" + msggetset.getKey_remote_jid());
-            byte[] avatar = contact.getPhoto_ts();
+
+            Bitmap avtar = null;
+
+            if(isNotifiy && senderCount>1) {
+
+
+                avtar = BitmapFactory.decodeResource(
+                        context.getResources(), R.drawable.ic_launcher);
+
+            }else
+            {
+                try {
+                    avtar = BitmapFactory.decodeFile(KachingMeApplication.PROFILE_PIC_DIR
+                            + msggetset.getKey_remote_jid().toString().split("@")[0] + ".png");
+                } catch (Exception e) {
+                    avtar = null;
+                }
+
+
+                if (avtar == null) {
+                    avtar = BitmapFactory.decodeResource(
+                            context.getResources(), R.drawable.ic_launcher);
+                }
+            }
+
+
             NotificationManager notificationManager = (NotificationManager) context
                     .getSystemService(Context.NOTIFICATION_SERVICE);
-            Notification notification = new NotificationCompat.Builder(context)
-                    .setContentTitle(contact.getDisplay_name())
-                    .setContentText(msg_label).setTicker(msg_label)
-                    .setSmallIcon(R.drawable.ic_launcher)
-                    /*
-                     * .setLargeIcon( BitmapFactory.decodeByteArray(avatar,
-					 * 0,avatar.length)).setAutoCancel(true)
-					 */
-                    .setContentIntent(pIntent).build();
+            if (android.os.Build.VERSION.SDK_INT > 22) {
+                // Do something for lollipop and above versions
+                notification = new NotificationCompat.Builder(context)
+                        .setContentTitle(contact.getDisplay_name())
+                        .setContentText(msg_label).setTicker(msg_label)
+                        .setSmallIcon(R.drawable.icon_notify).setColor((context.getResources().getColor(R.color.accent_500)))
+                        .setLargeIcon(avtar)
+                        .setPriority(Notification.PRIORITY_HIGH)
+                        .setAutoCancel(true)
+                        .setContentIntent(pIntent);
+
+            } else {
+                // do something for phones running an SDK before lollipop
+
+               notification = new NotificationCompat.Builder(context)
+                        .setContentTitle(contact.getDisplay_name())
+                        .setContentText(msg_label).setTicker(msg_label)
+                        .setSmallIcon(R.drawable.ic_launcher).setColor((context.getResources().getColor(R.color.accent_500)))
+                        .setLargeIcon(avtar)
+                        .setPriority(Notification.PRIORITY_HIGH)
+                        .setAutoCancel(true)
+                        .setContentIntent(pIntent);
+
+            }
+
+//            if(isNotifiy && senderCount>1) {
+//                notification.setLargeIcon(BitmapFactory.decodeResource(
+//                        context.getResources(), R.drawable.ic_launcher));
+//            }else
+//            {
+//                notification
+//                notification.setLargeIcon(avtar);
+//            }
 
             int received_msg_count = pref.getInt("received_msg_count", 0);
             Constant.printMsg("received msg grp::" + received_msg_count);
@@ -692,56 +899,159 @@ public class MUC_ListenerMethods {
 
             if (conversation_sound) {
                 if (strRingtonePreference.equals("DEFAULT_SOUND")) {
-                    notification.defaults |= Notification.DEFAULT_SOUND;
+
+                    notification.setDefaults(Notification.DEFAULT_SOUND);
+
                 } else {
-                    notification.sound = Uri.parse(strRingtonePreference);
+                    notification.setSound(Uri.parse(strRingtonePreference));
+//                        notification.sound = Uri.parse(strRingtonePreference);
                 }
             }
 
             if (notify_vibrate_length == 1) {
-                notification.defaults |= Notification.DEFAULT_VIBRATE;
+                notification.setDefaults(Notification.DEFAULT_VIBRATE);
+//                    notification.defaults |= Notification.DEFAULT_VIBRATE;
             } else if (notify_vibrate_length == 2) {
                 long[] l = {1000, 1000};
-                notification.vibrate = l;
+                notification.setVibrate(l);
+//                    notification.vibrate = l;
             } else if (notify_vibrate_length == 3) {
                 long[] l = {2000, 2000};
-                notification.vibrate = l;
+                notification.setVibrate(l);
+//                    notification.vibrate = l;
             }
 
             if (notify_light_color.equals("1")) {
-                notification.ledARGB = Color.WHITE;
-                Log.d(TAG, "Notification Light Color::" + notify_light_color);
+                notification.setLights(Color.WHITE, 1000, 500);
+
+//                    notification.ledARGB = Color.WHITE;
+                com.wifin.kachingme.util.Log.d(TAG, "Notification Light Color::" + notify_light_color);
             } else if (notify_light_color.equals("2")) {
                 // notification.ledARGB=Color.RED;
-                notification.ledARGB = 0xffff0000;
-                Log.d(TAG, "Notification Light Color::" + notify_light_color);
+                notification.setLights(0xffff0000, 1000, 500);
+//                    notification.ledARGB = 0xffff0000;
+                com.wifin.kachingme.util.Log.d(TAG, "Notification Light Color::" + notify_light_color);
             } else if (notify_light_color.equals("3")) {
-                notification.ledARGB = Color.YELLOW;
-                Log.d(TAG, "Notification Light Color::" + notify_light_color);
+                notification.setLights(Color.YELLOW, 1000, 500);
+//                    notification.ledARGB = Color.YELLOW;
+                com.wifin.kachingme.util.Log.d(TAG, "Notification Light Color::" + notify_light_color);
             } else if (notify_light_color.equals("4")) {
-                notification.ledARGB = Color.GREEN;
-                Log.d(TAG, "Notification Light Color::" + notify_light_color);
+                notification.setLights(Color.GREEN, 1000, 500);
+//                    notification.ledARGB = Color.GREEN;
+                com.wifin.kachingme.util.Log.d(TAG, "Notification Light Color::" + notify_light_color);
             } else if (notify_light_color.equals("5")) {
-                notification.ledARGB = Color.CYAN;
-                Log.d(TAG, "Notification Light Color::" + notify_light_color);
+                notification.setLights(Color.CYAN, 1000, 500);
+//                    notification.ledARGB = Color.CYAN;
+                com.wifin.kachingme.util.Log.d(TAG, "Notification Light Color::" + notify_light_color);
             } else if (notify_light_color.equals("6")) {
-                notification.ledARGB = Color.BLUE;
-                Log.d(TAG, "Notification Light Color::" + notify_light_color);
+                notification.setLights(Color.BLUE, 1000, 500);
+//                    notification.ledARGB = Color.BLUE;
+                com.wifin.kachingme.util.Log.d(TAG, "Notification Light Color::" + notify_light_color);
             } else if (notify_light_color.equals("7")) {
-                notification.ledARGB = Color.MAGENTA;
-                Log.d(TAG, "Notification Light Color::" + notify_light_color);
+                notification.setLights(Color.MAGENTA, 1000, 500);
+//                    notification.ledARGB = Color.MAGENTA;
+                com.wifin.kachingme.util.Log.d(TAG, "Notification Light Color::" + notify_light_color);
             } else if (notify_light_color.equals("11")) {
-                notification.ledARGB = Color.WHITE;
-                Log.d(TAG, "Notification Light Color::" + notify_light_color);
+                notification.setLights(Color.WHITE, 1000, 500);
+//                    notification.ledARGB = Color.WHITE;
+                com.wifin.kachingme.util.Log.d(TAG, "Notification Light Color::" + notify_light_color);
             }
 
-            notification.ledOnMS = 100;
-            notification.ledOffMS = 100;
 
-            notification.flags |= Notification.FLAG_SHOW_LIGHTS
-                    | Notification.FLAG_AUTO_CANCEL;
+            if(isNotifiy) {
 
-            notificationManager.notify(contact.getId(), notification);
+                //Inbox style...
+                NotificationCompat.InboxStyle inboxStyle = new NotificationCompat.InboxStyle();
+
+                if(senderCount>1)
+                    inboxStyle.setBigContentTitle("KachingMe");
+                else
+                    inboxStyle.setBigContentTitle(contact.getDisplay_name());
+
+                String msgData;
+
+                msgData = contact.getDisplay_name()+"@"+sender_label +": " + notification_label;
+
+
+                if(count_msg==1) {
+                    String msg_one = notify_Pref.getMsg_Data_One();
+
+
+
+                    notify_Pref.setMsg_Data_Two(msgData);
+
+                    if(senderCount>1) {
+                        inboxStyle.addLine(msg_one);
+                        inboxStyle.addLine(msgData);
+                    }else
+                    {
+                        inboxStyle.addLine(msg_one.split("@")[1]);
+                        inboxStyle.addLine(msgData.split("@")[1]);
+                    }
+
+
+                }else if(count_msg==2) {
+                    String msg_one = notify_Pref.getMsg_Data_One();
+                    String msg_two = notify_Pref.getMsg_Data_Two();
+
+                    notify_Pref.setMsg_Data_Three(msgData);
+
+                    if (senderCount>1) {
+                        inboxStyle.addLine(msg_one);
+                        inboxStyle.addLine(msg_two);
+                        inboxStyle.addLine(msgData);
+                    }else
+                    {
+                        inboxStyle.addLine(msg_one.split("@")[1]);
+                        inboxStyle.addLine(msg_two.split("@")[1]);
+                        inboxStyle.addLine(msgData.split("@")[1]);
+                    }
+
+                }else if(count_msg>=3) {
+                    String msg_two = notify_Pref.getMsg_Data_Two();
+                    String msg_three = notify_Pref.getMsg_Data_Three();
+
+
+                    notify_Pref.setMsg_Data_One(msg_two);
+                    notify_Pref.setMsg_Data_Two(msg_three);
+                    notify_Pref.setMsg_Data_Three(msgData);
+
+                    if (senderCount>1) {
+                        inboxStyle.addLine(msg_two);
+                        inboxStyle.addLine(msg_three);
+                        inboxStyle.addLine(msgData);
+                    }else
+                    {
+                        inboxStyle.addLine(msg_two.split("@")[1]);
+                        inboxStyle.addLine(msg_three.split("@")[1]);
+                        inboxStyle.addLine(msgData.split("@")[1]);
+                    }
+
+                    Constant.printMsg("Noti::Finished.vvv555.");
+                    Constant.printMsg("Notification...bufs " + senderCount+ " " + count_msg);
+                    if(count_msg>3 && senderCount>1)
+                        inboxStyle.setSummaryText(count_msg + " messages from "+senderCount+ " chats");
+                    else if(count_msg>3 && senderCount==1)
+                    {
+                        inboxStyle.setSummaryText(count_msg + " new messages");
+                    }
+                }
+
+                Constant.printMsg("Noti::Finished.vvv22.");
+                notification.setStyle(inboxStyle);
+
+
+            } else {
+                notify_Pref.setMsg_Data_One(sender_label+"@"+contact.getDisplay_name()+ ": " + notification_label);
+            }
+
+//            notification.ledOnMS = 100;
+//            notification.ledOffMS = 100;
+//
+//            notification.flags |= Notification.FLAG_SHOW_LIGHTS
+//                    | Notification.FLAG_AUTO_CANCEL;
+            Constant.printMsg("Noti::Finished.vvv");
+            notificationManager.notify(0, notification.build());
             KachingMeApplication.setIS_FROM_NOTIFICATION(true);
             Constant.printMsg("Noti::Finished..");
         } catch (Exception e) {
@@ -817,7 +1127,7 @@ public class MUC_ListenerMethods {
 
     }
 
-    public void issue_notification_invitation(String inviter, String groupName, String grpJid) {
+    public void issue_notification_invitation(String inviter, String groupName, String grpJid, Bitmap avatar) {
 
         String sender_label = "";
 
@@ -867,17 +1177,22 @@ public class MUC_ListenerMethods {
         PendingIntent pIntent = PendingIntent.getActivity(context,
                 12345, intent, 0);
         // Constant.printMsg("jid::" + msggetset.getKey_remote_jid());
-        byte[] avatar = contact.getPhoto_ts();
+        Bitmap avtar_bitmap = null;
+     //   byte[] avatar = contact.getPhoto_ts();
+
+        if (avatar == null) {
+            avatar = BitmapFactory.decodeResource(
+                    context.getResources(), R.drawable.ic_launcher);
+
+        }
+
         NotificationManager notificationManager = (NotificationManager) context
                 .getSystemService(Context.NOTIFICATION_SERVICE);
         Notification notification = new NotificationCompat.Builder(context)
                 .setContentTitle("Group Invitation")
                 .setContentText(msg_label).setTicker(msg_label)
-                .setSmallIcon(R.drawable.ic_launcher)
-                    /*
-					 * .setLargeIcon( BitmapFactory.decodeByteArray(avatar,
-					 * 0,avatar.length)).setAutoCancel(true)
-					 */
+                .setSmallIcon(R.drawable.icon_notify)
+					 .setLargeIcon(avatar).setAutoCancel(true)
                 .setContentIntent(pIntent).build();
 
 
@@ -964,17 +1279,31 @@ public class MUC_ListenerMethods {
             // TODO Auto-generated method stub
             try {
                 muc = TempConnectionService.MUC_MANAGER
-                        .getMultiUserChat(jid);
+                        .getMultiUserChat(JidCreate.entityBareFrom(jid));
                 muc.addMessageListener(TempConnectionService.muc_messageListener);
                 muc.addSubjectUpdatedListener(new MUC_SubjectChangeListener(
                         context));
-                DiscussionHistory history = new DiscussionHistory();
-                history.setSeconds(0);
+//                DiscussionHistory history = new DiscussionHistory();
+//                history.setSeconds(0);
+//
+//                muc.join(
+//                        KachingMeApplication.getUserID()
+//                                + KachingMeApplication.getHost(), null, history,
+//                        timeout);
 
-                muc.join(
-                        KachingMeApplication.getUserID()
-                                + KachingMeApplication.getHost(), null, history,
-                        timeout);
+                MucEnterConfiguration.Builder build =  muc.getEnterConfigurationBuilder(Resourcepart.from(KachingMeApplication.getUserID()
+                        + KachingMeApplication.getHost()));
+
+                build.requestHistorySince(new Date());
+                build.requestMaxStanzasHistory(0);
+                build.requestMaxCharsHistory(0);
+                build.timeoutAfter(6000000L);
+
+                MucEnterConfiguration musOb =  build.build();
+
+
+//                if (!muc.isJoined()) {
+                muc.join(musOb);
 
                 Form f1 = muc.getConfigurationForm();
 
@@ -1047,13 +1376,18 @@ public class MUC_ListenerMethods {
     }
 
     public static void   sendReceiptDelivered(String toJID, String id) {
-        final Message ack = new Message(toJID, Message.Type.groupchat);
+        try {
+        final Message ack = new Message(JidCreate.from(toJID), Message.Type.groupchat);
         ack.setBody(Constant.STATUS_DELIVERED);
         ack.setStanzaId(id);
         ack.addExtension(new DeliveryReceipt(id));
-        try {
+
             TempConnectionService.connection.sendStanza(ack);
         } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (XmppStringprepException e) {
             e.printStackTrace();
         }
 

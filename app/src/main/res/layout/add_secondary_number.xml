@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:background="@color/white"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/usageAdapter_topMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/we_sent_sms"
+        android:textColor="@color/black" />
+
+    <EditText
+        android:id="@+id/usageAdapter_verification_code"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/border_style_gray"
+        android:ems="10"
+        android:inputType="phone"
+        android:maxLength="5"
+        android:hint="@string/otp_varification_hint"
+        android:textColorHint="@color/bold_header"
+        android:textCursorDrawable="@drawable/cursor_black" />
+
+
+    <LinearLayout
+        android:id="@+id/usageAdapter_nextLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/usageAdapter_resend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text="Call Again"
+            android:textColor="@color/red" />
+
+        <TextView
+            android:id="@+id/usageAdapter_resendTimer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text=""
+            android:textColor="@color/red" />
+
+        <TextView
+            android:id="@+id/usageAdapter_next"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/button_selector_white_to_gray"
+            android:text="@string/next"
+            android:textColor="@color/red" />
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/usageAdapter_bottomText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/varification_note"
+        android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+</LinearLayout>

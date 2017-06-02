@@ -45,10 +45,10 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.wifin.kaching.me.ui.R;
-import com.wifin.kachingme.adaptors.BuxSActivityAdapter;
 import com.wifin.kachingme.adaptors.BuxsPointAdapter;
 import com.wifin.kachingme.adaptors.DonateAdapter;
 import com.wifin.kachingme.applications.KachingMeApplication;
+import com.wifin.kachingme.async_tasks.ConcurrentAsyncTaskExecutor;
 import com.wifin.kachingme.cart.CartActivity;
 import com.wifin.kachingme.chat_home.HeaderActivity;
 import com.wifin.kachingme.chat_home.SliderTesting;
@@ -70,6 +70,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class BuxSActivity extends HeaderActivity implements
@@ -97,7 +99,6 @@ public class BuxSActivity extends HeaderActivity implements
     SharedPreferences sp;
     ArrayList<BuxsEarnedDto> mEarned = new ArrayList<BuxsEarnedDto>();
     ArrayList<BuxsRedeemedDto> mRedeemed = new ArrayList<BuxsRedeemedDto>();
-    ArrayList<BuxMasterDto> buxMasterList = new ArrayList<BuxMasterDto>();
 
     Bitmap bmp;
     int debit_value = 0;
@@ -107,6 +108,7 @@ public class BuxSActivity extends HeaderActivity implements
     Handler handler = new Handler();
     Runnable run;
     SharedPreferences preference;
+    CommonMethods commonMethods;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -126,11 +128,11 @@ public class BuxSActivity extends HeaderActivity implements
         initializeVariable();
         screenArrangement();
         FetchRedeem();
+        commonMethods = new CommonMethods(BuxSActivity.this);
         mList.add("All");
         mList.add("Credit");
         mList.add("Debit");
         new MyAsync().execute();
-
         ArrayAdapter<String> list_adapter = new ArrayAdapter<String>(this,
                 android.R.layout.simple_spinner_item, mList);
         list_adapter
@@ -151,13 +153,12 @@ public class BuxSActivity extends HeaderActivity implements
         mDonationBtnLayout.setVisibility(View.GONE);
         mBuxSActivityListview.setVisibility(View.VISIBLE);
         if (Connectivity.isConnected(getApplicationContext())) {
-            new getEarned().execute();
-            new getRedeemed().execute();
-//            new getBuxsMaster().execute();
+            Constant.printMsg("Buxs Activity getEarned called>>>>>");
+            ConcurrentAsyncTaskExecutor.executeConcurrently(new getEarned());
+            ConcurrentAsyncTaskExecutor.executeConcurrently(new getRedeemed());
         } else {
+            Constant.printMsg("Buxs Activity getEarned else called>>>>>");
             getdataFromDB();
-            Toast.makeText(getApplicationContext(), "Check", Toast.LENGTH_SHORT)
-                    .show();
             mBuxSActivityListview.setAdapter(new BuxsPointAdapter(
                     getApplicationContext(), mEarned));
         }
@@ -170,13 +171,11 @@ public class BuxSActivity extends HeaderActivity implements
         mBackBtn.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(BuxSActivity.this,
-                        SliderTesting.class);
-                startActivity(i);
+                startActivity(new Intent(BuxSActivity.this, SliderTesting.class));
                 finish();
             }
         });
-        mChatLayout.setOnClickListener(new View.OnClickListener() {
+        mChatLayout.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -185,7 +184,7 @@ public class BuxSActivity extends HeaderActivity implements
                         SliderTesting.class));
             }
         });
-        mBuxLayout.setOnClickListener(new View.OnClickListener() {
+        mBuxLayout.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -194,7 +193,7 @@ public class BuxSActivity extends HeaderActivity implements
                 //		BuxSActivity.class));
             }
         });
-        mCartLayout.setOnClickListener(new View.OnClickListener() {
+        mCartLayout.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -227,38 +226,30 @@ public class BuxSActivity extends HeaderActivity implements
 
             @Override
             public void onClick(View v) {
-                mMyBuXSBtn
-                        .setBackgroundResource(R.drawable.red_border_background);
+                mMyBuXSBtn.setBackgroundResource(R.drawable.red_border_background);
                 mMyBuXSBtn.setTextColor(Color.RED);
-                mDonateBtn
-                        .setBackgroundResource(R.drawable.gray_border_background);
+                mDonateBtn.setBackgroundResource(R.drawable.gray_border_background);
                 mDonateBtn.setTextColor(Color.GRAY);
                 mActivityCounterLayout.setVisibility(View.VISIBLE);
                 mDonationLayout.setVisibility(View.GONE);
                 mDonationBtnLayout.setVisibility(View.GONE);
                 mBuxSActivityListview.setVisibility(View.VISIBLE);
                 if (Connectivity.isConnected(getApplicationContext())) {
-                    new getEarned().execute();
-                    new getRedeemed().execute();
+                    ConcurrentAsyncTaskExecutor.executeConcurrently(new getEarned());
+                    ConcurrentAsyncTaskExecutor.executeConcurrently(new getRedeemed());
                 } else {
                     getdataFromDB();
-                    Toast.makeText(getApplicationContext(), "Check",
-                            Toast.LENGTH_SHORT).show();
-                    mBuxSActivityListview.setAdapter(new BuxsPointAdapter(
-                            getApplicationContext(), mEarned));
+                    mBuxSActivityListview.setAdapter(new BuxsPointAdapter(getApplicationContext(), mEarned));
                 }
-
             }
         });
         mDonateBtn.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                mMyBuXSBtn
-                        .setBackgroundResource(R.drawable.gray_border_background);
+                mMyBuXSBtn.setBackgroundResource(R.drawable.gray_border_background);
                 mMyBuXSBtn.setTextColor(Color.GRAY);
-                mDonateBtn
-                        .setBackgroundResource(R.drawable.red_border_background);
+                mDonateBtn.setBackgroundResource(R.drawable.red_border_background);
                 mDonateBtn.setTextColor(Color.RED);
                 mActivityCounterLayout.setVisibility(View.GONE);
                 mDonationLayout.setVisibility(View.VISIBLE);
@@ -269,8 +260,7 @@ public class BuxSActivity extends HeaderActivity implements
                     mSumCreditText.setVisibility(View.VISIBLE);
                     mSumDebitText.setVisibility(View.VISIBLE);
                     donate_no_record.setVisibility(View.GONE);
-                    mBuxSDonationList.setAdapter(new DonateAdapter(
-                            getApplicationContext(), Constant.donatelust));
+                    mBuxSDonationList.setAdapter(new DonateAdapter(getApplicationContext(), Constant.donatelust));
                 } else {
                     mBuxSFilterSpinner.setVisibility(View.GONE);
                     mSumCreditText.setVisibility(View.GONE);
@@ -325,7 +315,6 @@ public class BuxSActivity extends HeaderActivity implements
         });
     }
 
-
     private void initializeVariable() {
         mBuXSDetailLayout = (LinearLayout) findViewById(R.id.buxs_detail_layout);
         mBuxLayout = (LinearLayout) findViewById(R.id.buxs_layout);
@@ -363,7 +352,7 @@ public class BuxSActivity extends HeaderActivity implements
         mBuxSActivityListview = (ListView) findViewById(R.id.bux_activity_listview);
         mBuxSDonationList = (ListView) findViewById(R.id.donation_list);
         mBuxSFilterSpinner = (Spinner) findViewById(R.id.date_pick_text);
-        mListBottomView= (View) findViewById(R.id.activity_buxs_listView);
+        mListBottomView = (View) findViewById(R.id.activity_buxs_listView);
 
         Constant.typeFace(this, mBuXSText);
         Constant.typeFace(this, mBuXSCountText);
@@ -389,9 +378,7 @@ public class BuxSActivity extends HeaderActivity implements
     public void FetchRedeem() {
 
         Constant.redeemlist.clear();
-
         String tx, mn;
-
         Dbhelper db = new Dbhelper(getApplicationContext());
         Cursor c = null;
         try {
@@ -401,23 +388,16 @@ public class BuxSActivity extends HeaderActivity implements
                             null);
             int txnm = c.getColumnIndex("name");
             int mnnm = c.getColumnIndex("bux");
-
             Constant.printMsg("The pending cart list in db ::::"
                     + c.getCount());
-
             if (c.getCount() > 0) {
-
                 while (c.moveToNext()) {
-
                     tx = c.getString(txnm);
                     mn = c.getString(mnnm);
-
                     Constant.printMsg("dbadd:nym:" + tx + "  " + mn + "  ");
-
                     RedeemDto p = new RedeemDto();
                     p.setName(tx);
                     p.setBux(mn);
-
                     Constant.redeemlist.add(p);
                 }
             }
@@ -464,49 +444,36 @@ public class BuxSActivity extends HeaderActivity implements
     }
 
     private void getdataFromDB() {
-
         mEarned.clear();
-
-        String tx, dt, bux_status;
-        Long pt;
-
+        String achive, buxs, name, id;
         Dbhelper db = new Dbhelper(getApplicationContext());
         Cursor c = null;
         try {
-
-            c = db.open()
-                    .getDatabaseObj()
-                    .query(Dbhelper.TABLE_BUX_COUNTER, null, null, null, null,
-                            null, null);
-            int txnm = c.getColumnIndex("activity_bux");
-            int mnnm = c.getColumnIndex("activity");
-            int poi = c.getColumnIndex("earned_bux");
-            Constant.printMsg("The pending donate list in db ::::"
-                    + c.getCount());
-
+            c = db.open().getDatabaseObj().query(Dbhelper.TABLE_BUX_COUNTER,
+                    null, null, null, null, null, null);
+            int activity_bux_index = c.getColumnIndex("activity_bux");
+            int activity_index = c.getColumnIndex("activity");
+            int earned_bux_index = c.getColumnIndex("earned_bux");
+            int bux_id_index = c.getColumnIndex("bux_master_id");
+            Constant.printMsg("The pending donate list in db ::::" + c.getCount());
             if (c.getCount() > 0) {
-
                 while (c.moveToNext()) {
+                    id = c.getString(bux_id_index);
+                    name = c.getString(activity_index);
+                    achive = c.getString(activity_bux_index);
+                    buxs = c.getString(earned_bux_index);
 
-                    tx = c.getString(txnm);
-                    dt = c.getString(mnnm);
-                    pt = c.getLong(poi);
-                    Constant.printMsg("donate:ddfsd" + tx + "  " + dt + "  "
-                            + pt);
-                    if (pt != 0) {
-                        BuxsEarnedDto p = new BuxsEarnedDto();
-                        p.setAcheive(tx);
-                        p.setName(dt);
-                        p.setBuxs(String.valueOf(pt));
-                        mEarned.add(p);
-                    }
-
+                    Constant.printMsg("donate:ddfsd" + id + "  " + name + "  " + achive + "  " + buxs);
+                    BuxsEarnedDto buxsEarnedDto = new BuxsEarnedDto();
+                    buxsEarnedDto.setAcheive(achive);
+                    buxsEarnedDto.setName(name);
+                    buxsEarnedDto.setBuxs(buxs);
+                    buxsEarnedDto.setBux_id(id);
+                    mEarned.add(buxsEarnedDto);
                 }
             }
         } catch (SQLException e) {
-
-            Constant.printMsg("Sql exception in pending shop details ::::"
-                    + e.toString());
+            Constant.printMsg("Sql exception in pending shop details ::::" + e.toString());
         } finally {
             c.close();
             db.close();
@@ -514,12 +481,10 @@ public class BuxSActivity extends HeaderActivity implements
     }
 
     @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position,
-                               long id) {
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
         // TODO Auto-generated method stub
         debit_value = 0;
         credit_value = 0;
-
         if (mBuxSFilterSpinner.getSelectedItem().toString()
                 .equalsIgnoreCase("credit")) {
             String query = "select * from " + Dbhelper.TABLE_DONATE
@@ -527,10 +492,8 @@ public class BuxSActivity extends HeaderActivity implements
             Constant.printMsg("priyaaaa " + query);
             FetchBuxsData(query);
             Constant.printMsg("priyaaaa11 " + Constant.donatelust);
-
             mBuxSDonationList.setAdapter(new DonateAdapter(
                     getApplicationContext(), Constant.donatelust));
-
             for (int i = 0; i < Constant.donatelust.size(); i++) {
                 credit_value += Double.valueOf(Constant.donatelust.get(i)
                         .getPoint());
@@ -546,7 +509,6 @@ public class BuxSActivity extends HeaderActivity implements
             String query = "select * from " + Dbhelper.TABLE_DONATE
                     + " where status = 'debit'";
             Constant.printMsg("priyaaaa " + query);
-
             FetchBuxsData(query);
             Constant.printMsg("priyaaaa11 " + Constant.donatelust);
             for (int i = 0; i < Constant.donatelust.size(); i++) {
@@ -557,7 +519,6 @@ public class BuxSActivity extends HeaderActivity implements
             mSumDebitText.setVisibility(View.VISIBLE);
             mSumDebitText.setText(String
                     .valueOf("Total Debit : " + debit_value));
-
             mBuxSDonationList.setAdapter(new DonateAdapter(
                     getApplicationContext(), Constant.donatelust));
         }
@@ -566,12 +527,10 @@ public class BuxSActivity extends HeaderActivity implements
             debit_value = 0;
             credit_value = 0;
             fetchData();
-
             mBuxSDonationList.setAdapter(new DonateAdapter(
                     getApplicationContext(), Constant.donatelust));
 
             for (int i = 0; i < Constant.donatelust.size(); i++) {
-
                 if (Constant.donatelust.get(i).getStatus()
                         .equalsIgnoreCase("credit")) {
                     credit_value += Double.valueOf(Constant.donatelust.get(i)
@@ -761,6 +720,215 @@ public class BuxSActivity extends HeaderActivity implements
 
     }
 
+    private class MyAsync extends AsyncTask<String, String, Bitmap> {
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+            progressDialogAsyn = new ProgressDialog(BuxSActivity.this);
+            progressDialogAsyn.setMessage(getResources()
+                    .getString(R.string.loading));
+            progressDialogAsyn.show();
+            Constant.printMsg("called");
+        }
+
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            try {
+                System.gc();
+                BitmapFactory.Options options = new BitmapFactory.Options();
+                options.inJustDecodeBounds = false;
+                options.inPreferredConfig = Bitmap.Config.RGB_565;
+                options.inDither = true;
+                bmp = BitmapFactory.decodeByteArray(
+                        KachingMeApplication.getAvatar(), 0,
+                        KachingMeApplication.getAvatar().length, options);
+            } catch (Exception e) {
+                // //ACRA.getErrorReporter().handleException(e);
+                e.printStackTrace();
+            }
+            return bmp;
+        }
+
+
+        @Override
+        protected void onPostExecute(Bitmap result) {
+            progressDialogAsyn.cancel();
+            super.onPostExecute(result);
+            try {
+                if (bmp != null) {
+                    ProfileRoundImg roundImageProfile = new ProfileRoundImg(bmp);
+                    mProfileImg.setImageDrawable(roundImageProfile);
+                } else {
+                    Bitmap mTempIcon = null;
+                    mTempIcon = BitmapFactory.decodeResource(getApplicationContext()
+                            .getResources(), R.drawable.avtar);
+                    mProfileImg.setImageBitmap(mTempIcon);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private class getEarned extends AsyncTask<String, String, String> {
+
+        ProgressDialog progressdialog;
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+            progressdialog = new ProgressDialog(BuxSActivity.this);
+            progressdialog.setMessage(getResources()
+                    .getString(R.string.loading));
+            progressdialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            // TODO Auto-generated method stub
+            String result = null;
+            HttpConfig ht = new HttpConfig();
+            Constant.printMsg("PRODUCT URL>>>>>>" + KachingMeConfig.Buxs + "?userId=" + preference.getString("buxUserId", ""));
+            result = ht.httpget(KachingMeConfig.Buxs + "?userId=" + preference.getString("buxUserId", ""));
+            Constant.printMsg("PRODUCT RESET>>>>>>" + result);
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+            Constant.printMsg("PRODUCT RESULT>>>>>>" + result);
+            if (result != null && result.length() > 0) {
+                JSONObject jObject = null;
+                try {
+                    jObject = new JSONObject(result);
+
+                } catch (JSONException e) {
+                    // TODO: handle exception
+                    e.printStackTrace();
+                }
+                JSONArray jsonArray = null;
+                try {
+                    jsonArray = jObject.getJSONArray("buxsEarnedDtos");
+                    String query1 = "DELETE FROM " + Dbhelper.TABLE_BUX_COUNTER;
+                    Constant.printMsg("delete query1 ::>>>> " + query1);
+                    delete(query1);
+                    mEarned = new ArrayList<BuxsEarnedDto>();
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        jObject = jsonArray.getJSONObject(i);
+                        String buxsId = jObject.getString("buxMasterId");
+                        String name = jObject.getString("name");
+                        String acheive = jObject.getString("acheive");
+                        String buxs = jObject.getString("buxs");
+                        BuxsEarnedDto e = new BuxsEarnedDto();
+                        e.setName(name);
+                        e.setAcheive(acheive);
+                        e.setBuxs(buxs);
+                        e.setBux_id(buxsId);
+                        mEarned.add(e);
+                        ContentValues cv = new ContentValues();
+                        cv.put("bux_master_id", buxsId);
+                        cv.put("activity", name);
+                        cv.put("activity_bux", acheive);
+                        cv.put("earned_bux", buxs);
+                        Constant.printMsg("activity data   " + name + "   "
+                                + buxs + "    " + acheive);
+                        insertbuxDB(cv);
+                    }
+                } catch (JSONException e) {
+                    // TODO: handle exception
+                    e.printStackTrace();
+                }
+                if (mEarned.size() > 0) {
+                    mBuxSActivityListview.setAdapter(new BuxsPointAdapter(getApplicationContext(), mEarned));
+                    progressdialog.dismiss();
+                    commonMethods.postEarnedBux("buxs");
+                } else {
+                    progressdialog.dismiss();
+                }
+            } else {
+                getdataFromDB();
+                if (mEarned.size() > 0) {
+                    mBuxSActivityListview.setAdapter(new BuxsPointAdapter(getApplicationContext(), mEarned));
+                    progressdialog.dismiss();
+                    commonMethods.postEarnedBux("buxs");
+                } else {
+                    progressdialog.dismiss();
+                }
+            }
+        }
+    }
+
+    private class getRedeemed extends AsyncTask<String, String, String> {
+        ProgressDialog progressdialog;
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+            progressdialog = new ProgressDialog(BuxSActivity.this);
+            progressdialog.setMessage(getResources().getString(R.string.loading));
+            progressdialog.show();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+            // TODO Auto-generated method stub
+            String result = null;
+            HttpConfig ht = new HttpConfig();
+            Constant.printMsg("PRODUCT URL getRedeemed >>>>>>" + KachingMeConfig.Buxs + "?userId=" + preference.getString("buxUserId", ""));
+            result = ht.httpget(KachingMeConfig.Buxs + "?userId=" + preference.getString("buxUserId", ""));
+            Constant.printMsg("PRODUCT RESET getRedeemed >>>>>>" + result);
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+            progressdialog.dismiss();
+            Constant.printMsg("PRODUCT RESULT>>>>>>" + result);
+            if (result != null && result.length() > 0) {
+                JSONObject jObject = null;
+                try {
+                    jObject = new JSONObject(result);
+
+                } catch (JSONException e) {
+                    // TODO: handle exception
+                    e.printStackTrace();
+                }
+                JSONArray jsonArray = null;
+                try {
+                    jsonArray = jObject.getJSONArray("buxsRedeemedDtos");
+                    mRedeemed = new ArrayList<BuxsRedeemedDto>();
+                    for (int i = 0; i < jsonArray.length(); i++) {
+                        jObject = jsonArray.getJSONObject(i);
+                        String name = jObject.getString("retMerName");
+                        String buxs = jObject.getString("redeemedBux");
+                        BuxsRedeemedDto r = new BuxsRedeemedDto();
+                        r.setRetmerName(name);
+                        r.setRedeemedBuxs(buxs);
+                        mRedeemed.add(r);
+                    }
+                } catch (JSONException e) {
+                    // TODO: handle exception
+                    e.printStackTrace();
+                }
+                if (mRedeemed.size() > 0) {
+                    // reddemed_list.setAdapter(new RedeemedAdapter(
+                    // getApplicationContext(), mRedeemed));
+                    //new MyAsync().execute();
+                }
+            } else {
+                Toast.makeText(BuxSActivity.this, "Network Error..Try Again Later", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
     @Override
     public void onBackPressed() {
         // TODO Auto-generated method stub
@@ -816,7 +984,6 @@ public class BuxSActivity extends HeaderActivity implements
         LinearLayout.LayoutParams buXSDetailLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-
         buXSDetailLayoutParams.width = width;
         buXSDetailLayoutParams.height = width * 35 / 100;
         buXSDetailLayoutParams.gravity = Gravity.CENTER;
@@ -1023,287 +1190,5 @@ public class BuxSActivity extends HeaderActivity implements
             mBuXSActivityText.setTextSize(9);
             mEarnedBuxSActivity.setTextSize(9);
         }
-    }
-
-    private class MyAsync extends AsyncTask<String, String, Bitmap> {
-
-        @Override
-        protected void onPreExecute() {
-            // TODO Auto-generated method stub
-            super.onPreExecute();
-            progressDialogAsyn = new ProgressDialog(BuxSActivity.this);
-            progressDialogAsyn.setMessage(getResources()
-                    .getString(R.string.loading));
-            progressDialogAsyn.show();
-            Constant.printMsg("called");
-        }
-
-        @Override
-        protected Bitmap doInBackground(String... params) {
-            try {
-                System.gc();
-                BitmapFactory.Options options = new BitmapFactory.Options();
-                options.inJustDecodeBounds = false;
-                options.inPreferredConfig = Bitmap.Config.RGB_565;
-                options.inDither = true;
-                bmp = BitmapFactory.decodeByteArray(
-                        KachingMeApplication.getAvatar(), 0,
-                        KachingMeApplication.getAvatar().length, options);
-            } catch (Exception e) {
-                // //ACRA.getErrorReporter().handleException(e);
-                e.printStackTrace();
-            }
-            return bmp;
-        }
-
-
-        @Override
-        protected void onPostExecute(Bitmap result) {
-            progressDialogAsyn.cancel();
-            super.onPostExecute(result);
-            try {
-                if (bmp != null) {
-                    ProfileRoundImg roundImageProfile = new ProfileRoundImg(bmp);
-                    mProfileImg.setImageDrawable(roundImageProfile);
-                } else {
-                    Bitmap mTempIcon = null;
-                    mTempIcon = BitmapFactory.decodeResource(getApplicationContext()
-                            .getResources(), R.drawable.contact_profile);
-                    mProfileImg.setImageBitmap(mTempIcon);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private class getBuxsMaster extends AsyncTask<String, String, String> {
-        ProgressDialog progressdialog;
-
-        @Override
-        protected void onPreExecute() {
-            // TODO Auto-generated method stub
-            super.onPreExecute();
-            progressdialog = new ProgressDialog(BuxSActivity.this);
-            progressdialog.setMessage(getResources()
-                    .getString(R.string.loading));
-            progressdialog.show();
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            // TODO Auto-generated method stub
-            String result = null;
-            HttpConfig ht = new HttpConfig();
-
-            result = ht.httpget(KachingMeConfig.GET_BUXS);
-            Constant.printMsg("PRODUCT URL>>>>>>" + result);
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
-            progressdialog.dismiss();
-            Constant.printMsg("PRODUCT RESULT>>>>>>" + result);
-            if (result != null && result.length() > 0) {
-                CommonMethods commonMethods = new CommonMethods(BuxSActivity.this);
-                if (commonMethods.isJSONValid(result)) {
-                    JSONArray jsonArray = null;
-                    JSONObject jObject = null;
-                    try {
-                        jsonArray = new JSONArray(result);
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            jObject = new JSONObject(jsonArray.get(i).toString());
-                            BuxMasterDto buxMasterDto = new BuxMasterDto();
-                            buxMasterDto.setActivity(jObject.getString("activity"));
-                            buxMasterDto.setBuxMasterId(Integer.parseInt(jObject.getString("buxMasterId")));
-                            buxMasterDto.setBuxsForActivity(Integer.parseInt(jObject.getString("buxsForActivity")));
-                            buxMasterList.add(buxMasterDto);
-                        }
-                    } catch (JSONException e) {
-                        // TODO: handle exception
-                        e.printStackTrace();
-                    }
-                    if (buxMasterList.size() > 0) {
-                        mBuxSActivityListview.setAdapter(new BuxSActivityAdapter(
-                                getApplicationContext(), buxMasterList));
-                    }
-                } else {
-                    Toast.makeText(BuxSActivity.this, "Timeout Error..Try Again Later", Toast.LENGTH_SHORT).show();
-                }
-            } else {
-                Toast.makeText(BuxSActivity.this, "Network Error..Try Again Later", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private class getEarned extends AsyncTask<String, String, String> {
-
-        ProgressDialog progressdialog;
-
-        @Override
-        protected void onPreExecute() {
-            // TODO Auto-generated method stub
-            super.onPreExecute();
-            progressdialog = new ProgressDialog(BuxSActivity.this);
-            progressdialog.setMessage(getResources()
-                    .getString(R.string.loading));
-            progressdialog.show();
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            // TODO Auto-generated method stub
-            String result = null;
-            HttpConfig ht = new HttpConfig();
-            result = ht.httpget(KachingMeConfig.Buxs);
-            Constant.printMsg("PRODUCT URL>>>>>>" + result);
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
-            String query1 = "DELETE FROM " + Dbhelper.TABLE_BUX_COUNTER;
-            Constant.printMsg("delete query1 ::>>>> " + query1);
-            delete(query1);
-            progressdialog.dismiss();
-            Constant.printMsg("PRODUCT RESULT>>>>>>" + result);
-            if (result != null && result.length() > 0) {
-                JSONObject jObject = null;
-                try {
-                    jObject = new JSONObject(result);
-
-                } catch (JSONException e) {
-                    // TODO: handle exception
-                    e.printStackTrace();
-                }
-                JSONArray jsonArray = null;
-                try {
-                    jsonArray = jObject.getJSONArray("buxsEarnedDtos");
-                    mEarned = new ArrayList<BuxsEarnedDto>();
-                    for (int i = 0; i < jsonArray.length(); i++) {
-
-                        jObject = jsonArray.getJSONObject(i);
-                        String name = jObject.getString("name");
-                        String acheive = jObject.getString("acheive");
-                        String buxs = jObject.getString("buxs");
-
-                        BuxsEarnedDto e = new BuxsEarnedDto();
-                        e.setName(name);
-                        e.setAcheive(acheive);
-                        e.setBuxs(buxs);
-
-                        mEarned.add(e);
-
-                        ContentValues cv = new ContentValues();
-                        cv.put("activity", name);
-                        cv.put("activity_bux", buxs);
-                        cv.put("earned_bux", acheive);
-                        Constant.printMsg("activity data   " + name + "   "
-                                + buxs + "    " + acheive);
-                        insertbuxDB(cv);
-
-                    }
-
-                } catch (JSONException e) {
-                    // TODO: handle exception
-                    e.printStackTrace();
-                }
-
-                if (mEarned.size() > 0) {
-                    mBuxSActivityListview.setAdapter(new BuxsPointAdapter(
-                            getApplicationContext(), mEarned));
-                    // new MyAsync().execute();
-                }
-            } else {
-
-                Toast.makeText(BuxSActivity.this,
-                        "Network Error..Try Again Later", Toast.LENGTH_SHORT)
-                        .show();
-            }
-
-        }
-
-    }
-
-    private class getRedeemed extends AsyncTask<String, String, String> {
-        ProgressDialog progressdialog;
-
-        @Override
-        protected void onPreExecute() {
-            // TODO Auto-generated method stub
-            super.onPreExecute();
-            progressdialog = new ProgressDialog(BuxSActivity.this);
-            progressdialog.setMessage(getResources()
-                    .getString(R.string.loading));
-            progressdialog.show();
-        }
-
-        @Override
-        protected String doInBackground(String... params) {
-            // TODO Auto-generated method stub
-            String result = null;
-            HttpConfig ht = new HttpConfig();
-
-            result = ht.httpget(KachingMeConfig.Buxs);
-            Constant.printMsg("PRODUCT URL>>>>>>" + result);
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
-            progressdialog.dismiss();
-            Constant.printMsg("PRODUCT RESULT>>>>>>" + result);
-            if (result != null && result.length() > 0) {
-                JSONObject jObject = null;
-                try {
-                    jObject = new JSONObject(result);
-
-                } catch (JSONException e) {
-                    // TODO: handle exception
-                    e.printStackTrace();
-                }
-                JSONArray jsonArray = null;
-                try {
-                    jsonArray = jObject.getJSONArray("buxsRedeemedDtos");
-                    mRedeemed = new ArrayList<BuxsRedeemedDto>();
-                    for (int i = 0; i < jsonArray.length(); i++) {
-
-                        jObject = jsonArray.getJSONObject(i);
-                        String name = jObject.getString("retMerName");
-                        String buxs = jObject.getString("redeemedBux");
-
-                        BuxsRedeemedDto r = new BuxsRedeemedDto();
-                        r.setRetmerName(name);
-                        r.setRedeemedBuxs(buxs);
-
-                        mRedeemed.add(r);
-
-                    }
-
-                } catch (JSONException e) {
-                    // TODO: handle exception
-                    e.printStackTrace();
-                }
-                if (mRedeemed.size() > 0) {
-                    // reddemed_list.setAdapter(new RedeemedAdapter(
-                    // getApplicationContext(), mRedeemed));
-                    //new MyAsync().execute();
-                }
-            } else {
-
-                Toast.makeText(BuxSActivity.this,
-                        "Network Error..Try Again Later", Toast.LENGTH_SHORT)
-                        .show();
-            }
-
-        }
-
     }
 }

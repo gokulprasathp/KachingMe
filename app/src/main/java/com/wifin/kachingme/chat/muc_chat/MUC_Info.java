@@ -1,5 +1,6 @@
 package com.wifin.kachingme.chat.muc_chat;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -50,6 +51,7 @@ import android.widget.TextView;
 
 import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.applications.KachingMeApplication;
+import com.wifin.kachingme.async_tasks.ConcurrentAsyncTaskExecutor;
 import com.wifin.kachingme.chat.single_chat.ChatTest;
 import com.wifin.kachingme.chat_home.HeaderActivity;
 import com.wifin.kachingme.chat_home.SliderTesting;
@@ -82,6 +84,7 @@ import org.jivesoftware.smackx.bookmarks.BookmarkManager;
 import org.jivesoftware.smackx.jiveproperties.JivePropertiesManager;
 import org.jivesoftware.smackx.muc.Affiliate;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jivesoftware.smackx.muc.MucEnterConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
@@ -90,6 +93,9 @@ import org.jivesoftware.smackx.xdata.Form;
 import org.jivesoftware.smackx.xdata.FormField;
 import org.jivesoftware.smackx.xroster.RosterExchangeManager;
 import org.json.JSONObject;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -113,6 +119,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
     MultiUserChat muc;
     boolean isContactNumberExits = false;
     String jid;
+    ProgressDialog progressdialog;
     Handler h;
     Thread refresh;
     Boolean create = true;
@@ -148,6 +155,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
     int height = 0;
     int width = 0;
     ImageView back_arrow_btn;
+    public static ArrayList<ContactsGetSet> selected_users;
     // NEw
     private String res_jid = null;
     private List<String> jidList;
@@ -224,6 +232,9 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
 
         Constant.FROM_CHAT_SCREEN = "info";
 
+        progressdialog = new ProgressDialog(this);
+        progressdialog.setMessage(getResources().getString(R.string.loading));
+
         Constant.typeFace(this, txt_subject);
         Constant.typeFace(this, txt_member);
         Constant.typeFace(this, btn_edit_sunject);
@@ -299,8 +310,12 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                     MultiUserChatManager multiUserChatManager = MultiUserChatManager
                             .getInstanceFor(TempConnectionService.connection);
 
-                    muc = multiUserChatManager
-                            .getMultiUserChat(jid);
+                    try {
+                        muc = multiUserChatManager
+                                .getMultiUserChat(JidCreate.entityBareFrom(jid));
+                    } catch (XmppStringprepException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
 
@@ -955,6 +970,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
 
     }
 
+    @SuppressLint("StringFormatInvalid")
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v,
                                     ContextMenuInfo menuInfo) {
@@ -1058,13 +1074,24 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
         Thread mucThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                muc = TempConnectionService.MUC_MANAGER.getMultiUserChat(jid);
                 try {
-                    DiscussionHistory history = new DiscussionHistory();
-                    history.setSince(new Date());
-                    muc.join(dbAdapter.getLogin().get(0).getUserName()
-                                    + KachingMeApplication.getHost(), null,
-                            history, 60000L);
+                    muc = TempConnectionService.MUC_MANAGER.getMultiUserChat(JidCreate.entityBareFrom(jid));
+                } catch (XmppStringprepException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    MucEnterConfiguration.Builder build =  muc.getEnterConfigurationBuilder(Resourcepart.from("group"));
+
+                    build.requestHistorySince(new Date());
+                    build.requestMaxStanzasHistory(0);
+                    build.requestMaxCharsHistory(0);
+                    build.timeoutAfter(6000000L);
+
+                    MucEnterConfiguration musOb =  build.build();
+
+
+//                if (!muc.isJoined()) {
+                    muc.join(musOb);
                     muc.addMessageListener(new MUC_MessageListener(MUC_Info.this, MUC_Info.this));
                     muc.addSubjectUpdatedListener(new MUC_SubjectChangeListener(
                             MUC_Info.this));
@@ -1093,7 +1120,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
             if (item.getOrder() == 1 && Connectivity.isOnline(MUC_Info.this) && Connectivity.isTempConnection()) {
                 Constant.printMsg("checkkkkassasa   " + item.getItemId() + "   "
                         + item.toString() + "  " + item.getTitle());
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(
                         getResources().getString(R.string.remove_member))
                         .setMessage(
@@ -1111,7 +1138,13 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                                                         int which) {
                                         // Yes button clicked, do something
 
-                                        Remove_Meber(item.getItemId());
+                                       // Remove_Meber(item.getItemId());
+
+                                        Integer[] val = {item.getItemId()};
+                                        ConcurrentAsyncTaskExecutor.executeConcurrently(new Remove_Async(), val);
+                                        dialog.cancel();
+
+
 
                                     }
                                 })
@@ -1124,10 +1157,11 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                                     public void onClick(DialogInterface dialog,
                                                         int which) {
                                         // TODO Auto-generated method stub
+                                        dialog.cancel();
 
                                     }
-                                }) // Do nothing on no
-                        .show();
+                                }) ;// Do nothing on no
+                builder.show();
 
                 //
 
@@ -1202,59 +1236,62 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
 
     }
 
-    public void Remove_Meber(int positon) {
-
-        try {
-
-            Log.d(TAG, "LLLLLLLL Removed Member::" + contact_list_duplicate.get(positon).getJid());
-            muc.revokeOwnership(contact_list_duplicate.get(positon).getJid());
-
-            String mem_list = null;
-            Collection<Affiliate> owner = muc.getOwners();
-
-            int i = 0;
-            for (Affiliate affiliate : owner) {
-                if (i == 0) {
-                    mem_list = affiliate.getJid();
-                } else {
-                    mem_list = mem_list + "," + affiliate.getJid();
-                }
-                i++;
-                Log.d("MUC_info", "LLLLLLLL Owner Left::" + affiliate.getJid());
-            }
-            String packate_id = "" + new Date().getTime();
-
-            dbAdapter.deleteGroupMembers(jid, contact_list_duplicate.get(positon)
-                    .getJid());
-
-            Message msg = new Message(jid, Type.groupchat);
-            msg.setStanzaId(Constant.MEMBERREMOVEMESSAGE + packate_id);
-
-            // msg.setSubject(muc.getSubject());
-            msg.setBody(mem_list);
-            JivePropertiesManager.addProperty(msg, "Removed_member",
-                    contact_list_duplicate.get(positon).getJid());
-            JivePropertiesManager.addProperty(msg, "ID", 2);
-            JivePropertiesManager.addProperty(msg, "media_wa_type", "0");
-            muc.sendMessage(msg);
-            Constant.printMsg("LLLLLL mesg sent");
-            editor.putString(jid, mem_list);
-            editor.commit();
-
-            muc.revokeMembership(contact_list_duplicate.get(positon).getJid());
-
-//            SendWeb_Group.Update_Memberlist_on_web_async(MUC_Info.this, jid,
-//                    mem_list);
-
-            Intent chat_broadcast = new Intent("update_list");
-            sendBroadcast(chat_broadcast);
-
-        } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-            Constant.printMsg("LLLLLL remove mem exp :" + e.toString());
-        }
-
-        //	 new MyAsync().execute();
-    }
+//    public void Remove_Meber(final int positon) {
+//
+//
+//       try{
+//                    Log.d(TAG, "LLLLLLLL Removed Member::" + contact_list_duplicate.get(positon).getJid());
+//                    muc.revokeOwnership(contact_list_duplicate.get(positon).getJid());
+//
+//                    String mem_list = null;
+//                    Collection<Affiliate> owner = muc.getOwners();
+//
+//                    int i = 0;
+//                    for (Affiliate affiliate : owner) {
+//                        if (i == 0) {
+//                            mem_list = affiliate.getJid();
+//                        } else {
+//                            mem_list = mem_list + "," + affiliate.getJid();
+//                        }
+//                        i++;
+//                        Log.d("MUC_info", "LLLLLLLL Owner Left::" + affiliate.getJid());
+//                    }
+//                    String packate_id = "" + new Date().getTime();
+//
+//                    dbAdapter.deleteGroupMembers(jid, contact_list_duplicate.get(positon)
+//                            .getJid());
+//
+//                    Message msg = new Message(jid, Type.groupchat);
+//                    msg.setStanzaId(Constant.MEMBERREMOVEMESSAGE + packate_id);
+//
+//                    // msg.setSubject(muc.getSubject());
+//                    msg.setBody(mem_list);
+//                    JivePropertiesManager.addProperty(msg, "Removed_member",
+//                            contact_list_duplicate.get(positon).getJid());
+//                    JivePropertiesManager.addProperty(msg, "ID", 2);
+//                    JivePropertiesManager.addProperty(msg, "media_wa_type", "0");
+//                    muc.sendMessage(msg);
+//                    Constant.printMsg("LLLLLL mesg sent");
+//                    editor.putString(jid, mem_list);
+//                    editor.commit();
+//
+//                    muc.revokeMembership(contact_list_duplicate.get(positon).getJid());
+//
+////            SendWeb_Group.Update_Memberlist_on_web_async(MUC_Info.this, jid,
+////                    mem_list);
+//
+//                    Intent chat_broadcast = new Intent("update_list");
+//                    sendBroadcast(chat_broadcast);
+//
+//                } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+//                    Constant.printMsg("LLLLLL remove mem exp :" + e.toString());
+//                }
+//
+//
+//
+//
+//        //	 new MyAsync().execute();
+//    }
 
     public void Add_Meber(String mem_jid) {
 
@@ -1266,13 +1303,13 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
             mem_jid = selected_m[j];
 
             try {
-                Log.d(TAG, "Invited Member::" + mem_jid);
+                Log.d(TAG, "Invited Member::" + mem_jid +" "+muc.getSubject());
 
                 // muc.invite(mem_jid,"");
 
-                muc.invite(mem_jid, "invite");
+                muc.invite(JidCreate.entityBareFrom(mem_jid),"invite");
 
-                muc.grantOwnership(mem_jid);
+                muc.grantOwnership(JidCreate.from(mem_jid));
 
                 String mem_list = null;
                 Collection<Affiliate> owner = muc.getOwners();
@@ -1280,7 +1317,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                 int i = 0;
                 for (Affiliate affiliate : owner) {
                     if (i == 0) {
-                        mem_list = affiliate.getJid();
+                        mem_list = affiliate.getJid().toString();
                     } else {
                         mem_list = mem_list + "," + affiliate.getJid();
                     }
@@ -1294,7 +1331,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                 group_partcipant_getset.setJid(mem_jid);
                 dbAdapter.addGroupMembers(group_partcipant_getset);
 
-                Message msg1 = new Message(jid, Type.groupchat);
+                Message msg1 = new Message(JidCreate.from(jid), Type.groupchat);
                 Log.e("MUC_info", "Room subject::" + muc.getSubject());
 
                 msg1.setBody(mem_list);
@@ -1429,7 +1466,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
             if (TempConnectionService.connection != null) {
                 vc = VCardManager.getInstanceFor(
                         TempConnectionService.connection).loadVCard(
-                        contact.getJid());
+                        JidCreate.entityBareFrom(contact.getJid()));
 
                 Constant.printMsg("MUC Info Profile names Caaaaa::::::: "
                         + vc.getFirstName());
@@ -1606,7 +1643,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
             muc.sendConfigurationForm(submitForm);
 
 
-            Message msg = new Message(jid, Type.groupchat);
+            Message msg = new Message(JidCreate.from(jid), Type.groupchat);
             msg.setBody("Change admin");
             JivePropertiesManager.addProperty(msg, "ID", 4);
             JivePropertiesManager.addProperty(msg, "media_type",
@@ -1623,8 +1660,8 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
             long l = dbAdapter.updateGroupMembers(jid, new_admin, 1);
             Log.d(TAG, "Room Admin updated::" + l);
 
-            SendWeb_Group.Update_Admin_on_web_async(MUC_Info.this, jid,
-                    new_admin);
+//            SendWeb_Group.Update_Admin_on_web_async(MUC_Info.this, jid,
+//                    new_admin);
 
 
             Intent chat_broadcast = new Intent("update_list");
@@ -1682,8 +1719,8 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
 
             try {
 
-                muc.revokeOwnership(KachingMeApplication.getUserID()
-                        + KachingMeApplication.getHost());
+                muc.revokeOwnership(JidCreate.from(KachingMeApplication.getUserID()
+                        + KachingMeApplication.getHost()));
 
                 String mem_list = null;
                 Collection<Affiliate> owner = muc.getOwners();
@@ -1691,7 +1728,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                 int i = 0;
                 for (Affiliate affiliate : owner) {
                     if (i == 0) {
-                        mem_list = affiliate.getJid();
+                        mem_list = affiliate.getJid().toString();
                     } else {
                         mem_list = mem_list + "," + affiliate.getJid();
                     }
@@ -1699,7 +1736,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                     Log.d("MUC_info", "Owner::" + affiliate.getJid());
                 }
 
-                Message msg = new Message(jid, Type.groupchat);
+                Message msg = new Message(JidCreate.from(jid), Type.groupchat);
 
                 msg.setBody(mem_list);
                 JivePropertiesManager.addProperty(msg, "ID", 2);
@@ -1743,25 +1780,103 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
         try {
             BookmarkManager bm = BookmarkManager
                     .getBookmarkManager(TempConnectionService.connection);
-            bm.removeBookmarkedConference(jid);
+            bm.removeBookmarkedConference(JidCreate.entityBareFrom(jid));
         } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
             // TODO: handle exception
         }
 
     }
 
-    public void Remove_Meber(String jid_mem) {
 
-        try {
+    public class Remove_Async extends AsyncTask<Integer,String,String>
+    {
+        int positon;
 
-            muc.revokeOwnership(jid_mem);
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressdialog.show();
+        }
+        @Override
+        protected String doInBackground(Integer... strings) {
+
+            try{
+            positon = strings[0];
+
+            Log.d(TAG, "LLLLLLLL Removed Member::" + contact_list_duplicate.get(positon).getJid());
+            muc.revokeOwnership(JidCreate.from(contact_list_duplicate.get(positon).getJid()));
+
             String mem_list = null;
             Collection<Affiliate> owner = muc.getOwners();
 
             int i = 0;
             for (Affiliate affiliate : owner) {
                 if (i == 0) {
-                    mem_list = affiliate.getJid();
+                    mem_list = affiliate.getJid().toString();
+                } else {
+                    mem_list = mem_list + "," + affiliate.getJid();
+                }
+                i++;
+                Log.d("MUC_info", "LLLLLLLL Owner Left::" + affiliate.getJid());
+            }
+            String packate_id = "" + new Date().getTime();
+
+            dbAdapter.deleteGroupMembers(jid, contact_list_duplicate.get(positon)
+                    .getJid());
+
+            Message msg = new Message(JidCreate.from(jid), Type.groupchat);
+            msg.setStanzaId(Constant.MEMBERREMOVEMESSAGE + packate_id);
+
+            // msg.setSubject(muc.getSubject());
+            msg.setBody(mem_list);
+            JivePropertiesManager.addProperty(msg, "Removed_member",
+                    contact_list_duplicate.get(positon).getJid());
+            JivePropertiesManager.addProperty(msg, "ID", 2);
+            JivePropertiesManager.addProperty(msg, "media_wa_type", "0");
+            muc.sendMessage(msg);
+            Constant.printMsg("LLLLLL mesg sent");
+            editor.putString(jid, mem_list);
+            editor.commit();
+
+            muc.revokeMembership(JidCreate.from(contact_list_duplicate.get(positon).getJid()));
+
+//            SendWeb_Group.Update_Memberlist_on_web_async(MUC_Info.this, jid,
+//                    mem_list);
+
+
+
+        } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+        Constant.printMsg("LLLLLL remove mem exp :" + e.toString());
+    }
+
+        return null;
+        }
+
+
+
+        @Override
+        protected void onPostExecute(String s) {
+            progressdialog.cancel();
+
+            Intent chat_broadcast = new Intent("update_list");
+            sendBroadcast(chat_broadcast);
+
+            super.onPostExecute(s);
+        }
+    }
+
+    public void Remove_Meber(String jid_mem) {
+
+        try {
+
+            muc.revokeOwnership(JidCreate.from(jid_mem));
+            String mem_list = null;
+            Collection<Affiliate> owner = muc.getOwners();
+
+            int i = 0;
+            for (Affiliate affiliate : owner) {
+                if (i == 0) {
+                    mem_list = affiliate.getJid().toString();
                 } else {
                     mem_list = mem_list + "," + affiliate.getJid();
                 }
@@ -1770,7 +1885,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
             }
             dbAdapter.deleteGroupMembers(jid, jid_mem);
             Log.e("MUC_info", "Room subject::" + muc.getSubject());
-            Message msg = new Message(jid, Type.groupchat);
+            Message msg = new Message(JidCreate.from(jid), Type.groupchat);
             // msg.setSubject(muc.getSubject());
             msg.setBody(mem_list);
             JivePropertiesManager.addProperty(msg, "ID", 2);
@@ -1781,8 +1896,8 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
             muc.sendMessage(msg);
 
             muc.leave();
-            SendWeb_Group.Update_Memberlist_on_web_async(MUC_Info.this, jid,
-                    mem_list);
+//            SendWeb_Group.Update_Memberlist_on_web_async(MUC_Info.this, jid,
+//                    mem_list);
 
         } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
             e.printStackTrace();
@@ -1815,7 +1930,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                                 try {
                                     //  muc.changeSubject(value);
 
-                                    Message msg = new Message(jid, Type.groupchat);
+                                    Message msg = new Message(JidCreate.from(jid), Type.groupchat);
                                     msg.setStanzaId(Constant.SUBJECTCHNAGE
                                             + new Date().getTime());
                                     msg.setSubject("" + value);
@@ -1918,7 +2033,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
 
         @Override
         protected void onPreExecute() {
-            // TODO Auto-generated method stub
+            progressdialog.show();
 
             if (!myPd_ring.isShowing())
                 myPd_ring.dismiss();
@@ -2080,7 +2195,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
             // Constant.printMsg(":print size ::::: "+customer.getJid() +
             // "    "+contact_list.size());
             contact_list_duplicate = contact_list;
-
+            selected_users = contact_list;
             adapter = new UserListAdapter(MUC_Info.this,
                     R.layout.muc_mem_list_items, contact_list);
             list.setAdapter(adapter);
@@ -2088,6 +2203,8 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
 
             txt_member.setText(contact_list.size() + " "
                     + getResources().getString(R.string.out_of_200_members));
+
+            progressdialog.cancel();
 
             if (Connectivity.isOnline(MUC_Info.this) && Connectivity.isTempConnection() && isContactNumberExits)
                 new UpdateProfileAsync().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
@@ -2543,7 +2660,7 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
 
                 Log.d(TAG, "Load vcard for::" + jid);
                 vc = VCardManager.getInstanceFor(
-                        TempConnectionService.connection).loadVCard(jid);
+                        TempConnectionService.connection).loadVCard(JidCreate.entityBareFrom(jid));
                 contact.setStatus(vc.getField("SORT-STRING"));
                 contact.setNifty_email(vc.getEmailWork());
                 contact.setNifty_name(vc.getFirstName());
@@ -2582,11 +2699,11 @@ public class MUC_Info extends HeaderActivity implements OnClickListener {
                     Roster roster = Roster
                             .getInstanceFor(TempConnectionService.connection);
                     roster.setSubscriptionMode(SubscriptionMode.accept_all);
-                    roster.createEntry(vc.getJabberId(), vc.getJabberId(), null);
+                    roster.createEntry(JidCreate.bareFrom(vc.getJabberId()), vc.getJabberId(), null);
 
                     RosterExchangeManager rem = new RosterExchangeManager(
                             TempConnectionService.connection);
-                    rem.send(roster, vc.getJabberId());
+                    rem.send(roster, JidCreate.from(vc.getJabberId()));
 
                 }
 

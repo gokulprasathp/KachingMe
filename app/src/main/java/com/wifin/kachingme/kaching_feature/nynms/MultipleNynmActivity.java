@@ -892,7 +892,7 @@ public class MultipleNynmActivity extends HeaderActivity {
 
     public void dialogDeleteNynm(final String positionDelete) {
         AlertDialog.Builder alertDeleteNynm = new AlertDialog.Builder(this);
-        alertDeleteNynm.setMessage("Are You Sure To Delete.?");
+        alertDeleteNynm.setMessage("Are You Sure you want to delete.?");
         alertDeleteNynm.setPositiveButton("Proceed", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {

@@ -144,97 +144,101 @@ public class ContactService extends Service {
             // people.moveToFirst();
             boolean numberEdit = false;
             while (people.moveToNext()) {
-                count++;
                 String name = people.getString(indexName).trim();
                 String number = people.getString(indexNumber).trim();
                 int row_contact_id = people.getInt(indexRowId);
                 // if (number.length() > 9) {
-
-                UserContactDto cd = new UserContactDto();
-                String alphaAndDigits = number.replaceAll("[^0-9+]", "");
-                // String num = number.replaceAll("\\s+", "");
-                try {
-                    if (Utils.check_prefix(alphaAndDigits, "00", 2)) {
-                        alphaAndDigits = ""
-                                + alphaAndDigits.substring(2,
-                                alphaAndDigits.length());
-                    } else {
-                        if (Utils.check_prefix(alphaAndDigits, "0", 1)) {
-                            alphaAndDigits = alphaAndDigits.substring(1,
+                if (!number.startsWith("#") && !number.startsWith("*")) {
+                    count++;
+                    UserContactDto cd = new UserContactDto();
+                    String alphaAndDigits = number.replaceAll("[^0-9+]", "");
+                    // String num = number.replaceAll("\\s+", "");
+                    try {
+                        if (Utils.check_prefix(alphaAndDigits, "00", 2)) {
+                            alphaAndDigits = ""
+                                    + alphaAndDigits.substring(2,
                                     alphaAndDigits.length());
+                        } else {
+                            if (Utils.check_prefix(alphaAndDigits, "0", 1)) {
+                                alphaAndDigits = alphaAndDigits.substring(1,
+                                        alphaAndDigits.length());
+                            }
                         }
+                    } catch (Exception e) {
+                        // TODO: handle exception
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    // TODO: handle exception
-                    e.printStackTrace();
-                }
 
-                // String strName = name.replaceAll("\\s+", "");
-                if (alphaAndDigits.startsWith("+")) {
-                    cd.setContactNumbe(""
-                            + alphaAndDigits.substring(1,
-                            alphaAndDigits.length()));
-                } else {
-                    cd.setContactNumbe(country_code + alphaAndDigits);
-                }
-                cd.setContactName(name);
-                cd.setuId(String.valueOf(count));
-                conlist.add(cd);
-
-                ContactsGetSet contects = new ContactsGetSet();
-                contects.setDisplay_name(name);
-                contects.setIs_niftychat_user(0);
-                if (alphaAndDigits.startsWith("+")) {
-                    contects.setJid(""
-                            + alphaAndDigits.substring(1,
-                            alphaAndDigits.length())
-                            + KachingMeApplication.getHost());
-                } else {
-                    contects.setJid(country_code + alphaAndDigits
-                            + KachingMeApplication.getHost());
-
-                }
-                contects.setNumber(alphaAndDigits);
-                contects.setPhone_label("");
-                contects.setRaw_contact_id("" + row_contact_id);
-                contects.setPhone_type("");
-                contects.setIsInContactList(1);
-                contects.setUnseen_msg_count(0);
-                // Constant.printMsg("siva last duty:name.. present or not");
-                // Constant.printMsg("siva last duty:name..123..." + strName
-                // +"...db name..."+
-                // dbAdapter.getcontactName(contects.getJid()));
-
-                if (!contects.getJid().equals(
-                        KachingMeApplication.getUserID()
-                                + KachingMeApplication.getHost())) {
-                    if (dbAdapter.getJidIdPresentOrNot(contects.getJid()) == 0) {
-                        numberEdit = true;
-                        dbAdapter.insertContacts(contects);
-                        deleteAddedContact();
-                    } else if (dbAdapter.getIsInContactList(contects.getJid()) == 0) {
-                        dbAdapter.updateIsInContactList(contects.getJid(), 1,name);
+                    // String strName = name.replaceAll("\\s+", "");
+                    if (alphaAndDigits.startsWith("+")) {
+                        cd.setContactNumbe(""
+                                + alphaAndDigits.substring(1,
+                                alphaAndDigits.length()));
+                    } else {
+                        cd.setContactNumbe(country_code + alphaAndDigits);
                     }
-                    // Constant.printMsg("siva last duty:name.." + strName
+                    cd.setContactName(name);
+                    cd.setuId(String.valueOf(count));
+                    conlist.add(cd);
+
+                    ContactsGetSet contects = new ContactsGetSet();
+                    contects.setDisplay_name(name);
+                    contects.setIs_niftychat_user(0);
+                    if (alphaAndDigits.startsWith("+")) {
+                        contects.setJid(""
+                                + alphaAndDigits.substring(1,
+                                alphaAndDigits.length())
+                                + KachingMeApplication.getHost());
+                    } else {
+                        contects.setJid(country_code + alphaAndDigits
+                                + KachingMeApplication.getHost());
+
+                    }
+                    contects.setNumber(alphaAndDigits);
+                    contects.setPhone_label("");
+                    contects.setRaw_contact_id("" + row_contact_id);
+                    contects.setPhone_type("");
+                    contects.setIsInContactList(1);
+                    contects.setUnseen_msg_count(0);
+                    // Constant.printMsg("siva last duty:name.. present or not");
+                    // Constant.printMsg("siva last duty:name..123..." + strName
                     // +"...db name..."+
                     // dbAdapter.getcontactName(contects.getJid()));
-                    if (dbAdapter.getcontactName(contects.getJid()) != null
-                            && !dbAdapter.getcontactName(contects.getJid())
-                            .equalsIgnoreCase(name)) {
-                        dbAdapter.contactNameUpdate(contects.getJid(), name);
-                        Constant.printMsg("siva inside the name edit......"
-                                + name);
+
+                    if (!contects.getJid().equals(
+                            KachingMeApplication.getUserID()
+                                    + KachingMeApplication.getHost())) {
+                        if (dbAdapter.getJidIdPresentOrNot(contects.getJid()) == 0) {
+                            numberEdit = true;
+                            dbAdapter.insertContacts(contects);
+                            deleteAddedContact();
+                        } else if (dbAdapter.getIsInContactList(contects.getJid()) == 0) {
+                            dbAdapter.updateIsInContactList(contects.getJid(), 1, name);
+                        }
+                        // Constant.printMsg("siva last duty:name.." + strName
+                        // +"...db name..."+
+                        // dbAdapter.getcontactName(contects.getJid()));
+                        if (dbAdapter.getcontactName(contects.getJid()) != null
+                                && !dbAdapter.getcontactName(contects.getJid())
+                                .equalsIgnoreCase(name)) {
+                            dbAdapter.contactNameUpdate(contects.getJid(), name);
+                            Constant.printMsg("siva inside the name edit......"
+                                    + name);
+                        }
                     }
-                }
-                if (people.isLast() && numberEdit) {
-                    Constant.contactlist.addAll(conlist);
-                    if (Connectivity.isConnected(this)){
-                        new postcontact().execute();
-                    }else{
-                        Constant.printMsg("siva test.......");
-                        Intent login_broadcast = new Intent("contact_update");
-                        getApplicationContext().sendBroadcast(login_broadcast);
+                    if (people.isLast() && numberEdit) {
+                        Constant.contactlist.addAll(conlist);
+                        if (Connectivity.isConnected(this)) {
+                            new postcontact().execute();
+                        } else {
+                            Constant.printMsg("siva test.......");
+                            Intent login_broadcast = new Intent("contact_update");
+                            getApplicationContext().sendBroadcast(login_broadcast);
+                        }
                     }
+                } else {
+                    Constant.printMsg("siva test deleted inside update......." + number+".."+name);
+                    deleteAddedParticularContact(number,name);
                 }
             }
 
@@ -271,92 +275,95 @@ public class ContactService extends Service {
                 // int row_contact_id = people
                 // .getInt(people
                 // .getColumnIndex(ContactsContract.CommonDataKinds.Phone.RAW_CONTACT_ID));
-                count++;
-                // String name = people.getString(indexName).trim();
-                // String number = people.getString(indexNumber).trim();
                 String name = people.getString(indexName);
                 String number = people.getString(indexNumber);
                 int row_contact_id = people.getInt(indexRowId);
-                // UserListGetSet userlist = new UserListGetSet();
-                Constant.printMsg("siva onchange contact get particular contact name........." + name);
-                Constant.printMsg("siva onchange contact get particular contact number........." + number);
-                // if (number.length() > 9) {
+                if (!number.startsWith("#") && !number.startsWith("*")) {
+                    count++;
+                    // String name = people.getString(indexName).trim();
+                    // String number = people.getString(indexNumber).trim();
+                    // UserListGetSet userlist = new UserListGetSet();
+                    Constant.printMsg("siva onchange contact get particular contact name........." + name);
+                    Constant.printMsg("siva onchange contact get particular contact number........." + number);
+                    // if (number.length() > 9) {
 
-                UserContactDto cd = new UserContactDto();
-                String alphaAndDigits = number.replaceAll("[^0-9+]", "");
-                // String num = number.replaceAll("\\s+", "");
-                try {
-                    if (Utils.check_prefix(alphaAndDigits, "00", 2)) {
-                        alphaAndDigits = ""
-                                + alphaAndDigits.substring(2,
-                                alphaAndDigits.length());
-                    } else {
-                        if (Utils.check_prefix(alphaAndDigits, "0", 1)) {
-                            alphaAndDigits = alphaAndDigits.substring(1,
+                    UserContactDto cd = new UserContactDto();
+                    String alphaAndDigits = number.replaceAll("[^0-9+]", "");
+                    // String num = number.replaceAll("\\s+", "");
+                    try {
+                        if (Utils.check_prefix(alphaAndDigits, "00", 2)) {
+                            alphaAndDigits = ""
+                                    + alphaAndDigits.substring(2,
                                     alphaAndDigits.length());
+                        } else {
+                            if (Utils.check_prefix(alphaAndDigits, "0", 1)) {
+                                alphaAndDigits = alphaAndDigits.substring(1,
+                                        alphaAndDigits.length());
+                            }
                         }
+                    } catch (Exception e) {
+                        // TODO: handle exception
+                        e.printStackTrace();
                     }
-                } catch (Exception e) {
-                    // TODO: handle exception
-                    e.printStackTrace();
-                }
 
-                String strName = name.replaceAll("\\s+", "");
-                if (alphaAndDigits.startsWith("+")) {
-                    cd.setContactNumbe(""
-                            + alphaAndDigits.substring(1,
-                            alphaAndDigits.length()));
-                } else {
-                    cd.setContactNumbe(country_code + alphaAndDigits);
-                }
-                cd.setContactName(strName);
-                cd.setuId(String.valueOf(count));
-                conlist.add(cd);
-
-                ContactsGetSet contects = new ContactsGetSet();
-                contects.setDisplay_name(name);
-                contects.setIs_niftychat_user(0);
-                if (alphaAndDigits.startsWith("+")) {
-                    contects.setJid(""
-                            + alphaAndDigits.substring(1,
-                            alphaAndDigits.length())
-                            + KachingMeApplication.getHost());
-                } else {
-                    contects.setJid(country_code + alphaAndDigits
-                            + KachingMeApplication.getHost());
-
-                }
-                contects.setNumber(alphaAndDigits);
-                contects.setPhone_label("");
-                contects.setRaw_contact_id("" + row_contact_id);
-                contects.setPhone_type("");
-                contects.setIsInContactList(1);
-                contects.setUnseen_msg_count(0);
-                Constant.printMsg("siva conatct list:::name.." + strName
-                        + "...number..." + alphaAndDigits
-                        + "..number length...  " + number.length());
-                if (!contects.getJid().equals(
-                        KachingMeApplication.getUserID()
-                                + KachingMeApplication.getHost())) {
-                    if (dbAdapter.getJidIdPresentOrNot(contects.getJid()) == 0) {
-                        Constant.printMsg("siva onchange contact inserted particular contact name........." + name);
-                        dbAdapter.insertContacts(contects);
-                    } else if (dbAdapter.getIsInContactList(contects.getJid()) == 0) {
-                        Constant.printMsg("siva onchange contact update in insert particular contact name........." + name);
-                        dbAdapter.updateIsInContactList(contects.getJid(), 1,name);
+                    String strName = name.replaceAll("\\s+", "");
+                    if (alphaAndDigits.startsWith("+")) {
+                        cd.setContactNumbe(""
+                                + alphaAndDigits.substring(1,
+                                alphaAndDigits.length()));
                     } else {
-                        /** need to check diaplay name here */
-                        // if (condition) {
-                        // dbAdapter.updateInsertedContacts(jid, primaryNumber);
-                        // }
+                        cd.setContactNumbe(country_code + alphaAndDigits);
+                    }
+                    cd.setContactName(strName);
+                    cd.setuId(String.valueOf(count));
+                    conlist.add(cd);
+
+                    ContactsGetSet contects = new ContactsGetSet();
+                    contects.setDisplay_name(name);
+                    contects.setIs_niftychat_user(0);
+                    if (alphaAndDigits.startsWith("+")) {
+                        contects.setJid(""
+                                + alphaAndDigits.substring(1,
+                                alphaAndDigits.length())
+                                + KachingMeApplication.getHost());
+                    } else {
+                        contects.setJid(country_code + alphaAndDigits
+                                + KachingMeApplication.getHost());
+
+                    }
+                    contects.setNumber(alphaAndDigits);
+                    contects.setPhone_label("");
+                    contects.setRaw_contact_id("" + row_contact_id);
+                    contects.setPhone_type("");
+                    contects.setIsInContactList(1);
+                    contects.setUnseen_msg_count(0);
+                    Constant.printMsg("siva conatct list:::name.." + strName
+                            + "...number..." + alphaAndDigits
+                            + "..number length...  " + number.length());
+                    if (!contects.getJid().equals(
+                            KachingMeApplication.getUserID()
+                                    + KachingMeApplication.getHost())) {
+                        if (dbAdapter.getJidIdPresentOrNot(contects.getJid()) == 0) {
+                            Constant.printMsg("siva onchange contact inserted particular contact name........." + name);
+                            if (alphaAndDigits.length() >= 4)
+                                dbAdapter.insertContacts(contects);
+                        } else if (dbAdapter.getIsInContactList(contects.getJid()) == 0) {
+                            Constant.printMsg("siva onchange contact update in insert particular contact name........." + name);
+                            dbAdapter.updateIsInContactList(contects.getJid(), 1, name);
+                        } else {
+                            /** need to check diaplay name here */
+                            // if (condition) {
+                            // dbAdapter.updateInsertedContacts(jid, primaryNumber);
+                            // }
+                        }
                     }
                 }
             }
             Constant.contactlist.addAll(conlist);
             // data1 = jsonFormContact();
-            if (Connectivity.isConnected(this)){
+            if (Connectivity.isConnected(this)) {
                 new postcontact().execute();
-            }else{
+            } else {
                 Constant.printMsg("siva test.......");
                 Intent login_broadcast = new Intent("contact_update");
                 getApplicationContext().sendBroadcast(login_broadcast);
@@ -457,6 +464,55 @@ public class ContactService extends Service {
 //            m.setData(b);
 //            FavouriteContacts.handlerNew.sendMessage(m);
         }
+    }
+
+    protected void deleteAddedParticularContact(String number,String name) {
+        ArrayList<UserContactDto> contactDeletelist = new ArrayList<UserContactDto>();
+        UserContactDto cd = new UserContactDto();
+        String alphaAndDigits = number.replaceAll("[^0-9+]", "");
+        // String num = number.replaceAll("\\s+", "");
+        try {
+            if (Utils.check_prefix(alphaAndDigits, "00", 2)) {
+                alphaAndDigits = ""
+                        + alphaAndDigits.substring(2,
+                        alphaAndDigits.length());
+            } else {
+                if (Utils.check_prefix(alphaAndDigits, "0", 1)) {
+                    alphaAndDigits = alphaAndDigits.substring(1,
+                            alphaAndDigits.length());
+                }
+            }
+        } catch (Exception e) {
+            // TODO: handle exception
+            e.printStackTrace();
+        }
+        Constant.printMsg("siva onchange contact service inisde delete enter 1"
+                + number);
+
+        String strName = name.replaceAll("\\s+", "");
+        if (alphaAndDigits.startsWith("+")) {
+            cd.setContactNumbe(""
+                    + alphaAndDigits.substring(1,
+                    alphaAndDigits.length()));
+        } else {
+            cd.setContactNumbe(country_code + alphaAndDigits);
+        }
+        cd.setContactName(strName);
+        if (alphaAndDigits.startsWith("+")) {
+            cd.setuId(""
+                    + alphaAndDigits.substring(1,
+                    alphaAndDigits.length())
+                    + KachingMeApplication.getHost());
+        } else {
+            cd.setuId(country_code + alphaAndDigits
+                    + KachingMeApplication.getHost());
+        }
+        contactDeletelist.add(cd);
+        Constant.printMsg("siva conatct list:::name.." + strName
+                + "...number..." + alphaAndDigits
+                + "...number length...  " + number.length());
+        dbAdapter.checkDbForRemoveContact(contactDeletelist);
+
     }
 
     public String jsonFormContact() {
@@ -572,13 +628,13 @@ public class ContactService extends Service {
                                                         KachingMeApplication.getHost()) != 0) {
                                                     dbAdapter.updateInsertedContacts(
                                                             primaryNumber + KachingMeApplication.getHost(),
-                                                            primaryNumber, photo, status,email);
-                                                    if (photo!=null && !photo.isEmpty()){
+                                                            primaryNumber, photo, status, email);
+                                                    if (photo != null && !photo.isEmpty()) {
                                                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
                                                             com.new getImagefromUrlAsy().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
-                                                                    primaryNumber , photo, status, null);
+                                                                    primaryNumber, photo, status, null);
                                                         else
-                                                            com.new getImagefromUrlAsy().execute(primaryNumber , photo, status, null);
+                                                            com.new getImagefromUrlAsy().execute(primaryNumber, photo, status, null);
                                                     }
                                                 } else {
                                                     List<String> secondaryList = contactReponse
@@ -591,13 +647,13 @@ public class ContactService extends Service {
                                                                 KachingMeApplication.getHost()) != 0) {
                                                             dbAdapter.updateInsertedContacts(
                                                                     secondaryList.get(j) + KachingMeApplication.getHost(),
-                                                                    secondaryList.get(j), photo, status,email);
-                                                            if (photo!=null && !photo.isEmpty()){
+                                                                    secondaryList.get(j), photo, status, email);
+                                                            if (photo != null && !photo.isEmpty()) {
                                                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
                                                                     com.new getImagefromUrlAsy().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,
-                                                                            secondaryList.get(j) , photo, status, null);
+                                                                            secondaryList.get(j), photo, status, null);
                                                                 else
-                                                                    com.new getImagefromUrlAsy().execute(secondaryList.get(j) , photo, status, null);
+                                                                    com.new getImagefromUrlAsy().execute(secondaryList.get(j), photo, status, null);
                                                             }
                                                             break;
                                                         }

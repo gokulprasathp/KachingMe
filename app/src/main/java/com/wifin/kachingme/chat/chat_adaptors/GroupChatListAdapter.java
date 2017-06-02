@@ -139,18 +139,18 @@ public class GroupChatListAdapter extends RecyclerView.Adapter<GroupChatListAdap
 
             LinearLayout.LayoutParams statusImageParama = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            statusImageParama.width = width * 7 / 100;
-            statusImageParama.height = width * 7 / 100;
-            statusImageParama.gravity = Gravity.LEFT | Gravity.TOP;
+            statusImageParama.width = width * 5 / 100;
+            statusImageParama.height = width * 5 / 100;
+            statusImageParama.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_VERTICAL;
             imgChatStatus.setLayoutParams(statusImageParama);
 
             LinearLayout.LayoutParams msgTextParama = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             msgTextParama.width = width * 45 / 100;
             msgTextParama.height = height * 6 / 100;
-            msgTextParama.gravity = Gravity.LEFT;
+            msgTextParama.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_VERTICAL;
             tvChatUserMsg.setLayoutParams(msgTextParama);
-            tvChatUserMsg.setGravity(Gravity.CENTER | Gravity.LEFT | Gravity.TOP);
+//            tvChatUserMsg.setGravity(Gravity.CENTER | Gravity.LEFT | Gravity.TOP);
             tvChatUserMsg.setPadding(width * 1 / 100, width * 1 / 100, 0, 0);
 
             LinearLayout.LayoutParams rightSecondsParama = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,

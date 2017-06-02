@@ -10,16 +10,23 @@ import com.wifin.kachingme.database.DatabaseHelper;
 import com.wifin.kachingme.services.TempConnectionService;
 import com.wifin.kachingme.util.Constant;
 import com.wifin.kachingme.util.Log;
+import com.wifin.kachingme.util.SerialExecutor;
+
 
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smackx.muc.InvitationListener;
 import org.jivesoftware.smackx.muc.MultiUserChat;
+import org.jivesoftware.smackx.muc.packet.MUCUser;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
+import org.jxmpp.jid.EntityJid;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Queue;
+import java.util.concurrent.Executor;
 
 public class MUC_InvitationListener implements InvitationListener {
 
@@ -33,6 +40,7 @@ public class MUC_InvitationListener implements InvitationListener {
     MultiUserChat muc;
     SharedPreferences sp;
     SharedPreferences.Editor editor;
+    SerialExecutor serialExecutor;
 
 
     public MUC_InvitationListener(Context context, Context service1) {
@@ -45,34 +53,66 @@ public class MUC_InvitationListener implements InvitationListener {
         sp = this.context.getSharedPreferences(
                 KachingMeApplication.getPereference_label(), Activity.MODE_PRIVATE);
         editor = sp.edit();
+        serialExecutor = new SerialExecutor(new Executor() {
+            @Override
+            public void execute(Runnable runnable) {
+
+                runnable.run();
+            }
+        });
     }
+
+
 
     @Override
-    public void invitationReceived(XMPPConnection arg0, MultiUserChat arg1,
-                                   String inviter, String arg3, String arg4, Message arg5) {
-        // TODO Auto-generated method stub
-        Constant.printMsg("Invitation received is inviter temp:" + inviter
-                + " room:" + arg1.getSubject() + " isAuth::"
-                + arg0.isAuthenticated());
-
-        try {
-            Calendar c = Calendar.getInstance(/* TimeZone.getTimeZone("UTC") */);
-            editor.putLong("last_refresh_time",/* new Date().getTime() */
-                    c.getTimeInMillis());
-            editor.commit();
+    public void invitationReceived(XMPPConnection conn, MultiUserChat room, EntityJid inviter, String reason, String password, Message message, MUCUser.Invite invitation) {
+        {
+            // TODO Auto-generated method stub
+            Constant.printMsg("Invitation received is inviter temp:" + inviter
+                    + " room:" + reason + " isAuth::"
+                    + password);
 
 
-            if (arg1.getSubject()!=null) {
-                new MUC_ListenerMethods(context).setJoinRoom(arg1.getRoom(), inviter);
+            final MultiUserChat argument = room;
+            final String invite = inviter.toString();
+
+            try {
+                Calendar c = Calendar.getInstance(/* TimeZone.getTimeZone("UTC") */);
+                editor.putLong("last_refresh_time",/* new Date().getTime() */
+                        c.getTimeInMillis());
+                editor.commit();
+
+
+
+                Runnable runnable1 =  new Runnable() {
+                    @Override
+                    public void run() {
+                        try
+                        {
+
+                            Constant.printMsg("MUC Invitation before sleep....");
+                            Thread.sleep(3000);
+                            Constant.printMsg("MUC Invitation after sleep....");
+
+
+
+                            if(argument.getRoom()!=null && !dbadapter.isjidExist(argument.getRoom().toString()))
+                                new MUC_ListenerMethods(context).setJoinRoom(argument.getRoom().toString(), invite);
+                        }catch (Exception e)
+                        {
+
+                        }
+                    }
+                };
+
+                serialExecutor.execute(runnable1);
+
+            } catch (Exception e) {
+                // ACRA.getErrorReporter().handleException(e);
+                e.printStackTrace();
+                Log.d("Room::Bookmarking:", e.toString());
             }
 
-
-        } catch (Exception e) {
-            // ACRA.getErrorReporter().handleException(e);
-            e.printStackTrace();
-            Log.d("Room::Bookmarking:", e.toString());
         }
-
     }
-
 }

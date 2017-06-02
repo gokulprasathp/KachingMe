@@ -42,6 +42,8 @@ import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
 import org.jivesoftware.smackx.jiveproperties.JivePropertiesManager;
+import org.json.JSONObject;
+import org.jxmpp.jid.impl.JidCreate;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -55,7 +57,7 @@ import java.util.Date;
 //import com.loopj.android.http.AsyncHttpResponseHandler;
 //import com.loopj.android.http.RequestParams;
 
-public class GroupProfilePic extends SherlockBaseActivity {
+public class  GroupProfilePic extends SherlockBaseActivity {
 
     private static final int RESULT_CODE_GALLERY = 1, RESULT_CODE_CAMERA = 2,
             REQUEST_CODE_CROP_IMAGE = 3;
@@ -358,10 +360,20 @@ public class GroupProfilePic extends SherlockBaseActivity {
             fos.write(filedata);
             fos.close();
 
-            request_params.put("uploaded_file", new File(
+            request_params.setUseJsonStreamer(false);
+
+
+            request_params.put("primaryNo", "" + KachingMeApplication.getUserID().split("@")[0]);
+            request_params.put("fileType",  "5");
+            request_params.put("fileName",  "");
+            request_params.put("latitude",  "0");
+            request_params.put("longitude", "0");
+            request_params.put("reciverId", "1");
+            request_params.put("groupId", jid.split("@")[0]);
+            request_params.put("msgId", "");
+            request_params.put("file", new File(
                     KachingMeApplication.PROFILE_PIC_DIR + jid.split("@")[0]
                             + ".png"));
-            request_params.put("filename", jid.split("@")[0]);
 
         } catch (FileNotFoundException e) {// ACRA.getErrorReporter().handleException(e);
             // TODO Auto-generated catch block
@@ -373,8 +385,10 @@ public class GroupProfilePic extends SherlockBaseActivity {
 
         AsyncHttpClient client = new AsyncHttpClient();
         client.setTimeout(60000);
-        client.post(KachingMeConfig.UPLOAD_GROUP_ICON_PHP,
-                request_params,
+        client.post(this,
+                KachingMeConfig.UPLOAD_MEDIA,
+                null,
+                request_params,"multipart/form-data",
                 new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
                     @Override
@@ -412,42 +426,55 @@ public class GroupProfilePic extends SherlockBaseActivity {
                     public void onSuccess(int arg0, Header[] arg1, byte[] arg2) {
                         // TODO Auto-generated method stub
 
+
+
                         FileOutputStream fos;
                         try {
-                            fos = new FileOutputStream(new File(
-                                    KachingMeApplication.PROFILE_PIC_DIR
-                                            + jid.split("@")[0] + ".png"));
-                            fos.write(filedata);
-                            fos.close();
 
-                            Message message = new Message(jid, Type.groupchat);
-                            message.setStanzaId(Constant.GROUPICONCHNAGE
-                                    + new Date().getTime());
-                            message.setBody("");
+                            String content  = new String(arg2);
 
-                            JivePropertiesManager.addProperty(message, "ID", 8);
-                            JivePropertiesManager.addProperty(message,
-                                    "memberid", KachingMeApplication.getjid());
-                            MUCTest.muc.sendMessage(message);
+                            JSONObject jsonObject_Image = new JSONObject(content);
+//
+                            final String  url = jsonObject_Image.getString("url");
+
+                            Constant.printMsg("GGrrrr update " + url);
+
+                            if (url!=null) {
+                                fos = new FileOutputStream(new File(
+                                        KachingMeApplication.PROFILE_PIC_DIR
+                                                + jid.split("@")[0] + ".png"));
+                                fos.write(filedata);
+                                fos.close();
+
+                                Message message = new Message(JidCreate.from(jid), Type.groupchat);
+                                message.setStanzaId(Constant.GROUPICONCHNAGE
+                                        + new Date().getTime());
+                                message.setBody(url);
+
+                                JivePropertiesManager.addProperty(message, "ID", 8);
+                                JivePropertiesManager.addProperty(message,
+                                        "memberid", KachingMeApplication.getjid());
+                                MUCTest.muc.sendMessage(message);
 
 
-                            MessageGetSet msg = new MessageGetSet();
-                            msg.setData("");
-                            msg.setKey_from_me(0);
-                            msg.setKey_id(message.getPacketID());
-                            msg.setKey_remote_jid(jid);
-                            msg.setNeeds_push(0);
-                            msg.setStatus(0);
-                            msg.setTimestamp(new Date().getTime());
-                            msg.setRemote_resource(KachingMeApplication.getjid());
-                            msg.setMedia_wa_type("11");
-                            dbadapter.setInsertMessages(msg);
+                                MessageGetSet msg = new MessageGetSet();
+                                msg.setData("");
+                                msg.setKey_from_me(0);
+                                msg.setKey_id(message.getPacketID());
+                                msg.setKey_remote_jid(jid);
+                                msg.setNeeds_push(0);
+                                msg.setStatus(0);
+                                msg.setTimestamp(new Date().getTime());
+                                msg.setRemote_resource(KachingMeApplication.getjid());
+                                msg.setMedia_wa_type("11");
+                                dbadapter.setInsertMessages(msg);
 
-                            int msg_id = dbadapter.getLastMsgid(jid);
-                            if (dbadapter.isExistinChatList(jid)) {
-                                dbadapter.setUpdateChat_lits(jid, msg_id);
-                            } else {
-                                dbadapter.setInsertChat_list(jid, msg_id);
+                                int msg_id = dbadapter.getLastMsgid(jid);
+                                if (dbadapter.isExistinChatList(jid)) {
+                                    dbadapter.setUpdateChat_lits(jid, msg_id);
+                                } else {
+                                    dbadapter.setInsertChat_list(jid, msg_id);
+                                }
                             }
 
                         } catch (FileNotFoundException e) {// ACRA.getErrorReporter().handleException(e);

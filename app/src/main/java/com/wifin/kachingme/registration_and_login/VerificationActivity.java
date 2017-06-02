@@ -1,3 +1,9 @@
+/*
+* @author Sivanesan
+*
+* @usage -  This class give Option to add Primary and Secondary Number
+*
+* */
 package com.wifin.kachingme.registration_and_login;
 
 import android.app.Activity;
@@ -9,6 +15,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -23,9 +31,9 @@ import android.widget.Toast;
 
 import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.applications.KachingMeApplication;
-import com.wifin.kachingme.chat_home.SliderTesting;
+import com.wifin.kachingme.bradcast_recivers.GlobalBroadcast;
 import com.wifin.kachingme.database.DatabaseHelper;
-import com.wifin.kachingme.util.AvatarManager;
+import com.wifin.kachingme.services.ContactLastSync;
 import com.wifin.kachingme.util.CommonMethods;
 import com.wifin.kachingme.util.Connectivity;
 import com.wifin.kachingme.util.Constant;
@@ -34,59 +42,42 @@ import com.wifin.kachingme.util.RounderImageView;
 import java.io.InputStream;
 
 public class VerificationActivity extends Slideshow implements View.OnClickListener {
-
-    //	private static final int REQUEST_CODE_PICK_CONTACTS = 1;
     public static int count = 1, seXvalue;
     TextView mHeadText1, mHeadText2, mHeadText3, mPerimaryVerification, mAddSecondary, mNextButton;
     RounderImageView mProfilePicture;
     int width, height;
-    //	static int backpress = 0;
     Bitmap bmp = null;
     String country_code, full_mobile_no, mobileno;
     String TAG = VerificationActivity.class.getSimpleName();
     Editor editor;
     DatabaseHelper dbAdapter;
-    SharedPreferences preference;
-    byte[] img_byte;
-//    ProgressDialog progressdialog;
-    boolean decline = false;
-    public static boolean emptyfreebie;
+    SharedPreferences preference,sp;
+    boolean decline = false, isNoFreebie;
     CommonMethods commonMethods;
-//    ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // setContentView(R.layout.verification_activity);
         ViewGroup vg = (ViewGroup) findViewById(R.id.register_mainLayout);
         View.inflate(this, R.layout.verification_activity, vg);
         intializeVerification();
         screenArrangeVerification();
-        commonMethods=new CommonMethods(VerificationActivity.this);
+        commonMethods = new CommonMethods(VerificationActivity.this);
         sIndicator.setVisibility(View.GONE);
         sLoginImage.setVisibility(View.GONE);
         sPager.setVisibility(View.GONE);
         dbAdapter = KachingMeApplication.getDatabaseAdapter();
         preference = getSharedPreferences(KachingMeApplication.getPereference_label(),
                 Activity.MODE_PRIVATE);
+        sp = PreferenceManager.getDefaultSharedPreferences(this);
         editor = preference.edit();
 
-//		if (Constant.mFromsettingVerfication) {
-////			logo.setVisibility(ImageView.GONE);
-////			back.setVisibility(ImageView.VISIBLE);
-//			if (mAddSecondary.getVisibility() == View.VISIBLE) {
-//			} else {
-//			}
-//		}
-
-        img_byte = Constant.byteimage;
         Bundle extras = getIntent().getExtras();
         if (extras != null) {
             seXvalue = extras.getInt("sexId", 0);
             Constant.printMsg("seXvalue is::" + seXvalue);
         }
         count = preference.getInt("sec_count", 0);
-
         Constant.printMsg("count add:" + count);
         if (count == 1) {
             mAddSecondary.setText("Add Third Number");
@@ -99,8 +90,6 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
         Constant.printMsg("countttttttt:::::>>>>>>" + count);
         if (count >= 4) {
             mAddSecondary.setVisibility(View.GONE);
-//            showAlertDialog1(this, getResources().getString(R.string.phone_number_exceed),
-//                    true);
         } else {
             mAddSecondary.setVisibility(View.VISIBLE);
         }
@@ -113,7 +102,7 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
             Constant.printMsg("country:::ver" + mobileno);
         }
         Constant.printMsg("siva verification true......." + Constant.settings);
-        full_mobile_no=preference.getString("MyPrimaryNumber","");
+        full_mobile_no = preference.getString("MyPrimaryNumber", "");
 
         if (Constant.settings == false) {
             if (Constant.freelistmain.size() > 0) {
@@ -144,7 +133,6 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
                 }
             }
         } else {
-            // veradd.setVisibility(Button.VISIBLE);
             mPerimaryVerification.setVisibility(Button.GONE);
             mNextButton.setVisibility(Button.GONE);
             mHeadText1.setText("First Text Messaging App that Rewards You!");
@@ -157,16 +145,23 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
         if (Constant.byteimage != null) {
             bmp = BitmapFactory.decodeByteArray(Constant.byteimage, 0,
                     Constant.byteimage.length);
+            Editor e = preference.edit();
+            e.putString("ProfileByte", Base64.encodeToString(Constant.byteimage, Base64.DEFAULT));
+            e.commit();
+        } else {
+            String image = preference.getString("ProfileByte", "");
+            if (image != null && !image.isEmpty()) {
+                Constant.byteimage = Base64.decode(image, Base64.DEFAULT);
+                bmp = BitmapFactory.decodeByteArray(Constant.byteimage, 0,
+                        Constant.byteimage.length);
+            }
         }
         if (bmp != null) {
-            mProfilePicture.setImageBitmap(new AvatarManager().roundCornerImage(bmp, 180));
+            mProfilePicture.setImageBitmap(bmp);
         }
-
         if (Constant.manualmail == null) {
             Constant.manualmail = Constant.profilemail;
-            new LoadProfileImage(mProfilePicture).execute(Constant.profileimg);
-        } else {
-            //head.setText("Welcome  " + Constant.mFirstName + "!!");
+            //new LoadProfileImage(mProfilePicture).execute(Constant.profileimg);
         }
     }
 
@@ -189,7 +184,6 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
         mPerimaryVerification.setOnClickListener(this);
         mAddSecondary.setOnClickListener(this);
         mNextButton.setOnClickListener(this);
-
     }
 
     @Override
@@ -197,60 +191,46 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
         // TODO Auto-generated method stub
         switch (v.getId()) {
             case R.id.ver_primaryBtn:
-                Constant.ifSecondary = false;
-                Constant.mPrimarynumBtn = true;
-                startActivity(new Intent(VerificationActivity.this, Signin.class));
-                finish();
+                if (Connectivity.isConnected(this)) {
+                    Constant.ifSecondary = false;
+                    Constant.mPrimarynumBtn = true;
+                    startActivity(new Intent(VerificationActivity.this, Signin.class));
+                    finish();
+                } else {
+                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.ver_addSecondaryBtn:
                 addSeondaryNumber();
                 break;
             case R.id.ver_NextButton:
-                if (count >= 4) {
-                    if (Constant.mFromsettingVerfication == true) {
-                        finish();
+                if (Connectivity.isConnected(getApplicationContext())) {
+                    //if (!GlobalBroadcast.isServiceRunning(ContactLastSync.class.getCanonicalName(), this)) {
+                    //    startService(new Intent(VerificationActivity.this, ContactLastSync.class));
+                    //}
+                    if (count >= 4) {
+                        if (Constant.mFromsettingVerfication == true) {
+                            finish();
+                        } else {
+                            if (Constant.freelistmain.size() > 0) {
+                                freeBeDialgBox();
+                            } else {
+                                decline = true;
+                                isNoFreebie = true;
+                                agreeDeclineStatusUpdate();
+                            }
+                        }
                     } else {
                         if (Constant.freelistmain.size() > 0) {
                             freeBeDialgBox();
                         } else {
-                            if (Connectivity.isConnected(getApplicationContext())) {
-                                decline = true;
-                                agreeDeclineStatusUpdate();
-//                                progressdialog = ProgressDialog.show(VerificationActivity.this,
-//                                        getResources().getString(R.string.please_wait),
-//                                        getResources().getString(R.string.loading), true);
-//                                progressdialog.show();
-//                                if (Constant.manualmail.equals("")) {
-//                                    new MySync().execute();
-//                                } else {
-//                                    new MySync_Check().execute();
-//                                }
-                            } else {
-                                Toast.makeText(getApplicationContext(),
-                                        "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
-                            }
+                            decline = true;
+                            isNoFreebie = true;
+                            agreeDeclineStatusUpdate();
                         }
                     }
                 } else {
-                    if (Constant.freelistmain.size() > 0) {
-                        freeBeDialgBox();
-                    } else {
-                        if (Connectivity.isConnected(getApplicationContext())) {
-                            decline = true;
-//                            progressdialog = ProgressDialog.show(VerificationActivity.this,
-//                                    getResources().getString(R.string.please_wait),
-//                                    getResources().getString(R.string.loading), true);
-//                            progressdialog.show();
-                            agreeDeclineStatusUpdate();
-//                            if (Constant.manualmail.equals("")) {
-//                                new MySync().execute();
-//                            } else {
-//                                new MySync_Check().execute();
-//                            }
-                        } else {
-                            Toast.makeText(getApplicationContext(), "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
-                        }
-                    }
+                    Toast.makeText(getApplicationContext(), "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
                 }
                 break;
         }
@@ -258,7 +238,12 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
 
     private void agreeDeclineStatusUpdate() {
         Constant.printMsg("decline::endddddd" + decline);
+        editor.putString("loginSucess", "Slider");
+        editor.commit();
+        Editor noFreeEditor = sp.edit();
         if (!decline) {
+            noFreeEditor.putInt("nofreebiepoint", 0);
+            noFreeEditor.commit();
             Intent intent = new Intent(VerificationActivity.this,
                     FreebieActivity.class);
             Constant.fullmob = full_mobile_no;
@@ -269,11 +254,24 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
             updatefreebieaccept();
             finish();
         } else {
-            Intent intent = new Intent(VerificationActivity.this,
-                    SliderTesting.class);
-            startActivity(intent);
-            updatefreebiedecline();
-            finish();
+            if (isNoFreebie) {
+                noFreeEditor.putInt("nofreebiepoint", 1);
+                noFreeEditor.commit();
+                Intent intent = new Intent(VerificationActivity.this,
+                        WelcomeActivity.class);
+                startActivity(intent);
+                updateNoFreebieDecline();
+                updatefreebiedecline();
+                finish();
+            } else {
+                noFreeEditor.putInt("nofreebiepoint", 0);
+                noFreeEditor.commit();
+                Intent intent = new Intent(VerificationActivity.this,
+                        WelcomeActivity.class);
+                startActivity(intent);
+                updatefreebiedecline();
+                finish();
+            }
         }
     }
 
@@ -282,7 +280,6 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
         Constant.mBackInvisible = true;
         Constant.addverification = true;
         Constant.printMsg("conut ::::: >>>" + count + 1);
-        setshared(count + 1);
         Intent ii = new Intent(VerificationActivity.this, Signin.class);
         Constant.fullmob = full_mobile_no;
         Constant.countrycode = country_code;
@@ -403,17 +400,6 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
                 if (Connectivity.isConnected(getApplicationContext())) {
                     dialog.dismiss();
                     decline = false;
-//                    progressdialog = ProgressDialog.show(VerificationActivity.this,
-//                            getResources().getString(R.string.please_wait),
-//                            getResources().getString(R.string.loading), true);
-//                    progressdialog.show();
-//                    if (Constant.manualmail.equals("")) {
-//                        Constant.printMsg("sssssssss  if condition agree " + Constant.manualmail);
-//                        new MySync().execute();
-//                    } else {
-//                        Constant.printMsg("sssssssss  else  condition agree " + Constant.manualmail);
-//                        new MySync_Check().execute();
-//                    }
                     agreeDeclineStatusUpdate();
                 } else {
                     Toast.makeText(getApplicationContext(), "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
@@ -427,15 +413,6 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
                 if (Connectivity.isConnected(getApplicationContext())) {
                     dialog.dismiss();
                     decline = true;
-//                    progressdialog = ProgressDialog.show(VerificationActivity.this,
-//                            getResources().getString(R.string.please_wait),
-//                            getResources().getString(R.string.loading), true);
-//                    progressdialog.show();
-//                    if (Constant.manualmail.equals("")) {
-//                        new MySync().execute();
-//                    } else {
-//                        new MySync_Check().execute();
-//                    }
                     agreeDeclineStatusUpdate();
                 } else {
                     Toast.makeText(getApplicationContext(), "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
@@ -443,13 +420,6 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
             }
         });
         dialog.show();
-    }
-
-    protected void setshared(int newstlistpos) {
-        // TODO Auto-generated method stub
-        editor = preference.edit();
-        editor.putInt("sec_count", newstlistpos);
-        editor.commit();
     }
 
     private void updatefreebieaccept() {
@@ -466,125 +436,45 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
         editor.commit();
     }
 
+    private void updateNoFreebieDecline() {
+        // TODO Auto-generated method stub
+        editor = preference.edit();
+        editor.putBoolean("declineNoFreebie", true);
+        editor.commit();
+    }
+
     @Override
     protected void onResume() {
         // TODO Auto-generated method stub
         super.onResume();
-
     }
 
     @Override
     protected void onDestroy() {
         //	doUnbindService();
-
         super.onDestroy();
     }
 
-//    public void showAlertDialog1(Context context, String message, Boolean status) {
-//        AlertDialog alertDialog = new AlertDialog.Builder(context).create();
-//
-//        // Setting Dialog Title
-//        alertDialog.setTitle("Kaching.Me");
-//
-//        // Setting Dialog Message
-//        alertDialog.setMessage(message);
-//
-//        if (status != null)
-//            // Setting alert dialog icon
-//            // alertDialog.setIcon((status) ? R.drawable.success :
-//            // R.drawable.fail);
-//
-//            // Setting OK Button
-//            alertDialog.setButton(
-//                    context.getResources().getString(R.string.ok),
-//                    new DialogInterface.OnClickListener() {
-//                        public void onClick(DialogInterface dialog, int which) {
-//
-//                            if (Constant.mFromsettingVerfication == true) {
-//
-//                                finish();
-//
-//                            } else {
-//
-//                                progressdialog = ProgressDialog.show(
-//                                        VerificationActivity.this,
-//                                        getResources().getString(
-//                                                R.string.please_wait),
-//                                        getResources().getString(
-//                                                R.string.loading), true);
-//                                progressdialog.show();
-//
-//                                if (Constant.manualmail.equals("")) {
-//                                    new MySync().execute();
-//                                } else {
-//                                    new MySync_Check().execute();
-//                                }
-//
-//                            }
-//                        }
-//                    });
-//
-//        // Showing Alert Message
-//        alertDialog.show();
-//    }
 
-	/*private ServiceConnection mConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-
-			mBoundService = ((KaChingMeService.LocalBinder) service)
-					.getService();
-			connection = mBoundService.getConnection();
-
-			Constant.printMsg("ggggggggggggggggggggggggfffffffffffffffffffff"
-					+ connection.isConnected());
-		}
-
-		public void onServiceDisconnected(ComponentName className) {
-
-			mBoundService = null;
-		}
-	};
-
-	void doBindService() {
-
-		bindService(new Intent(VerificationActivity.this,
-				KaChingMeService.class), mConnection, Context.BIND_AUTO_CREATE);
-		isBound = true;
-	}
-
-	void doUnbindService() {
-		if (isBound) {
-
-			unbindService(mConnection);
-			isBound = false;
-		}
-	}*/
-
-    /**
-     * Background Async task to load user profile picture from url
-     */
-    private class LoadProfileImage extends AsyncTask<String, Void, Bitmap> {
-        ImageView bmImage;
-
-        public LoadProfileImage(ImageView bmImage) {
-            this.bmImage = bmImage;
-        }
-
-        protected Bitmap doInBackground(String... urls) {
-            String urldisplay = urls[0];
-            Bitmap mIcon11 = null;
-            try {
-                InputStream in = new java.net.URL(urldisplay).openStream();
-                mIcon11 = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                Log.e("Error", e.getMessage());
-                e.printStackTrace();
+    @Override
+    public void onBackPressed() {
+        if (mAddSecondary.getVisibility() == View.VISIBLE) {
+            if (Constant.mFromsettingVerfication == true) {
+                finish();
             }
-            return mIcon11;
-        }
+        } else {
+            if (Constant.mBackInvisible == true) {
 
-        protected void onPostExecute(Bitmap result) {
-            bmImage.setImageBitmap(result);
+            } else if (Constant.mFromsettingVerfication == true) {
+                finish();
+            } else {
+                Constant.mFromVerfication = true;
+                Intent ii = new Intent(VerificationActivity.this,
+                        RegisterActivity.class);
+                ii.putExtra("sexId", seXvalue);
+                startActivity(ii);
+                finish();
+            }
         }
     }
 //    public class MySync extends AsyncTask<String, String, String> {
@@ -1157,28 +1047,6 @@ public class VerificationActivity extends Slideshow implements View.OnClickListe
 //            super.onPostExecute(result);
 //        }
 //    }
-
-    @Override
-    public void onBackPressed() {
-        if (mAddSecondary.getVisibility() == View.VISIBLE) {
-            if (Constant.mFromsettingVerfication == true) {
-                finish();
-            }
-        } else {
-            if (Constant.mBackInvisible == true) {
-
-            } else if (Constant.mFromsettingVerfication == true) {
-                finish();
-            } else {
-                Constant.mFromVerfication = true;
-                Intent ii = new Intent(VerificationActivity.this,
-                        RegisterActivity.class);
-                ii.putExtra("sexId", seXvalue);
-                startActivity(ii);
-                finish();
-            }
-        }
-    }
 
     private void screenArrangeVerification() {
         // TODO Auto-generated method stub

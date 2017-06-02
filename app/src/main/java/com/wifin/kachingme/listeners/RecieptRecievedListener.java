@@ -16,6 +16,7 @@ import com.wifin.kachingme.util.Utils;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smackx.receipts.ReceiptReceivedListener;
+import org.jxmpp.jid.Jid;
 
 public class RecieptRecievedListener implements ReceiptReceivedListener {
 
@@ -29,160 +30,160 @@ public class RecieptRecievedListener implements ReceiptReceivedListener {
         Constant.printMsg("EEEEEEEE Context added... notification1::::>>>>");
     }
 
+
     @Override
-    public void onReceiptReceived(String from, String to, String recieptid,
-                                  Stanza receipt) {
-        Constant.printMsg("EEEEEEEE notification1::::>>>>.   " + "From ::"  +recieptid +"    "+from+"    "+to+"   "+receipt.toXML());
+    public void onReceiptReceived(Jid fromJidJid, Jid toJidJid, String receiptId, Stanza receipt) {
+        {
+            Constant.printMsg("EEEEEEEE notification1::::>>>>.   " + "fromJid ::"  +receiptId +"    "+ fromJidJid.toString()+"    "+ toJidJid.toString()+"   "+receipt.toString());
 
-        int msg_status = 0;
-        Message m = (Message) receipt;
+            int msg_status = 0;
+            Message m = (Message) receipt;
 
-        try {
+            try {
 
 
-            if (m.getSubject().equals(Constant.STATUS_DISPLAYED)) {
-                msg_status = -1;
-            } else if (m.getSubject().equals(Constant.STATUS_DELIVERED)) {
-                msg_status = 2;
+                if (m.getSubject().equals(Constant.STATUS_DISPLAYED)) {
+                    msg_status = -1;
+                } else if (m.getSubject().equals(Constant.STATUS_DELIVERED)) {
+                    msg_status = 2;
+                }
+
+            } catch (Exception e) {
+
             }
 
-        } catch (Exception e) {
+            MessageGetSet messagegetset=null;
+            try {
+                messagegetset = dbAdapter
+                        .getMessages_by_key_id(receiptId);
 
-        }
+            } catch (Exception e) {
 
-        MessageGetSet messagegetset=null;
-        try {
-            messagegetset = dbAdapter
-                    .getMessages_by_key_id(recieptid);
+            }
 
-        } catch (Exception e) {
+            try {
+                String fromJidUser = fromJidJid.toString().split("/")[0];
 
-        }
-
-        try {
-            String fromUser = from.toString().split("/")[0];
-
-            // Receiver seen message status..
-            if (msg_status == -1) {
+                // Receiver seen message status..
+                if (msg_status == -1) {
 
 
-                if (messagegetset.getIs_sec_chat() == 0
-                        && !messagegetset.getMedia_wa_type().equals("7")
-                        && messagegetset.getSelf_des_time() != 0) {
-                    new Self_Destruct_Messages(context).setDestruct(
-                            "" + messagegetset.get_id(),
-                            messagegetset.getSelf_des_time(),
-                            messagegetset.getKey_remote_jid());
-                }
+                    if (messagegetset.getIs_sec_chat() == 0
+                            && !messagegetset.getMedia_wa_type().equals("7")
+                            && messagegetset.getSelf_des_time() != 0) {
+                        new Self_Destruct_Messages(context).setDestruct(
+                                "" + messagegetset.get_id(),
+                                messagegetset.getSelf_des_time(),
+                                messagegetset.getKey_remote_jid());
+                    }
 
-                try {
-                    dbAdapter.setUpdateMessage_status(fromUser, recieptid, -1);
+                    try {
+                        dbAdapter.setUpdateMessage_status(fromJidUser, receiptId, -1);
 
-                } catch (Exception e) {
-
-                }
-
-                if (Utils.isActivityIsFront(context, ChatTest.class.getCanonicalName().toString())) {
-
-                    for (int i = 0; i < ChatTest.msg_list.size(); i++) {
-
-                        if (ChatTest.msg_list.get(i).getKey_id().toString().equalsIgnoreCase(recieptid)) {
-
-                            Intent login_broadcast = new Intent("update_tick");
-                            login_broadcast.putExtra("position", "" + i);
-                            login_broadcast.putExtra("status", "displayed");
-                            context.getApplicationContext().sendBroadcast(login_broadcast);
-                        }
-                        else if (Utils.isActivityIsFront(context, SliderTesting.class.getCanonicalName())) {
-                            Constant.printMsg("MUCCCCCCCC slider");
-                            Intent login_broadcast = new Intent("lastseen_broadcast");
-                            login_broadcast.putExtra("from",fromUser);
-                            login_broadcast.putExtra("type", ChatTest.msg_list.get(i).getData());
-                            context.getApplicationContext().sendBroadcast(login_broadcast);
-                        }
+                    } catch (Exception e) {
 
                     }
 
-                } else if (Utils.isActivityIsFront(context, MUCTest.class.getCanonicalName().toString())) {
+                    if (Utils.isActivityIsFront(context, ChatTest.class.getCanonicalName().toString())) {
 
-                    for (int i = 0; i < ChatTest.msg_list.size(); i++) {
+                        for (int i = 0; i < ChatTest.msg_list.size(); i++) {
 
-                        if (MUCTest.msg_list.get(i).getKey_id().toString().equalsIgnoreCase(recieptid)) {
+                            if (ChatTest.msg_list.get(i).getKey_id().toString().equalsIgnoreCase(receiptId)) {
 
-                            Intent login_broadcast = new Intent("update_tick");
-                            login_broadcast.putExtra("position", "" + i);
-                            login_broadcast.putExtra("status", "displayed");
-                            context.getApplicationContext().sendBroadcast(login_broadcast);
+                                Intent login_broadcast = new Intent("update_tick");
+                                login_broadcast.putExtra("position", "" + i);
+                                login_broadcast.putExtra("status", "displayed");
+                                context.getApplicationContext().sendBroadcast(login_broadcast);
+                            }
+                            else if (Utils.isActivityIsFront(context, SliderTesting.class.getCanonicalName())) {
+                                Constant.printMsg("MUCCCCCCCC slider");
+                                Intent login_broadcast = new Intent("lastseen_broadcast");
+                                login_broadcast.putExtra("fromJid",fromJidUser);
+                                login_broadcast.putExtra("type", ChatTest.msg_list.get(i).getData());
+                                context.getApplicationContext().sendBroadcast(login_broadcast);
+                            }
+
                         }
 
+                    } else if (Utils.isActivityIsFront(context, MUCTest.class.getCanonicalName().toString())) {
+
+                        for (int i = 0; i < ChatTest.msg_list.size(); i++) {
+
+                            if (MUCTest.msg_list.get(i).getKey_id().toString().equalsIgnoreCase(receiptId)) {
+
+                                Intent login_broadcast = new Intent("update_tick");
+                                login_broadcast.putExtra("position", "" + i);
+                                login_broadcast.putExtra("status", "displayed");
+                                context.getApplicationContext().sendBroadcast(login_broadcast);
+                            }
+
+                        }
                     }
-                }
 
-            } else if (msg_status == 2) {  //  Receiver getting delivered  message status..
+                } else if (msg_status == 2) {  //  Receiver getting delivered  message status..
 
-                int statuss = dbAdapter.getMessageStatus(fromUser, recieptid);
-                Constant.printMsg("" +
-                        "RRRRRR status delivery : " + statuss);
-                try {
+                    int statuss = dbAdapter.getMessageStatus(fromJidUser, receiptId);
+                    Constant.printMsg("" +
+                            "RRRRRR status delivery : " + statuss);
+                    try {
 
 
-                    if (statuss != 0) {
+                        if (statuss != 0) {
 
-                        if (messagegetset.getIs_sec_chat() == 0
-                                && !messagegetset.getMedia_wa_type().equals("7")
-                                && messagegetset.getSelf_des_time() != 0) {
+                            if (messagegetset.getIs_sec_chat() == 0
+                                    && !messagegetset.getMedia_wa_type().equals("7")
+                                    && messagegetset.getSelf_des_time() != 0) {
 //                        new Self_Destruct_Messages(context).setDestruct(""
 //                                        + messagegetset.get_id(),
 //                                messagegetset.getSelf_des_time(),
 //                                messagegetset.getKey_remote_jid());
-                        }
-
-                        dbAdapter.setUpdateMessage_status(fromUser, recieptid, 0);
-
-                        if (Utils.isActivityIsFront(context, ChatTest.class.getCanonicalName().toString())) {
-
-                            for (int i = 0; i < ChatTest.msg_list.size(); i++) {
-
-                                if (ChatTest.msg_list.get(i).getKey_id().toString().equalsIgnoreCase(recieptid)) {
-
-                                    Intent login_broadcast = new Intent("update_tick");
-                                    login_broadcast.putExtra("position", "" + i);
-                                    login_broadcast.putExtra("status", "delivered");
-                                    context.getApplicationContext().sendBroadcast(login_broadcast);
-                                }
-
                             }
 
-                        } else if (Utils.isActivityIsFront(context, MUCTest.class.getCanonicalName().toString())) {
+                            dbAdapter.setUpdateMessage_status(fromJidUser, receiptId, 0);
 
-                            for (int i = 0; i < MUCTest.msg_list.size(); i++) {
+                            if (Utils.isActivityIsFront(context, ChatTest.class.getCanonicalName().toString())) {
 
-                                if (MUCTest.msg_list.get(i).getKey_id().toString().equalsIgnoreCase(recieptid)) {
+                                for (int i = 0; i < ChatTest.msg_list.size(); i++) {
 
-                                    Intent login_broadcast = new Intent("update_tick");
-                                    login_broadcast.putExtra("position", "" + i);
-                                    login_broadcast.putExtra("status", "delivered");
-                                    context.getApplicationContext().sendBroadcast(login_broadcast);
+                                    if (ChatTest.msg_list.get(i).getKey_id().toString().equalsIgnoreCase(receiptId)) {
+
+                                        Intent login_broadcast = new Intent("update_tick");
+                                        login_broadcast.putExtra("position", "" + i);
+                                        login_broadcast.putExtra("status", "delivered");
+                                        context.getApplicationContext().sendBroadcast(login_broadcast);
+                                    }
+
                                 }
 
-                            }
-                        }
+                            } else if (Utils.isActivityIsFront(context, MUCTest.class.getCanonicalName().toString())) {
 
+                                for (int i = 0; i < MUCTest.msg_list.size(); i++) {
+
+                                    if (MUCTest.msg_list.get(i).getKey_id().toString().equalsIgnoreCase(receiptId)) {
+
+                                        Intent login_broadcast = new Intent("update_tick");
+                                        login_broadcast.putExtra("position", "" + i);
+                                        login_broadcast.putExtra("status", "delivered");
+                                        context.getApplicationContext().sendBroadcast(login_broadcast);
+                                    }
+
+                                }
+                            }
+
+                        }
+                    } catch (Exception e) {
+                        // toJidDO: handle exception
                     }
-                } catch (Exception e) {
-                    // TODO: handle exception
+
                 }
+
+            }catch (Exception e1)
+
+            {
 
             }
 
-        }catch (Exception e1)
-
-        {
 
         }
-
-
     }
-
-
 }

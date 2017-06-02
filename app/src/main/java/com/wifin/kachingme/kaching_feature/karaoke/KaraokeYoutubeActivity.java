@@ -477,12 +477,20 @@ public class KaraokeYoutubeActivity extends YouTubeBaseActivity implements YouTu
                         else if (Constant.mKrokFromGroup)
                         {
                             Constant.mKrokFromGroup = false;
+
+                            if(MUCTest.mMUC_TestActivity!=null)
+                                MUCTest.mMUC_TestActivity.finish();
+
+
                             Intent in = new Intent(KaraokeYoutubeActivity.this, MUCTest.class);
                             startActivity(in);
                             finish();
                         }
                         else
                         {
+                            if(ChatTest.chatTestActivity!=null)
+                                ChatTest.chatTestActivity.finish();
+
                             Intent in = new Intent(KaraokeYoutubeActivity.this, ChatTest.class);
                             startActivity(in);
                             finish();

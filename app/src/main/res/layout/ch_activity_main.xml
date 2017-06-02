@@ -9,34 +9,34 @@
         android:layout_gravity="top"
         android:orientation="vertical">
 
-
         <LinearLayout
             android:id="@+id/text_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/all_songs_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/selectorforclick"
-                android:gravity="center"
-                android:text="Songs"
-                android:textColor="@color/white"
-                android:visibility="gone" />
-
+            android:orientation="horizontal"
+            android:weightSum="2">
 
             <Button
                 android:id="@+id/karaoke_songs_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:background="@drawable/whitecolr"
+                android:background="@drawable/select_song_kara"
                 android:gravity="center"
                 android:text="Karaoke"
                 android:textColor="@color/accent_500"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                android:layout_weight="1" />
 
+            <Button
+                android:id="@+id/all_songs_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/select_song_kara"
+                android:gravity="center"
+                android:text="Songs"
+                android:textColor="@color/accent_500"
+                android:textStyle="bold"
+                android:layout_weight="1"/>
 
         </LinearLayout>
 
@@ -54,7 +54,6 @@
             android:layout_marginTop="5dp"
             android:gravity="center"
             android:orientation="horizontal">
-
 
             <Button
                 android:id="@+id/stop_btn"
@@ -76,7 +75,6 @@
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="36dp"
                 android:background="@drawable/pause_audio" />
-
 
         </LinearLayout>
 
@@ -106,8 +104,8 @@
                 android:progressDrawable="@drawable/seekbar_bg"
                 android:thumb="@drawable/thumb"
                 android:visibility="visible" />
-        </LinearLayout>
 
+        </LinearLayout>
 
         <ListView
             android:id="@+id/list_check"
@@ -123,15 +121,6 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/song_ok"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="36dp"
-                android:background="@drawable/whitecolr"
-                android:text="OK"
-                android:textColor="@color/accent_500" />
-
-            <Button
                 android:id="@+id/song_cancel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -141,8 +130,17 @@
                 android:text="CANCEL"
                 android:textColor="@color/accent_500" />
 
+            <Button
+                android:id="@+id/song_ok"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="36dp"
+                android:background="@drawable/whitecolr"
+                android:text="OK"
+                android:textColor="@color/accent_500" />
 
         </LinearLayout>
+
     </LinearLayout>
 
     <View

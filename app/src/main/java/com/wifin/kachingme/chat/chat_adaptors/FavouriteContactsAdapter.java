@@ -73,14 +73,14 @@ public class FavouriteContactsAdapter extends RecyclerView.Adapter<FavouriteCont
         Constant.printMsg("test......" + list.size());
         dbHelper = new Dbhelper(contextContact);
         this.imageProfile = imageProfile;
-        mTempIcon = BitmapFactory.decodeResource(contextContact.getResources(), R.drawable.contact_profile);
+        mTempIcon = BitmapFactory.decodeResource(contextContact.getResources(), R.drawable.avtar);
         mTempIconForChat = BitmapFactory.decodeResource(contextContact.getResources(), R.drawable.ic_launcher2);
         imageLoader = ImageLoader.getInstance();
         imageLoader.init(ImageLoaderConfiguration.createDefault(contextContact));
         options = new DisplayImageOptions.Builder()
                 .displayer(new RoundedBitmapDisplayer(5))
-                .showStubImage(R.drawable.contact_profile)
-                .showImageForEmptyUri(R.drawable.contact_profile)
+                .showStubImage(R.drawable.avtar)
+                .showImageForEmptyUri(R.drawable.avtar)
                 .cacheOnDisc().cacheInMemory().build();
     }
 

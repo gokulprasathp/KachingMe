@@ -19,6 +19,7 @@ android {
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
+
     }
     buildTypes {
         release {
@@ -35,49 +36,145 @@ android {
         exclude 'META-INF/NOTICE.txt'
         exclude 'META-INF/ASL2.0'
     }
+    aaptOptions {
+        additionalParameters "--no-version-vectors"
+    }
+
+
+
 }
 
 dependencies {
     compile fileTree(dir: 'lib', include: ['*.jar'])
     androidTestCompile 'com.android.support:multidex-instrumentation:1.0.1'
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/acra-4.6.1.jar')
+//    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/acra-4.6.1.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/android-async-http-1.4.6.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/android-vcard.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/gcm.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/gson-2.2.2.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/jxmpp-core-0.4.1.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/jxmpp-util-cache-0.4.1.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/libphonenumber-7.0.7.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/minidns-0.1.7.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/protobuf-java-2.2.0.jar')
+//    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/jxmpp-core-0.4.1.jar')
+//    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/jxmpp-util-cache-0.4.1.jar')
+//    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/minidns-0.1.7.jar')
+//    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/protobuf-java-2.2.0.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/slider.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-android-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-android-extensions-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-core-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-experimental-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-extensions-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-im-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-legacy-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-resolver-minidns-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-sasl-provided-4.1.3.jar')
-    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/smack-tcp-4.1.3.jar')
+
+
+    compile files('D:/CurrentProjects/libs/smack-android-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-android-extensions-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-core-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-experimental-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-extensions-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-im-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-legacy-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-resolver-minidns-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-sasl-provided-4.2.0.jar')
+    compile files('D:/CurrentProjects/libs/smack-tcp-4.2.0.jar')
+
+
+//    compile files('D:/CurrentProjects/libs/smack-android-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-android-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-android-extensions-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-android-extensions-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-bosh-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-bosh-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-bosh-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-compression-jzlib-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-compression-jzlib-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-compression-jzlib-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-core-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-core-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-debug-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-debug-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-debug-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-debug-slf4j-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-debug-slf4j-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-debug-slf4j-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-experimental-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-experimental-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-extensions-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-extensions-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-im-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-im-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-integration-test-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-integration-test-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-integration-test-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-java7-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-java7-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-java7-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-jingle-old-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-jingle-old-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-jingle-old-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-legacy-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-legacy-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-repl-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-repl-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-repl-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-resolver-dnsjava-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-resolver-dnsjava-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-resolver-dnsjava-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-resolver-javax-4.2.0.jar')
+//    compile files('D:/CurrentProjects/libs/smack-resolver-javax-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-resolver-javax-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-resolver-minidns-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-resolver-minidns-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-sasl-javax-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-sasl-javax-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-sasl-provided-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-sasl-provided-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/smack-tcp-4.2.0-javadoc.jar')
+//    compile files('D:/CurrentProjects/libs/smack-tcp-4.2.0-sources.jar')
+//    compile files('D:/CurrentProjects/libs/jxmpp-core-0.1.0.jar')
+//    compile files('D:/CurrentProjects/libs/jxmpp-jid-0.1.0.jar')
+//    compile files('D:/CurrentProjects/libs/jxmpp-util-cache-0.1.0.jar')
+    compile group: 'org.jxmpp', name: 'jxmpp-core', version: '0.5.0'
+    compile group: 'org.jxmpp', name: 'jxmpp-jid', version: '0.5.0'
+    compile group: 'org.jxmpp', name: 'jxmpp-util-cache', version: '0.5.0'
+    compile group: 'de.measite.minidns', name: 'minidns-hla', version: '0.2.1'
+    //    compile group: 'org.igniterealtime.jxmpp', name: 'jxmpp-core', version: '0.1.0'
+//    compile group: 'org.igniterealtime.jxmpp', name: 'jxmpp-util-cache', version: '0.1.0'
+//    compile group: 'org.jxmpp', name: 'jxmpp-stringprep-libidn', version: '0.5.0'
+//    compile group: 'org.jxmpp', name: 'jxmpp-stringprep-icu4j', version: '0.5.0'
+//    compile group: 'org.jxmpp', name: 'jxmpp-repl', version: '0.5.0'
+//    compile group: 'org.igniterealtime.jxmpp', name: 'jxmpp-stringprep-libidn', version: '0.1.0'
+
+
+
+
+
+
+
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/universal-image-loader-1.9.3.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/YouTubeAndroidPlayerApi.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/apache-httpcomponents-httpcore.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/httpclient-4.0.3.jar')
     compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/nineoldandroids-library-2.4.0.jar')
-    compile project(':aFileChooser')
+    compile files('D:/CurrentProjects/Studio_Workspace/kachingpackage/libs/httpmime-4.1.3.jar')
+//    compile project(':aFileChooser')
     compile project(':imageShapeLib')
     compile project(':lib_view_pager_indicator')
     compile project(':MemorizingTrustManager')
     compile project(':multipleimageselect')
 
+
     compile('com.android.support:appcompat-v7:23.0.1') {
         exclude group: 'support-v4'
     }
 
+
+//    compile "org.igniterealtime.smack:smack-android:4.1.8"
+//    compile "org.igniterealtime.smack:smack-android-extensions:4.1.8"
+//    compile "org.igniterealtime.smack:smack-core:4.1.8"
+//    compile "org.igniterealtime.smack:smack-experimental:4.1.8"
+//    compile "org.igniterealtime.smack:smack-extensions:4.1.8"
+//    compile "org.igniterealtime.smack:smack-im:4.1.8"
+//    compile "org.igniterealtime.smack:smack-legacy:4.1.8"
+//    compile "org.igniterealtime.smack:smack-resolver-minidns:4.1.8"
+//    compile "org.igniterealtime.smack:smack-sasl-provided:4.1.8"
+//    compile "org.igniterealtime.smack:smack-tcp:4.1.8"
+
     compile 'com.yqritc:recyclerview-flexibledivider:1.4.0'
     compile 'com.facebook.android:facebook-android-sdk:4.16.0'
+    compile 'com.googlecode.libphonenumber:libphonenumber:8.4.0'
     compile 'com.github.viethoa:fastscroller:1.2.0'
     compile 'de.hdodenhof:circleimageview:2.1.0'
     compile 'com.android.volley:volley:1.0.0'
@@ -96,39 +193,9 @@ dependencies {
     compile 'com.google.android.gms:play-services-auth:9.0.0'
     compile 'com.google.android.gms:play-services-plus:9.0.0'
     compile 'com.google.firebase:firebase-core:9.0.2'
-
-    // compile 'com.android.support:design:23.0.1'
-    // compile 'com.android.support:recyclerview-v7:23.0.0'
-    // compile 'com.facebook.android:facebook-android-sdk:4.5.+'
-    // compile files('D:/Kachng_Librery_studio/libs/asmack-android-8-0.8.10.jar')
-    // compile files('D:/Kachng_Librery_studio/libs/jackson-all-1.9.0.jar')
-    // compile files('D:/Kachng_Librery_studio/libs/org-apache-commons-codec.jar')
-    // compile 'com.android.support:appcompat-v7:22.1.0'
-    // compile 'com.android.support:appcompat-v7:24.0.0'
-    // compile 'com.android.support:support-v4:13.0.+'
-    // compile 'com.android.support:support-v4:18.0.0'
-    // compile files('D:/Kachng_Librery_studio/libs/android-support-v4.jar')
-    // compile files('D:/Kachng_Librery_studio/libs/android-support-v7-appcompat.jar')
-    // compile 'com.loopj.android:android-async-http:1.4.9'
-    // compile 'cz.msebera.android:httpclient:4.3.6'
-    // compile files('src/main/libs/android-saripaar-1.0.3.jar')
-    // compile files('D:/Kachng_Librery_studio/libs/android-support-v4.jar')
-    // compile files('src/main/libs/android-support-v7-appcompat.jar')
-    // compile files('D:/Kachng_Librery_studio/libs/android.jar')
-    // compile files('D:/Kachng_Librery_studio/libs/http-core-4.1.jar')
-    // compile 'org.apache.httpcomponents:httpclient:4.5.2'
-    // compile group: 'com.google.android', name: 'android', version: '4.1.1.4'
-    // compile 'com.android.support:design:23.+'
-    // compile 'com.android.support:support-v4:19.0.0'
-    // compile group: 'org.apache.httpcomponents' , name: 'httpclient-android' , version: '4.3.5.1'
-    // compile 'org.apache.httpcomponents:httpcore:4.4.1'
-    // compile 'org.apache.httpcomponents:httpclient:4.5'
-    // compile "org.apache.httpcomponents:httpclient-android:4.3.5.1"
-    // compile files('D:/Kachng_Librery_studio/libs/httpmime-4.3.6-sources.jar')
-    // compile 'org.apache.httpcomponents:httpclient:4.2.6'
-    // compile 'org.apache.httpcomponents:httpmime:4.2.6'
-    // compile files('D:/Kachng_Librery_studio/libs/volley.jar')
+    //D:/Siva/Kaching.Me Studio Space/KachingMe/libs
 }
+
 configurations {
     all*.exclude group: 'com.android.support', module: 'support-v7'
 }

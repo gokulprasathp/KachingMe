@@ -132,7 +132,7 @@ public class BannerPreview extends Activity implements OnTouchListener,
 
         printMessage = Value;
         for (int i = 0; i < 50; i++) {
-            printMessage = Value + "   " + printMessage;
+            printMessage = Value + "  " + printMessage;
         }
         // inputTextColor = pref.getString("inputtextcolor", "#00FF00");
         // backroundColor = pref.getString("backroundcolor", "#292929");
@@ -487,7 +487,6 @@ public class BannerPreview extends Activity implements OnTouchListener,
         public void stop() {
             this.running = false;
             this.mThread.destroy();
-
         }
 
         public void pause() {

@@ -14,6 +14,7 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.iqlast.LastActivityManager;
 import org.jivesoftware.smackx.iqlast.packet.LastActivity;
+import org.jxmpp.jid.impl.JidCreate;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -43,7 +44,7 @@ public class GetJidPresenceIntentService extends IntentService {
 			 * LastActivityManager.isLastActivitySupported( connection, jid));
 			 */
             LastActivity la = LastActivityManager.getInstanceFor(
-                    TempConnectionService.connection).getLastActivity(jid);
+                    TempConnectionService.connection).getLastActivity(JidCreate.from(jid));
 
             Calendar cal = Calendar.getInstance();
             Long l = (cal.getTimeInMillis() - (la.getIdleTime() * 1000));
@@ -87,7 +88,7 @@ public class GetJidPresenceIntentService extends IntentService {
             if (TempConnectionService.connection != null) {
                 Roster roster = Roster
                         .getInstanceFor(TempConnectionService.connection);
-                Presence presence = roster.getPresence(jid);
+                Presence presence = roster.getPresence(JidCreate.bareFrom(jid));
 
                 if (presence.isAvailable()) {
 

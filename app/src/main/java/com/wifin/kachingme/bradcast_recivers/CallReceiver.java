@@ -2,6 +2,7 @@ package com.wifin.kachingme.bradcast_recivers;
 
 import android.content.Context;
 
+import com.wifin.kachingme.adaptors.UsageAdapters;
 import com.wifin.kachingme.registration_and_login.OtpVerification;
 import com.wifin.kachingme.util.Constant;
 
@@ -19,12 +20,18 @@ public class CallReceiver extends PhonecallReceiver {
         if (Constant.loginOtp != null && !Constant.loginOtp.equalsIgnoreCase("null")
                 && !Constant.loginOtp.isEmpty()){
             if (Constant.loginOtp.equals(otpNumber))
-            OtpVerification.otpConfirmation(otpNumber);
+                OtpVerification.otpConfirmation(otpNumber);
         } else {
             if (Constant.Otp != null && !Constant.Otp.equalsIgnoreCase("null")
                     && !Constant.Otp.isEmpty()) {
                 if (Constant.Otp.equals(otpNumber))
                     OtpVerification.otpConfirmation(otpNumber);
+            }else{
+                if (Constant.secondaryOtp != null && !Constant.secondaryOtp.equalsIgnoreCase("null")
+                        && !Constant.secondaryOtp.isEmpty()) {
+                    if (Constant.secondaryOtp.equals(otpNumber))
+                        UsageAdapters.otpConfirmation(otpNumber);
+                }
             }
         }
     }

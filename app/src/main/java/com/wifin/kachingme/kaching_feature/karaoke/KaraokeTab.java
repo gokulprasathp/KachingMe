@@ -85,6 +85,18 @@ public class KaraokeTab extends MainActivity implements OnClickListener {
         tab3Song.add("tujh mein rab dikhta");
         tab3Song.add("HAULE HAULE HO JAYEGA");
 
+        $Tab1.setBackgroundResource(R.drawable.whitecolr);
+        $Tab1.setTextColor(Color.parseColor("#ffffff"));
+        $Tab2.setBackgroundResource(R.drawable.selectorforclick);
+        $Tab2.setTextColor(Color.parseColor("#ffffff"));
+        $Tab3.setBackgroundResource(R.drawable.selectorforclick);
+        $Tab3.setTextColor(Color.parseColor("#ffffff"));
+        $SongList
+                .setAdapter(new SongListAdapter(KaraokeTab.this, tab1Song));
+        tab1 = true;
+        tab2 = false;
+        tab3 = false;
+
         back.setOnClickListener(new OnClickListener() {
 
             @Override

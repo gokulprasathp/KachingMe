@@ -7,10 +7,16 @@
 
 package com.wifin.kachingme.util;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -67,6 +73,7 @@ public class Constant {
     public static ArrayList<String> konsBackgroundList = new ArrayList<String>();
     public static ArrayList<String> konsColorList = new ArrayList<String>();
     public static ArrayList<String> mNynmMeaningList = new ArrayList<String>();
+    public static ArrayList<String> mTempNynmMeaningList = new ArrayList<String>();
     public static boolean emptyFreebie;
     public static boolean registrationLogin;
     public static boolean registrationLoginNoConnection;
@@ -136,7 +143,7 @@ public class Constant {
     public static String BLOCKED_USERS = "blocked_users";
     // public static String WEBSERVICE_HOST =
     // "http://mobilewebs.net/mojoomla/demo/opencart/niftychat/";
-	/*
+    /*
 	 * public static String INSERT_UPDATE_WEBSERVICE = WEBSERVICE_HOST +
 	 * "insert_updatedata.php"; public static String SELECT_WEBSERVICE =
 	 * WEBSERVICE_HOST + "selectdata.php"; public static String
@@ -189,6 +196,8 @@ public class Constant {
 
 
     /*siva integrationsa*/
+    public static int asynTaskFortySeconds = 40000;
+    public static int asynTaskSixtySeconds = 60000;
     public static String CURRENT_LOG = "CURRENT_LOG";
     public static boolean group_lock = false;
     public static boolean pause_mode = false;
@@ -228,6 +237,7 @@ public class Constant {
     public static boolean mFromDazzLib = false;
     public static boolean mFromDazzLed = false;
     public static String mVerifiedNum;
+    public static String mVerifiedNumResend;
     public static boolean mDazzLib = false;
     public static String pushNum;
     public static Long mDonatedBux;
@@ -299,7 +309,6 @@ public class Constant {
     public static boolean addverification = false;
     public static ArrayList removepos = new ArrayList();
     public static String dob;
-    public static String Imei_no = null;
     public static int mselectedPosition;
     // Google Project Number
     public static String GOOGLE_PROJECT_ID = "772480990282";
@@ -398,7 +407,7 @@ public class Constant {
     public static boolean mDonateBux = false;
     public static boolean mBuxAccept = false;
     public static boolean mBuxReject = false;
-    public static String shapeselected="";
+    public static String shapeselected = "";
     public static Long mAcceptedBuxS;
     public static Long mRejectedBuxS;
     public static List<FreebieMainDto> freelistmain = new ArrayList<FreebieMainDto>();
@@ -406,10 +415,10 @@ public class Constant {
     public static boolean mKonsGroup = false;
     public static boolean mBazzle = false;
     public static boolean mBazzleGroup = false;
-    public static String mPreviewTextColor="";
-    public static String mPreviewBackground="";
-    public static String mPreviewSpeed="";
-    public static String mPreviewTextsize="";
+    public static String mPreviewTextColor = "";
+    public static String mPreviewBackground = "";
+    public static String mPreviewSpeed = "";
+    public static String mPreviewTextsize = "";
     public static boolean karaoke = false;
     public static boolean mDesTFromSlider = false;
     public static int mTimeFromSlider = 0;
@@ -463,7 +472,7 @@ public class Constant {
     public static boolean freebie = false;
     public static boolean login = false;
     public static boolean settings = false;
-    public static int mselected_self_destruct_time;
+    public static int mselected_self_destruct_time=0;
     public static boolean mself_destruct_time = false;
     public static String mself_destruct_msg;
     public static String mself_jid;
@@ -502,16 +511,23 @@ public class Constant {
     public static boolean mFromContactScreen = false;
     public static ArrayList mSelectedImage = new ArrayList();
     public static boolean mFromBrodAudio = false;
-//    public static BroadcastTestAdaptor adapterTest_Broad;
+    //    public static BroadcastTestAdaptor adapterTest_Broad;
     public static boolean mIsLogin = false;
     public static String mNymnQuirePosition = "";
-    public static Bitmap mGroupInfoProfile=null;
+    public static Bitmap mGroupInfoProfile = null;
     public static boolean isFront = false;
-    public static boolean isFirebaseBitmap=false;
+    public static boolean isFirebaseBitmap = false;
 
     public static String jsonString_Builder = null;
     public static List<Chat_list_home_GetSet> chatHomeList = new ArrayList<Chat_list_home_GetSet>();
     public static boolean isOtpVerification;
+    public static String secondaryOtp;
+
+    public static boolean autoResponse = false;
+    public static ArrayList<String> autoResponseDefault = new ArrayList<>();
+    public static String autoResponseSelected = "";
+    public static String secondaryCountryCode;
+    public static String registrationData;
 
     public static void typeFaceKons(Context myContext, TextView type) {
         type.setTypeface(Typeface.createFromAsset(myContext.getAssets(),
@@ -552,5 +568,46 @@ public class Constant {
     public static void printMsg(String msg) {
         // TODO Auto-generated method stub
         System.out.println("siva kachingme check......." + msg);
+    }
+
+    public static Uri singleImagUri, singleAudioUri, singleVideoUri;
+    public static ArrayList<Uri> multipleImageUri = new ArrayList<>();
+    public static String shareText;
+
+    public static int PERMISSION_CODE_IMAGES = 1001;
+    public static int PERMISSION_CODE_CONTACTS = 1002;
+    public static int PERMISSION_CODE_LOCATION = 1003;
+    public static int PERMISSION_CODE_STORAGE = 1004;
+    public static int PERMISSION_CODE_SMS = 1005;
+    public static int PERMISSION_CODE_MISCEL = 1006;
+
+    public static boolean checkPermission(Context context, String checkPermission)
+    {
+        if (Build.VERSION.SDK_INT >= 23)
+        {
+            // Marshmallow+
+
+            int result = ContextCompat.checkSelfPermission(context, checkPermission);
+
+            if (result == PackageManager.PERMISSION_GRANTED)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            // Pre-Marshmallow
+
+            return true;
+        }
+    }
+
+    public static void permissionRequest(Activity activityRequest, String permissionRequest, int requestCode)
+    {
+        ActivityCompat.requestPermissions(activityRequest, new String[]{permissionRequest}, requestCode);
     }
 }

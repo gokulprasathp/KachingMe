@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.acra.ACRA;
+//import org.acra.ACRA;
 
 import a_vcard.android.syncml.pim.PropertyNode;
 import a_vcard.android.syncml.pim.VDataBuilder;
@@ -91,11 +91,11 @@ public class SendContact extends SherlockBaseActivity {
 		try {
 			boolean parsed = parser.parse(vcard, "UTF-8", builder);
 		} catch (VCardException e) {//
-			ACRA.getErrorReporter().handleException(e);
+//			ACRA.getErrorReporter().handleException(e);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {//
-			ACRA.getErrorReporter().handleException(e);
+//			ACRA.getErrorReporter().handleException(e);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

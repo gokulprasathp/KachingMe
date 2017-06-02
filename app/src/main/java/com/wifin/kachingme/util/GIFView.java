@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.graphics.Movie;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.ImageView;
 
 import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.applications.KachingMeApplication;
@@ -25,6 +26,7 @@ public class GIFView extends View {
 
 		super(context);
 		Constant.printMsg("type of wallpaper gifView  " + Constant.wallType);
+
 		if (Constant.wallType != null) {
 			if (Constant.wallType.equalsIgnoreCase("file")) {
 				initializeViewFile();
@@ -36,12 +38,12 @@ public class GIFView extends View {
 		} else {
 			initializeView();
 		}
-
 	}
 
 	public GIFView(Context context, AttributeSet attrs) {
 
 		super(context, attrs);
+
 		if (Constant.wallType != null) {
 
 			if (Constant.wallType.equalsIgnoreCase("file")) {
@@ -82,31 +84,32 @@ public class GIFView extends View {
 		String wall = KachingMeApplication.getsharedpreferences().getString(
 				"wallpaper", "");
 		Constant.printMsg("not file ::::::: ");
+
 		if (wall.equalsIgnoreCase("blue")) {
 			is = getContext().getResources().openRawResource(+
-					R.drawable.flower_falling);
+					R.drawable.ic_gif_one);
 			mMovie = Movie.decodeStream(is);
 
 		}
 		if (wall.equalsIgnoreCase("birds")) {
-			is = getContext().getResources().openRawResource(+ R.drawable.birds);
+			is = getContext().getResources().openRawResource(+ R.drawable.ic_gif_two);
 			mMovie = Movie.decodeStream(is);
 
 		}
 		if (wall.equalsIgnoreCase("nature")) {
-			is = getContext().getResources().openRawResource(+ R.drawable.nature);
+			is = getContext().getResources().openRawResource(+ R.drawable.ic_gif_three);
 			mMovie = Movie.decodeStream(is);
 		}
 		if (wall.equalsIgnoreCase("sunset")) {
-			is = getContext().getResources().openRawResource(+ R.drawable.sunset);
+			is = getContext().getResources().openRawResource(+ R.drawable.ic_gif_four);
 			mMovie = Movie.decodeStream(is);
 
 		}
 		if (wall.equalsIgnoreCase("earth_rotation")) {
 			is = getContext().getResources().openRawResource(+
-					R.drawable.rotate_earth);
+					R.drawable.ic_gif_five);
 
-		}
+		}/*
 		if (wall.equalsIgnoreCase("smiley")) {
 			is = getContext().getResources().openRawResource(+ R.drawable.smiley);
 			mMovie = Movie.decodeStream(is);
@@ -127,7 +130,7 @@ public class GIFView extends View {
 			is = getContext().getResources().openRawResource(+ R.drawable.cat);
 			mMovie = Movie.decodeStream(is);
 
-		}
+		}*/
 
 	}
 
@@ -195,13 +198,13 @@ public class GIFView extends View {
 			int relTime = (int) ((now - movieStart) % mMovie.duration());
 
 			if (currentapiVersion >= 23) {
-				canvas.scale(5.0f, 6.0f);
+//				canvas.scale(5.0f, 6.0f);
 
 			} else {
-				canvas.scale(3.0f, 4.0f);
+//				canvas.scale(3.0f, 4.0f);
 
 			}
-
+			canvas.scale(2.0f, 2.0f);
 			mMovie.setTime(relTime);
 
 			mMovie.draw(canvas, 0, 0);

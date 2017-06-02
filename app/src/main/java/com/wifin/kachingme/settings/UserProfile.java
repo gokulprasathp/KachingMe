@@ -172,6 +172,7 @@ public class UserProfile extends SherlockBaseActivity implements OnClickListener
                         Intent intent = new Intent();
                         // intent.putExtra("path",f);
                         intent.setAction(Intent.ACTION_VIEW);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
                         intent.setDataAndType(Uri.fromFile(f), "image/jpg");
                         startActivity(intent);
                     } catch (Exception e) {

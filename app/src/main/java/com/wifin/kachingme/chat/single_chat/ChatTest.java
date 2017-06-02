@@ -1,5 +1,6 @@
 package com.wifin.kachingme.chat.single_chat;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -25,6 +26,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.ThumbnailUtils;
@@ -40,6 +42,7 @@ import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds.Email;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.view.ActionMode;
@@ -119,6 +122,7 @@ import com.wifin.kachingme.chat.chat_common_classes.ContactView_Normal;
 import com.wifin.kachingme.chat.chat_common_classes.LocationShare;
 import com.wifin.kachingme.chat.chat_common_classes.SendContact;
 import com.wifin.kachingme.chat.chat_common_classes.SongList;
+import com.wifin.kachingme.chat.muc_chat.MUCTest;
 import com.wifin.kachingme.chat.muc_chat.OrientationGroup;
 import com.wifin.kachingme.chat_home.SliderTesting;
 import com.wifin.kachingme.database.DatabaseHelper;
@@ -169,6 +173,7 @@ import com.wifin.kachingme.util.Log;
 import com.wifin.kachingme.util.NetworkSharedPreference;
 import com.wifin.kachingme.util.NoUnderlineSpan;
 import com.wifin.kachingme.util.NotificationHandler;
+import com.wifin.kachingme.util.NotificationSharedPreference;
 import com.wifin.kachingme.util.ProfileRoundImg;
 import com.wifin.kachingme.util.RounderImageView;
 import com.wifin.kachingme.util.SelectionMode;
@@ -176,26 +181,23 @@ import com.wifin.kachingme.util.TimeUtils;
 import com.wifin.kachingme.util.Utils;
 import com.wifin.kachingme.util.cropimage.Util;
 
-import org.acra.ACRAConstants;
 import org.apache.http.Header;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ExceptionCallback;
-import org.jivesoftware.smack.PacketCollector;
-import org.jivesoftware.smack.PacketCollector.Configuration;
+
 import org.jivesoftware.smack.SmackException.NoResponseException;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.chat.ChatManager;
+import org.jivesoftware.smack.chat2.ChatManager;
 import org.jivesoftware.smack.filter.StanzaFilter;
 import org.jivesoftware.smack.iqrequest.IQRequestHandler;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.IQ.Type;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.PlainStreamElement;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.roster.Roster;
@@ -212,6 +214,9 @@ import org.jivesoftware.smackx.xevent.MessageEventManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -236,11 +241,13 @@ import java.util.TimerTask;
 
 import a_vcard.android.provider.Contacts;
 
+//import org.acra.ACRAConstants;
+
 //import com.kaching.me.login.NymsListActivity;
 
 //import android.provider.Contacts.Intents;
 
-public class ChatTest extends AppCompatActivity implements XMPPConnection,
+public class ChatTest extends AppCompatActivity implements
         EmojiconGridFragment.OnEmojiconClickedListener,
         EmojiconFragmentGroup.OnEmojiconBackspaceClickedListener, AnimationListener, OnItemClickListenerInterface {
 
@@ -259,13 +266,13 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
     public static boolean isNotifyDataChanged = false;
     public static TextView txt_sub_title;
     public static boolean isThreadRun = false;
-    public List<String> mPositionKey = new ArrayList<String>();
+    public static List<String> mPositionKey = new ArrayList<String>();
     public static RecyclerView listview;
     public static MessageEventManager messageEventManager = TempConnectionService.messageEventManager;
     public static Boolean IS_Front = false;
-    public static HashMap<String,AsyncHttpClient> mAsyncUpload_Image = new HashMap<String, AsyncHttpClient>();
-    public static HashMap<String,AsyncHttpClient> mAsyncUpload_Audio = new HashMap<String, AsyncHttpClient>();
-    public static HashMap<String,AsyncHttpClient> mAsyncUpload_Video = new HashMap<String, AsyncHttpClient>();
+    public static HashMap<String, AsyncHttpClient> mAsyncUpload_Image = new HashMap<String, AsyncHttpClient>();
+    public static HashMap<String, AsyncHttpClient> mAsyncUpload_Audio = new HashMap<String, AsyncHttpClient>();
+    public static HashMap<String, AsyncHttpClient> mAsyncUpload_Video = new HashMap<String, AsyncHttpClient>();
     public static String home_title = "";
     public static boolean menuclick = false;
     public static boolean isJidOnline = false;
@@ -287,6 +294,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
     public static ArrayList<String> mself_destruct_list = new ArrayList<String>();
     public static ImageView mRightTickMark;
     public static TextView mRightDestTime;
+    public static Activity chatTestActivity;
     static Boolean IS_TYPED = true;
 
     static boolean isPlayAudio = false;
@@ -414,7 +422,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                 }
 
-            }else if(intent.getAction().equals("getjid_online")) {
+            } else if (intent.getAction().equals("getjid_online")) {
 
                 try {
                     String msg = intent.getStringExtra("title_msg");
@@ -427,10 +435,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     e.printStackTrace();
                 }
 
-            }
-
-
-            else if (intent.getAction().equals("chat")) {
+            } else if (intent.getAction().equals("chat")) {
                 try {
                     String jid1 = intent.getStringExtra("jid");
 
@@ -475,9 +480,9 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     String time = intent.getStringExtra("time");
                     String jidvalue = intent.getStringExtra("jid");
 
-                    if(jidvalue.equalsIgnoreCase(jid)) {
+                    if (jidvalue.equalsIgnoreCase(jid)) {
                         Constant.printMsg("GGGGGGG Chat test recived inside destruct destruct_time" + postion + "    " + time);
-                        Constant.printMsg("DEEEEESSSSSTTTTT4 "+postion);
+                        Constant.printMsg("DEEEEESSSSSTTTTT4 " + postion);
 
 
                         mRightDestTime = (TextView) findViewById(Integer.valueOf(postion) + 100000);
@@ -558,9 +563,9 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
             } else if (intent.getAction().equals("update_left")) {
 
-                Constant.printMsg("GGGGGGGPOGG<GLGMG<MG"+k+"       "+msg_list.size());
+                Constant.printMsg("GGGGGGGPOGG<GLGMG<MG" + k + "       " + msg_list.size());
 
-                k=msg_list.size()-1;
+                k = msg_list.size() - 1;
 
                 try {
 
@@ -571,7 +576,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 0) {
                         Constant.printMsg("GGGGGGGPOGG<GLGMG<MG111111");
 
-
+                        Constant.printMsg("Auto Response Broad 12222");
                         leftTextChat();
                         setLeftChatText();
 
@@ -609,11 +614,13 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                 } catch (Exception e) {
 
-                    Constant.printMsg("HHHHHHHHHHFOJF"+e.toString());
+                    Constant.printMsg("HHHHHHHHHHFOJF" + e.toString());
 
                 }
 
                 k = k + 1;
+
+                Constant.printMsg("Auto Response Broad 1333  " + k);
 
             } else if (intent.getAction().equals("remove_subtitle")) {
 
@@ -640,11 +647,11 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 } catch (Exception e) {
 
                 }
-            }else if (intent.getAction().equals("update_image_cancel")) {
+            } else if (intent.getAction().equals("update_image_cancel")) {
                 try {
                     int j = intent.getIntExtra("key", -1);
 
-                    if (j!=-1) {
+                    if (j != -1) {
                         try {
                             Constant.printMsg("......Chat Image CCCC...22.");
                             mRightImageChatUpload = (ImageView) findViewById(j + 800000);
@@ -662,19 +669,90 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 } catch (Exception e) {
 
                 }
-            }else if (intent.getAction().equals("update_audio_cancel")) {
+            } else if (intent.getAction().equals("update_auto_response")) {
+
+                Constant.printMsg("Auto Response Broad 5 :: " + k + " Size :: " + msg_list.size());
+
+                if (msg_list.size() > 0) {
+                    if (k == msg_list.size()) {
+                        k = msg_list.size() - 1;
+                    }
+                }
+                initializeListElememts(1);
+                rightTextChat();
+                setRightChatText();
+                k = k + 1;
+
+                mRightTipLayout.requestFocus();
+                edt_msg.setText("");
+                edt_msg.requestFocus();
+
+                Constant.printMsg("Auto Response Broad 3 :: " + k + " Size :: " + msg_list.size());
+
+            } else if (intent.getAction().equals("update_audio_cancel")) {
                 try {
                     mChatTypingMsgLayout.setVisibility(View.GONE);
                 } catch (Exception e) {
 
                 }
-            }else if (intent.getAction().equals("update_video_cancel")) {
+            } else if (intent.getAction().equals("update_video_cancel")) {
                 try {
                     mChatTypingMsgLayout.setVisibility(View.GONE);
                 } catch (Exception e) {
 
                 }
-            }else if (intent.getAction().equals("image_upload")) {
+            } else if (intent.getAction().equals("download_set_audio")) {
+                try {
+                    int j = intent.getIntExtra("key", -1);
+                    String media_name = intent.getStringExtra("media_name");
+                    String result = intent.getStringExtra("result");
+
+                    Constant.printMsg("Download audio setttt " + j + " " + media_name);
+
+                    if (result.equalsIgnoreCase("success"))
+                        if (j != -1) {
+                            set_audio_download(j, media_name);
+                        } else if (result.equalsIgnoreCase("fail")) {
+                            Toast.makeText(context, "Something went wrong. Try again", Toast.LENGTH_SHORT).show();
+                        }
+                } catch (Exception e) {
+
+                }
+            } else if (intent.getAction().equals("download_set_video")) {
+                try {
+                    int j = intent.getIntExtra("key", -1);
+                    String media_name = intent.getStringExtra("media_name");
+                    String result = intent.getStringExtra("result");
+
+                    Constant.printMsg("Download video setttt " + j + " " + media_name);
+
+                    if (result.equalsIgnoreCase("success"))
+                        if (j != -1) {
+                            set_video_download(j, media_name);
+                        } else if (result.equalsIgnoreCase("fail")) {
+                            Toast.makeText(context, "Something went wrong. Try again", Toast.LENGTH_SHORT).show();
+                        }
+                } catch (Exception e) {
+
+                }
+            } else if (intent.getAction().equals("download_set_image")) {
+                try {
+                    int j = intent.getIntExtra("key", -1);
+                    String media_name = intent.getStringExtra("media_name");
+                    String result = intent.getStringExtra("result");
+
+                    Constant.printMsg("Download image setttt " + j + " " + media_name + " " + result);
+
+                    if (result.equalsIgnoreCase("success"))
+                        if (j != -1) {
+                            set_Download_Image(j, media_name);
+                        } else if (result.equalsIgnoreCase("fail")) {
+                            Toast.makeText(context, "Something went wrong. Try again", Toast.LENGTH_SHORT).show();
+                        }
+                } catch (Exception e) {
+
+                }
+            } else if (intent.getAction().equals("image_upload")) {
 
                 int j = intent.getIntExtra("key", -1);
 
@@ -682,24 +760,23 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 Constant.printMsg("BBBBBBBB " + j);
 
 
+                if (j != -1) {
+                    try {
+                        Constant.printMsg("......Chat Image CCCC...22.");
+                        mRightImageChatUpload = (ImageView) findViewById(j + 800000);
+                        mRightImageChatCancel = (ImageView) findViewById(j + 120000);
+                        mRightImageProgress = (ProgressBar) findViewById(j + 900000);
+                        mRightImageChatUpload.setVisibility(View.GONE);
+                        mRightImageChatCancel.setVisibility(View.GONE);
+                        mRightImageProgress.setVisibility(View.GONE);
+                        mRightImageTickMark = (ImageView) findViewById(j + 600000);
+                        mRightImageTickMark
+                                .setImageResource(R.drawable.receipt_from_server);
 
-                    if (j!=-1) {
-                        try {
-                            Constant.printMsg("......Chat Image CCCC...22.");
-                            mRightImageChatUpload = (ImageView) findViewById(j + 800000);
-                            mRightImageChatCancel = (ImageView) findViewById(j + 120000);
-                            mRightImageProgress = (ProgressBar) findViewById(j + 900000);
-                            mRightImageChatUpload.setVisibility(View.GONE);
-                            mRightImageChatCancel.setVisibility(View.GONE);
-                            mRightImageProgress.setVisibility(View.GONE);
-                            mRightImageTickMark = (ImageView) findViewById(j + 600000);
-                            mRightImageTickMark
-                                    .setImageResource(R.drawable.receipt_from_server);
-
-                        } catch (Exception e) {
-                            Constant.printMsg("dosadllas" + e.toString());
-                        }
+                    } catch (Exception e) {
+                        Constant.printMsg("dosadllas" + e.toString());
                     }
+                }
 
               /*  for(int j=0;j<msg_list.size();j++){
 
@@ -744,7 +821,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
     int[] self_desc_time = {0, 5, 10, 15};
     int selected_self_desc_time = 0;
     int selected_self_desc_index = 0;
-    LinearLayout emoji_frag, zlay, mTextLay, linearLayoutPopup;
+    LinearLayout emoji_frag, linearLayoutPopup;
     SharedPreferences sp, pref, sp1;
     Editor ed;
     SharedPreferences sharedPrefs;
@@ -762,7 +839,6 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
     String lastseen = null;
     DriveFile file;
     ProgressDialog barProgressDialog;
-    ImageView an_background;
     ImageView img_chat_background1;
     GIFView img_chat_background;
     ImageView img_chat_avatar;
@@ -806,12 +882,12 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
     ArrayList mFinalNymsMeaning = new ArrayList();
     ArrayList mFinalNymsMeaningLength = new ArrayList();
     String selectedWord_back = "";
-    int mTextSizeVariation=0;
+    int mTextSizeVariation = 0;
     public static String selectedWord_backTemp = "";
     // Chat Hedder Views
     ImageView mChatHedderBackImg, mChatHedderProfileImg, mChatHedderCopyImg, mChatHedderAttachmentImg, mChatHedderMenuImg, mToolTipImg;
     TextView mChatHedderUserTxt;
-    LinearLayout mChatHedderLayout, mChatHedderTextLayout, mChatHedderCopyLayout, mChatHedderAttachmentLayout, mChatHedderMenuLayout, mDownArrowLayout,mSliderMenuLayout;
+    LinearLayout mChatHedderLayout, mChatHedderTextLayout, mChatHedderCopyLayout, mChatHedderAttachmentLayout, mChatHedderMenuLayout, mDownArrowLayout, mSliderMenuLayout;
     boolean mMenuVisible = false;
     boolean mContactMenuVisible = false;
     LinearLayout mChatFooterLayout, mChatFooterEdittextLayout, mChatTypingMsgLayout;
@@ -1160,7 +1236,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
         @Override
         public void run() {
 
-            if (!IS_TYPED) {
+            if (!IS_TYPED && !UserBlocked) {
                 presence_typing(Constant.TYPING_STRING);
             }
 
@@ -1201,7 +1277,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
     private NetworkSharedPreference mNewtSharPref;
     // The callbacks through which we will interact with the LoaderManager.
     private LoaderManager.LoaderCallbacks<Cursor> mCallbacks;
-    String mLedText ;
+    String mLedText;
 
     public static boolean isAvailable(Context ctx, Intent intent) {
         final PackageManager mgr = ctx.getPackageManager();
@@ -1211,6 +1287,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
     }
 
     byte[] avatar;
+
     public static void updateAudioBtnStatus(boolean status) {
         isPlayAudio = status;
     }
@@ -1227,6 +1304,12 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             super.onCreate(savedInstanceState);
             Window window = getWindow();
 
+            if (MUCTest.mMUC_TestActivity != null)
+                MUCTest.mMUC_TestActivity.finish();
+
+            chatTestActivity = this;
+
+
             window.addFlags(LayoutParams.FLAG_SHOW_WHEN_LOCKED);
 
             setContentView(R.layout.chat_muc);
@@ -1235,6 +1318,8 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
             mParentActivity = this;
             //mCallbacks = this;
+
+            isFirstCall = true;
 
             MEDIA_UPLOAD_URL = KachingMeConfig.UPLOAD_MEDIA;
 
@@ -1247,6 +1332,20 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             mScreenArrangement();
             Constant.mKonsFromChat = false;
 
+            if (Constant.singleImagUri != null) {
+                handleSendImage(Constant.singleImagUri);
+            }
+
+            if (Constant.singleVideoUri != null) {
+                handleSendSingleVideo(Constant.singleVideoUri);
+            }
+
+            if (Constant.multipleImageUri.size() != 0) {
+                handleSendMultipleImages();
+
+                Constant.printMsg("Selected Image Size ::: " + Constant.multipleImageUri.size());
+            }
+
             loaderManager = getSupportLoaderManager();
 
             // new ServerConnectionAsync(this).execute();
@@ -1257,8 +1356,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             pDialog = new ProgressDialog(this);
             pDialog.setMessage(getResources().getString(R.string.loading));
             pDialog.setCancelable(false);
-            pref = PreferenceManager
-                    .getDefaultSharedPreferences(getApplicationContext());
+            pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             getWindow().setSoftInputMode(
                     LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
             btn_send = (RounderImageView) findViewById(R.id.sendButton);
@@ -1269,13 +1367,11 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             listview = (RecyclerView) findViewById(R.id.convlist);
             //        gridview_emo = (GridView) findViewById(R.id.gridview_emo);
             img_chat_background1 = (ImageView) findViewById(R.id.img_chat_background1);
-
             img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
             emoji_frag = (LinearLayout) findViewById(R.id.emoji_frag);
-            an_background = (ImageView) findViewById(R.id.anim_background);
-            if (ChatDictionary.mDictionaryList.size() == 0) {
-                fetchNymFrom();
-            }
+//            if (ChatDictionary.mDictionaryList.size() == 0) {
+//                fetchNymFrom();
+//            }
             Constant.mZzleGroup = false;
             Constant.mKonsFromChat = false;
             Constant.mBazzleGroup = false;
@@ -1290,7 +1386,6 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             //        mDownArrow = (ImageButton) findViewById(R.id.btn_down_arrow);
             //    mZzleView = (View) findViewById(R.id.zzle_view);
 
-            mTextLay = (LinearLayout) findViewById(R.id.text_lay);
             //    mEditTextLay = (LinearLayout) findViewById(R.id.edit_text_lay);
             shake = AnimationUtils.loadAnimation(this, R.anim.shakeanim);
             listMeaning = (ListView) findViewById(R.id.mnglist);
@@ -1311,8 +1406,13 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
             TranslateAnimation anim = new TranslateAnimation(0, 150, 0, 0);
             anim.setDuration(500);
-            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-            notificationManager.cancelAll();
+            try {
+                new NotificationSharedPreference(this).clearDataNewtork();
+                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                notificationManager.cancelAll();
+            } catch (Exception e) {
+
+            }
             popupShow = AnimationUtils.loadAnimation(this, R.anim.popin);
             popupShow.setAnimationListener(this);
             popupHide = AnimationUtils.loadAnimation(this, R.anim.popout);
@@ -1335,18 +1435,17 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     Activity.MODE_PRIVATE);
             ed = sp.edit();
 
-
-            String mFinalBlockedUser=null;
-            mFinalBlockedUser = sp.getString(Constant.BLOCKED_USERS,"");
+            String mFinalBlockedUser = null;
+            mFinalBlockedUser = sp.getString(Constant.BLOCKED_USERS, "");
             String[] parts = mFinalBlockedUser.split("-");
 
-            ArrayList mBlockedList=new ArrayList();
-            for(int j=0;j<parts.length;j++){
+            ArrayList mBlockedList = new ArrayList();
+            for (int j = 0; j < parts.length; j++) {
                 mBlockedList.add(parts[j].trim());
             }
             KachingMeApplication.setBlocked_user(mBlockedList);
 
-            Constant.printMsg("BLLLLLLL"+sp.getString(Constant.BLOCKED_USERS,"")+"   "+mBlockedList);
+            Constant.printMsg("BLLLLLLL" + sp.getString(Constant.BLOCKED_USERS, "") + "   " + mBlockedList);
 
             DisplayMetrics metricss = new DisplayMetrics();
             getWindowManager().getDefaultDisplay().getMetrics(metricss);
@@ -1355,38 +1454,36 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             int x = dbAdapter.getLastMsgid_chat(jid, sec);
             Constant.printMsg("looooollll   " + x);
             if (KachingMeApplication.getsharedpreferences().contains("wallpaper")) {
-
                 Constant.wallType = sp1.getString("wallpaper_type", "");
                 Constant.printMsg("type of wallpaper   " + Constant.wallType);
 
-                if (Constant.wallType.equalsIgnoreCase("file"))
-                {
-                    File f = new File(KachingMeApplication.getsharedpreferences()
-                            .getString("wallpaper", null));
+                if (Constant.wallType.equalsIgnoreCase("file")) {
+                    File f = new File(KachingMeApplication.getsharedpreferences().getString("wallpaper", null));
+                    Drawable d = Drawable.createFromPath(f.getAbsolutePath());
+                    getWindow().setBackgroundDrawable(d);
                     img_chat_background1.setVisibility(View.VISIBLE);
-                    img_chat_background1.setImageURI(Uri.fromFile(f));
                     img_chat_background.setVisibility(View.GONE);
-                }
-                else
-                {
-                    String wall = KachingMeApplication.getsharedpreferences()
-                            .getString("wallpaper", "");
-                    // Constant.printMsg("wallll   " + wall);
+                } else {
                     img_chat_background1.setVisibility(View.GONE);
                     img_chat_background.setVisibility(View.VISIBLE);
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
 
-                    File f = new File(KachingMeApplication.getsharedpreferences()
-                            .getString("wallpaper", null));
+                    File f = new File(KachingMeApplication.getsharedpreferences().getString("wallpaper", null));
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
 
                     Constant.printMsg("paththththth ::::: >>>>>>> " + f);
-
                     String pathName = f.getAbsolutePath();
-
                     Constant.gifimage = pathName;
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
+                    FrameLayout.LayoutParams hedderLayoutParams = new FrameLayout.LayoutParams(
+                            LinearLayout.LayoutParams.WRAP_CONTENT,
+                            LinearLayout.LayoutParams.WRAP_CONTENT);
+                    hedderLayoutParams.width = width;
+                    hedderLayoutParams.height = height;
+                    img_chat_background.setLayoutParams(hedderLayoutParams);
                 }
+            } else {
+                getWindow().setBackgroundDrawableResource(R.drawable.bg);
             }
 
             Bundle bundle = getIntent().getExtras();
@@ -1403,14 +1500,12 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     home_title = "";
                 }
 
-
                 try {
 
                     avatar = bundle.getByteArray("avatar");
 
                 } catch (Exception e) {
                     Constant.printMsg("avatar exo " + e);
-
                 }
                 SliderTesting.msg_ids = null;
                 if (bundle.getString("msg_ids") != null) {
@@ -1529,16 +1624,83 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     // ////////*Images Message*////////////
                     else if (msg.getMedia_wa_type().equals("1")) {
 
-                        Forword_Image(msg);
+
+                        try {
+                            File file = null;
+                            file = new File(Constant.local_image_dir
+                                    + msg.getMedia_name());
+
+                            if (file != null) {
+                                if (file.exists()) {
+                                    msg.setStatus(3);
+                                    msg.setNeeds_push(1);
+                                    msg.setMedia_url(null);
+                                    isFirstCall = false;
+                                    Forword_Image(msg);
+                                } else {
+                                    Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                        }
 
                     }
                     // ////////*Videos Message*////////////
                     else if (msg.getMedia_wa_type().equals("2")) {
-                        Forword_Video(msg);
+
+                        try {
+                            File file = null;
+                            file = new File(Constant.local_video_dir
+                                    + msg.getMedia_name());
+
+                            if (file != null) {
+                                if (file.exists()) {
+                                    msg.setStatus(3);
+                                    msg.setNeeds_push(1);
+                                    msg.setMedia_url(null);
+                                    isFirstCall = false;
+                                    Forword_Video(msg);
+                                } else {
+                                    Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                        }
+
+
                     }
                     // ////////*Audios Message*////////////
                     else if (msg.getMedia_wa_type().equals("3")) {
-                        Forword_Audio(msg);
+
+
+                        try {
+                            File file = null;
+                            file = new File(Constant.local_audio_dir
+                                    + msg.getMedia_name());
+
+                            if (file != null) {
+                                if (file.exists()) {
+                                    msg.setStatus(3);
+                                    msg.setNeeds_push(1);
+                                    msg.setMedia_url(null);
+                                    isFirstCall = false;
+                                    Forword_Audio(msg);
+                                } else {
+                                    Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                        }
+
                     }
                     // ////////*Location Message*////////////
                     else if (msg.getMedia_wa_type().equals("4")) {
@@ -1575,21 +1737,21 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 //        mSenderRoundImage.setLayoutParams(mRoundImageParams);
 
             Constant.printMsg("LLLLLLLIS info dd" + Constant.FROM_CHAT_SCREEN);
-            if(Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification")){
+            if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification")) {
 
-                if(Constant.mReciverAvathor!=null){
+                if (Constant.mReciverAvathor != null) {
 
-                    ProfileRoundImg  mSenderImage=new ProfileRoundImg(Constant.mReciverAvathor);
+                    ProfileRoundImg mSenderImage = new ProfileRoundImg(Constant.mReciverAvathor);
                     img_chat_avatar.setImageDrawable(mSenderImage);
 
-                }else{
-                    Bitmap  bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,Util.getBitmapOptions());
+                } else {
+                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.avtar, Util.getBitmapOptions());
                     ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                     img_chat_avatar.setImageDrawable(mSenderImage);
                 }
 
 
-            }else  if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("chat")) {
+            } else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("chat")) {
 
                 try {
                     if (UserChatList.mProfileImagesList.size() > 0) {
@@ -1600,7 +1762,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                     } else {
 
-                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,Util.getBitmapOptions());
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.avtar, Util.getBitmapOptions());
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                         img_chat_avatar.setImageDrawable(mSenderImage);
                     }
@@ -1608,7 +1770,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                 }
 
-            }else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("contact")) {
+            } else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("contact")) {
 
 
                 try {
@@ -1620,7 +1782,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                     } else {
 
-                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2);
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.avtar);
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                         img_chat_avatar.setImageDrawable(mSenderImage);
                     }
@@ -1630,20 +1792,17 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                 }
 
-            }
-            else
-            {
+            } else {
 
-                Constant.printMsg("LLLLLLLIS infosss"  );
+                Constant.printMsg("LLLLLLLIS infosss");
 
-                   try {
-                        if(avatar!=null)
-                    {
+                try {
+                    if (avatar != null) {
 
 
-                    System.gc();
-                    Bitmap bmp = BitmapFactory.decodeByteArray(avatar,
-                            0, avatar.length,Util.getBitmapOptions());
+                        System.gc();
+                        Bitmap bmp = BitmapFactory.decodeByteArray(avatar,
+                                0, avatar.length, Util.getBitmapOptions());
                         //                        mSenderRoundImage.setImageBitmap(FavouriteContacts.mProfileImagesList.get(FavouriteContacts.mPosition));
 
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(bmp);
@@ -1651,7 +1810,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                     } else {
 
-                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,Util.getBitmapOptions());
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.avtar, Util.getBitmapOptions());
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                         img_chat_avatar.setImageDrawable(mSenderImage);
                     }
@@ -1659,15 +1818,15 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                 }
             }
-            try{
-                if(img_chat_avatar.getDrawable()==null){
+            try {
+                if (img_chat_avatar.getDrawable() == null) {
 
-                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,Util.getBitmapOptions());
+                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.avtar, Util.getBitmapOptions());
                     ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                     img_chat_avatar.setImageDrawable(mSenderImage);
 
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
 
@@ -1777,8 +1936,19 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 @Override
                 public void onClick(View v) {
 
-                    downArrowClickAction();
-                    topMenuHideFunction();
+                    try {
+                        ArrayList<String> blocked = KachingMeApplication.getBlocked_user();
+                        Constant.printMsg("blocked test msg send   " + jid);
+
+                        if (blocked.contains(jid)) {
+                            callBlockedUserAlert();
+                        } else {
+                            downArrowClickAction();
+                            topMenuHideFunction();
+                        }
+                    } catch (Exception e) {
+
+                    }
                 }
             });
 
@@ -1787,8 +1957,19 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 @Override
                 public void onClick(View v) {
 
-                    downArrowClickAction();
-                    topMenuHideFunction();
+                    try {
+                        ArrayList<String> blocked = KachingMeApplication.getBlocked_user();
+                        Constant.printMsg("blocked test msg send   " + jid);
+
+                        if (blocked.contains(jid)) {
+                            callBlockedUserAlert();
+                        } else {
+                            downArrowClickAction();
+                            topMenuHideFunction();
+                        }
+                    } catch (Exception e) {
+
+                    }
                 }
             });
 
@@ -1800,7 +1981,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                         String copiedtext = "";
                         int j = 0;
 
-                        ArrayList<MessageGetSet> mTempCopy=new ArrayList<MessageGetSet>();
+                        ArrayList<MessageGetSet> mTempCopy = new ArrayList<MessageGetSet>();
 
                         if (mOnLongSelectedPostions != null) {
                             for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
@@ -1836,11 +2017,11 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                         });
 
-                        copiedtext="";
+                        copiedtext = "";
 
-                        for(int i=0;i<mTempCopy.size();i++){
+                        for (int i = 0; i < mTempCopy.size(); i++) {
 
-                            copiedtext+=mTempCopy.get(i).getData()+ "\n";
+                            copiedtext += mTempCopy.get(i).getData() + "\n";
 
                         }
 
@@ -1949,7 +2130,6 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                                             }
 
 
-
                                             int msg_id = dbAdapter.getLastMsgid_chat(jid, sec);
                                             Constant.printMsg("id::::::::::::" + msg_id);
                                             if (dbAdapter.isExistinChatList_chat(jid, sec)) {
@@ -1958,8 +2138,8 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                                                 dbAdapter.setInsertChat_list_chat(jid, msg_id, sec);
                                             }
 
-                                            if(msg_id==0)
-                                            updateForHomeScreenList();
+                                            if (msg_id == 0)
+                                                updateForHomeScreenList();
 
                                             //
                                             Intent iDest = new Intent(ChatTest.this, DestructService.class);
@@ -2012,43 +2192,61 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                         return;
                     }
 
-                    if (mMenuVisible == false) {
-                        Constant.printMsg("siva check seleted or not false.............." + mMenuVisible);
-                        mChatHedderMenuLayout.setBackgroundColor(Color
-                                .parseColor("#00000000"));
-                        mContactMenuVisible = false;
-                        if (mChatOptionMenuLayout != null) {
-                            mChatOptionMenuLayout.setVisibility(View.GONE);
-                        }
-                        mToolTipImg.setVisibility(View.GONE);
 
-                        mChatHedderAttachmentLayout
-                                .setBackgroundColor(Color
-                                        .parseColor("#59000000"));
-                        mMenuVisible = true;
-                        mAttachmentIconMenuPopup();
-                        attachmentOptionMenuClickListener();
-                        FrameLayout.LayoutParams hedderToolTipParams = new FrameLayout.LayoutParams(
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                                LinearLayout.LayoutParams.MATCH_PARENT);
-                        hedderToolTipParams.width = width * 5 / 100;
-                        hedderToolTipParams.height = width * 3 / 100;
-                        hedderToolTipParams.topMargin = height * 8 / 100;
-                        hedderToolTipParams.leftMargin = width * 81 / 100;
-                        mToolTipImg.setLayoutParams(hedderToolTipParams);
-                        mToolTipImg.setVisibility(View.VISIBLE);
+                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                            .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                                    0);
+                    try {
+                        ArrayList<String> blocked = KachingMeApplication.getBlocked_user();
+                        Constant.printMsg("blocked test msg send   " + jid);
 
-                    } else {
-                        Constant.printMsg("siva check seleted or not true closed.............." + mMenuVisible);
-                        mChatHedderAttachmentLayout
-                                .setBackgroundColor(Color
+                        if (blocked.contains(jid)) {
+                            callBlockedUserAlert();
+                        } else {
+                            if (mMenuVisible == false) {
+
+
+                                Constant.printMsg("siva check seleted or not false.............." + mMenuVisible);
+                                mChatHedderMenuLayout.setBackgroundColor(Color
                                         .parseColor("#00000000"));
-                        mMenuVisible = false;
-                        mAttachmentIconMenuPopup();
-                        attachmentOptionMenuClickListener();
-                        mToolTipImg.setVisibility(View.GONE);
+                                mContactMenuVisible = false;
+                                if (mChatOptionMenuLayout != null) {
+                                    mChatOptionMenuLayout.setVisibility(View.GONE);
+                                }
+                                mToolTipImg.setVisibility(View.GONE);
+
+                                mChatHedderAttachmentLayout
+                                        .setBackgroundColor(Color
+                                                .parseColor("#59000000"));
+                                mMenuVisible = true;
+                                mAttachmentIconMenuPopup();
+                                attachmentOptionMenuClickListener();
+                                FrameLayout.LayoutParams hedderToolTipParams = new FrameLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.MATCH_PARENT);
+                                hedderToolTipParams.width = width * 5 / 100;
+                                hedderToolTipParams.height = width * 3 / 100;
+                                hedderToolTipParams.topMargin = height * 8 / 100;
+                                hedderToolTipParams.leftMargin = width * 81 / 100;
+                                mToolTipImg.setLayoutParams(hedderToolTipParams);
+                                mToolTipImg.setVisibility(View.VISIBLE);
+
+                            } else {
+                                Constant.printMsg("siva check seleted or not true closed.............." + mMenuVisible);
+                                mChatHedderAttachmentLayout
+                                        .setBackgroundColor(Color
+                                                .parseColor("#00000000"));
+                                mMenuVisible = false;
+                                mAttachmentIconMenuPopup();
+                                attachmentOptionMenuClickListener();
+                                mToolTipImg.setVisibility(View.GONE);
+
+                            }
+                        }
+                    } catch (Exception e) {
 
                     }
+
 
                 }
             });
@@ -2083,6 +2281,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                             }
                         }
                         //    mode.finish();
+                        Constant.fromChat = true;
                         Intent intent = new Intent(mParentActivity, SliderTesting.class);
                         Log.i("Forword", "Message IDS " + msg_ids);
                         intent.putExtra("msg_ids", msg_ids);
@@ -2091,6 +2290,9 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                         return;
                     }
 
+                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                            .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                                    0);
 
                     String query = "select status from " + Dbhelper.TABLE_LOCK
                             + " where jid = '" + jid + "'";
@@ -2207,7 +2409,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
           });*/
 
             // edt_msg.setInputType(InputType.TYPE_NULL|InputType.);
-             edt_msg.setOnTouchListener(new OnTouchListener() {
+            edt_msg.setOnTouchListener(new OnTouchListener() {
 
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
@@ -2219,27 +2421,34 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     v.setFocusable(true);
                     v.setFocusableInTouchMode(true);
 
-                    if(mPopup){
-                        downArrowClickAction();
-                    }
+                    FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT);
+                    mScrollViewParams.topMargin = height * 8 / 100;
+                    mScrollViewParams.bottomMargin = (height * 11 / 100);
+                    mScrollView.setLayoutParams(mScrollViewParams);
+
+//                    if(mPopup){
+//                        downArrowClickAction();
+//                    }
                     if (emoji_frag.getVisibility() == View.VISIBLE) {
                         emoji_frag.setVisibility(View.GONE);
                         btn_emo.setImageResource(R.drawable.emoji_btn_normal);
 
                     }
-                //    mPopup = false;
+                    //    mPopup = false;
                     //mEditTextLay.setBackgroundResource(R.drawable.roundcorner);
 
-                    if (is_enter_is_send) {
+//                    if (is_enter_is_send) {
+//
+//                        edt_msg.setInputType(1);
+//
+//                    } else {
 
-                        edt_msg.setInputType(1);
+                    edt_msg.setInputType(InputType.TYPE_CLASS_TEXT
+                            | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
 
-                    } else {
-
-                        edt_msg.setInputType(InputType.TYPE_CLASS_TEXT
-                                | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-
-                    }
+//                    }
                     edt_msg.onTouchEvent(event); // call native handler
 
                     return true; // consume touch even
@@ -2272,13 +2481,19 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                     topMenuHideFunction();
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
-                    if(mPopup){
+                    if (mPopup) {
                         downArrowClickAction();
                     }
 
                     if (emoji_frag.getVisibility() == View.VISIBLE) {
                         emoji_frag.setVisibility(View.GONE);
                         btn_emo.setImageResource(R.drawable.emoji_btn_normal);
+                        FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT);
+                        mScrollViewParams.topMargin = height * 8 / 100;
+                        mScrollViewParams.bottomMargin = (height * 11 / 100);
+                        mScrollView.setLayoutParams(mScrollViewParams);
                         ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
                                 .toggleSoftInput(InputMethodManager.SHOW_FORCED,
                                         InputMethodManager.HIDE_IMPLICIT_ONLY);
@@ -2287,9 +2502,18 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                         // btn_emo.setImageResource(R.drawable.smiling36);
                         btn_emo.setImageResource(R.drawable.ic_action_hardware_keyboard);
 
+                        FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT);
+                        mScrollViewParams.topMargin = height * 8 / 100;
+                        mScrollViewParams.bottomMargin = (height * 45 / 100);
+                        mScrollView.setLayoutParams(mScrollViewParams);
+
                         ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
                                 .hideSoftInputFromWindow(edt_msg.getWindowToken(),
                                         0);
+
+
                         // btn_emo.set
                     }
                 }
@@ -2301,11 +2525,11 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 public boolean onKey(View v, int keyCode, KeyEvent event) {
                     // TODO Auto-generated method stub
                     Constant.printMsg("Selected word is del :"
-                            + mFinalNyms + "  "+selectedWord_back);
+                            + mFinalNyms + "  " + selectedWord_back);
 
                     if (event.getAction() == KeyEvent.ACTION_DOWN) {
                         Constant.printMsg("Selected word is del :"
-                                + mFinalNyms + "  "+selectedWord_back);
+                                + mFinalNyms + "  " + selectedWord_back);
                         if (keyCode == KeyEvent.KEYCODE_DEL) {
 
 //                            if(selectedWord_backTemp.length()>0){
@@ -2330,22 +2554,15 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 //                                // edt_msg.setText(edtText.replace(selectedWord_back,""));
 //                            }
                         }
-                        if (is_enter_is_send)
-                        {
-                            if (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == EditorInfo.IME_ACTION_DONE)
-                            {
-                                try
-                                {
+                        if (is_enter_is_send) {
+                            if (keyCode == KeyEvent.KEYCODE_ENTER || keyCode == EditorInfo.IME_ACTION_DONE) {
+                                try {
                                     ArrayList<String> blocked = KachingMeApplication.getBlocked_user();
+                                    Constant.printMsg("blocked test msg send   " + blocked.contains(jid));
 
-                                    Constant.printMsg("blocked test msg send   " + jid);
-
-                                    if (blocked.contains(jid))
-                                    {
+                                    if (blocked.contains(jid)) {
                                         callBlockedUserAlert();
-                                    }
-                                    else
-                                    {
+                                    } else {
                                         mSendMsg();
                                         mFinalNyms = new ArrayList();
                                         mFinalNymsMeaning = new ArrayList();
@@ -2353,15 +2570,12 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                                         editNo = 0;
                                         topMenuHideFunction();
                                     }
-                                }
-                                catch (Exception e)
-                                {
+                                } catch (Exception e) {
 
                                 }
+                                return true;
                             }
-                        }
-                        else
-                        {
+                        } else {
 
                         }
                     }
@@ -2378,11 +2592,16 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                     Constant.printMsg("KUUUU" + s + "    " + start + "   "
                             + before + "    " + count);
-                    if(TempConnectionService.connection!=null && TempConnectionService.connection.isAuthenticated()) {
+                    if (TempConnectionService.connection != null && TempConnectionService.connection.isAuthenticated()) {
                         Roster roster = Roster
                                 .getInstanceFor(TempConnectionService.connection);
-                        Presence presence = roster.getPresence(jid);
-                        isJidOnline=presence.isAvailable();
+                        Presence presence = null;
+                        try {
+                            presence = roster.getPresence(JidCreate.bareFrom(jid));
+                        } catch (XmppStringprepException e) {
+                            e.printStackTrace();
+                        }
+                        isJidOnline = presence.isAvailable();
 
                     }
                     if (isJidOnline) {
@@ -2417,10 +2636,10 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     for (int i = 0; i < words1.length; i += ChatTest.AUDIO_ACTIVITY_REQUEST_CODE) {
                         mParentActivity.meaningList.clear();
                         for (int j = 0; j < ChatDictionary.mDictionaryList.size(); j += ChatTest.AUDIO_ACTIVITY_REQUEST_CODE) {
-                            Constant.printMsg("jkgad"+words1[i]);
+                            Constant.printMsg("jkgad" + words1[i]);
                             if (words1[i]
                                     .equalsIgnoreCase(ChatDictionary.mDictionaryList
-                                            .get(j).toString()) && !(txt.charAt(txt.length()-1)==' ')) {
+                                            .get(j).toString()) && !(txt.charAt(txt.length() - 1) == ' ')) {
                                 String finalstring = ChatDictionary.mDictionaryMeaningList
                                         .get(j).toString();
                                 String[] splMeaning = finalstring.split(",");
@@ -2509,7 +2728,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                                         mParentActivity.listview
                                                 .setVisibility(View.VISIBLE);
 
-                                        selectedWord_backTemp=msg + editNo;
+                                        selectedWord_backTemp = msg + editNo;
 
                                         Constant.printMsg("SSSSSSSSSSSSSSSSSSS"
                                                 + edt_msg.getText().toString());
@@ -2602,14 +2821,19 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     Constant.printMsg("Selected word is backaaaa: "
                             + selectedWord_back + "  ");
                     if (s.length() == 0) {
-                        if(TempConnectionService.connection!=null && TempConnectionService.connection.isAuthenticated()) {
+                        if (TempConnectionService.connection != null && TempConnectionService.connection.isAuthenticated()) {
                             Roster roster = Roster
                                     .getInstanceFor(TempConnectionService.connection);
-                            Presence presence = roster.getPresence(jid);
-                            isJidOnline=presence.isAvailable();
+                            Presence presence = null;
+                            try {
+                                presence = roster.getPresence(JidCreate.bareFrom(jid));
+                            } catch (XmppStringprepException e) {
+                                e.printStackTrace();
+                            }
+                            isJidOnline = presence.isAvailable();
 
                         }
-                        if (isJidOnline) {
+                        if (isJidOnline && !UserBlocked) {
                             presence_typing(Constant.TYPING_STRING);
                         }
                         is_text = false;
@@ -2632,8 +2856,8 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     int length = 0;
                     String[] currentWord = edt_msg.getText().toString()
                             .split(" ");
-                    for (int i=0;i<currentWord.length;i++) {
-                         length = length + currentWord[i].length() + 1;
+                    for (int i = 0; i < currentWord.length; i++) {
+                        length = length + currentWord[i].length() + 1;
 
                         if (length > startSelection) {
                             selectedWord_back = currentWord[i];
@@ -2645,16 +2869,16 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                             + selectedWord_back + "  ");
 
 
-                    if(mTextSizeVariation<=edt_msg.getText().toString().length()){
+                    if (mTextSizeVariation <= edt_msg.getText().toString().length()) {
 
-                        selectedWord_backTemp="";
+                        selectedWord_backTemp = "";
 
-                    }else if(s.length()>0){
+                    } else if (s.length() > 0) {
 
                         try {
-                            if(selectedWord_backTemp.length()>0){
-                                selectedWord_back=selectedWord_backTemp;
-                                selectedWord_backTemp="";
+                            if (selectedWord_backTemp.length() > 0) {
+                                selectedWord_back = selectedWord_backTemp;
+                                selectedWord_backTemp = "";
                             }
 
                             if (selectedWord_back != "") {
@@ -2673,13 +2897,13 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                                 // String edtText = edt_msg.getText().toString();
                                 // edt_msg.setText(edtText.replace(selectedWord_back,""));
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
 
                         }
 
                     }
 
-                    mTextSizeVariation=s.length();
+                    mTextSizeVariation = s.length();
 
 //                    if(selectedWord_backTemp.length()>0){
 //                        Constant.printMsg("Selected word is back:11 "
@@ -2769,14 +2993,12 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 public void onClick(View v) {
 
                     block_or_unblock();
-
                 }
             });
 
             mAddContact.setOnClickListener(new OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
                     ContactsGetSet contact = dbAdapter.getContact_grp(jid);
                     Constant.printMsg("contact value :::: " + contact);
                     if (contact == null) {
@@ -2787,10 +3009,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                         contact.setNumber(jid.split("@")[0]);
                     }
 
-
-                    Intent intent = new Intent(
-                            Intent.ACTION_INSERT,
-                            ContactsContract.Contacts.CONTENT_URI);
+                    Intent intent = new Intent(Intent.ACTION_INSERT, ContactsContract.Contacts.CONTENT_URI);
                     intent.setType(ContactsContract.Contacts.CONTENT_TYPE);
                     intent.putExtra(ContactsContract.Intents.Insert.PHONE, "+"
                             + contact.getNumber());
@@ -2887,8 +3106,6 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             }
 
 
-            isFirstCall = true;
-
             ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
 
 
@@ -2919,19 +3136,14 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
                 mChatTypingMsgLayout.setVisibility(View.GONE);
                 v.clearFocus();
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 return false;
             }
         });
 
 
-
     }
-
-
-
-
 
 
     public boolean contactExists(Activity _activity, String number) {
@@ -3053,11 +3265,10 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             //            } catch (Exception ee) {
             //
             //            }
-        } else
-        {
+        } else {
 
         }
-            // add or remove selection for current list item
+        // add or remove selection for current list item
 //            onListItemSelect(i);
 
 
@@ -3147,26 +3358,34 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
     public void onBackPressed() {
 
         try {
-
-
-
-
-
-            for(int i=0; i<list.size(); i++)
-            {
+            for (int i = 0; i < list.size(); i++) {
                 MediaPlayer player = list.get(i);
-                if(player!=null) {
+                if (player != null) {
 
                     player.stop();
                     player.release();
                 }
             }
 
+            Constant.printMsg("jsfdhsflhk" + mIsLogClick + "   " + emoji_frag.isShown());
 
+            if (mIsLogClick || emoji_frag.isShown()) {
 
+                emoji_frag.setVisibility(View.GONE);
+                // btn_emo.setImageResource(R.drawable.smiling36);
+                btn_emo.setImageResource(R.drawable.emoji_btn_normal);
 
+                FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT);
+                mScrollViewParams.topMargin = height * 8 / 100;
+                mScrollViewParams.bottomMargin = (height * 11 / 100);
+                mScrollView.setLayoutParams(mScrollViewParams);
 
-            if (mIsLogClick) {
+                ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                        .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                                0);
+
                 for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
 
                     mRightTipLayout = (FrameLayout) findViewById(Integer.valueOf(mOnLongSelectedPostions.get(i)) + 200000);
@@ -3210,280 +3429,308 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
 
                 mChatHedderCopyLayout.setVisibility(View.GONE);
+                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
 
             } else {
+                Constant.printMsg("jsfdhsflhk111" + mIsLogClick + "   " + emoji_frag.isShown());
                 try {
-                unregisterReceiver(lastseen_event);
-                handler.removeCallbacks(AsyncConnection);
-                // handler.removeCallbacks(sendLastSeenData);
-                if (cursor != null) {
-                    cursor.close();
-                }
-                Constant.printMsg("Call   Stop333");
-                Constant.printMsg("Call   Destory");
-                Log.d("Chat",
-                        "BACK IS_FROM_NOTIFICATION ::"
-                                + KachingMeApplication.getIS_FROM_NOTIFICATION());
-                if (emoji_frag.getVisibility() == View.VISIBLE) {
-                    emoji_frag.setVisibility(View.GONE);
-                    btn_emo.setImageResource(R.drawable.emoji_btn_normal);
-                } else if (KachingMeApplication.getIS_FROM_NOTIFICATION()) {
-                    KachingMeApplication.setIS_FROM_NOTIFICATION(false);
-                    // Intent upIntent = NavUtils.getParentActivityIntent(this);
-                    // // upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                    // TaskStackBuilder.create(this)
-                    // .addNextIntentWithParentStack(upIntent).startActivities();
+                    unregisterReceiver(lastseen_event);
+                    handler.removeCallbacks(AsyncConnection);
+                    // handler.removeCallbacks(sendLastSeenData);
+                    if (cursor != null) {
+                        cursor.close();
+                    }
+                    Constant.printMsg("Call   Stop333");
+                    Constant.printMsg("Call   Destory");
+                    Log.d("Chat",
+                            "BACK IS_FROM_NOTIFICATION ::"
+                                    + KachingMeApplication.getIS_FROM_NOTIFICATION());
+                    if (emoji_frag.getVisibility() == View.VISIBLE) {
+                        emoji_frag.setVisibility(View.GONE);
+                        btn_emo.setImageResource(R.drawable.emoji_btn_normal);
+                    } else if (KachingMeApplication.getIS_FROM_NOTIFICATION()) {
+                        KachingMeApplication.setIS_FROM_NOTIFICATION(false);
+                        // Intent upIntent = NavUtils.getParentActivityIntent(this);
+                        // // upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        // TaskStackBuilder.create(this)
+                        // .addNextIntentWithParentStack(upIntent).startActivities();
 //                    Intent intent = new Intent(mParentActivity, SliderTesting.class);
 //                    intent.putExtra("SliderIntent","SliderTesting");
 //                    startActivity(intent);
 //                    finish();
 
-                } else {
+                    } else {
 
 //                    Intent intent = new Intent(mParentActivity, SliderTesting.class);
 //                    intent.putExtra("SliderIntent","SliderTesting");
 //                    startActivity(intent);
 //                    finish();
-                    // super.onBackPressed();
-                }
-
-                seekHandler.removeCallbacks(run);
-                    if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification")) {
+                        // super.onBackPressed();
+                    }
+                    Constant.printMsg("jsfdhsflhk2222" + mIsLogClick + "   " + emoji_frag.isShown());
+                    seekHandler.removeCallbacks(run);
+                    if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification") || msg_ids != null) {
                         Intent intent = new Intent(mParentActivity, SliderTesting.class);
                         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         intent.putExtra("SliderIntent", "SliderTesting");
                         startActivity(intent);
                         finish();
                     }
+                    Constant.fromChat = true;
+                    Constant.printMsg("jsfdhsflhk333" + mIsLogClick + "   " + emoji_frag.isShown());
                     finish();
-                super.onBackPressed();
+                    super.onBackPressed();
 
-            }catch (Exception e){
-                   super.onBackPressed();
+                } catch (Exception e) {
+                    Constant.printMsg("jsfdhsflhk4444" + e.toString());
+                    finish();
+                    super.onBackPressed();
                 }
 
             }
 
 
-
         } catch (Exception e) {
-
+            Constant.printMsg("jsfdhsflhk4444555" + e.toString());
+            finish();
+            super.onBackPressed();
         }
 
     }
 
     @Override
-         public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) {
 
-             Intent intent;
-             switch (item.getItemId()) {
-                 case android.R.id.home:
+        Intent intent;
+        switch (item.getItemId()) {
+            case android.R.id.home:
 
-                     Log.d("Chat",
-                             "BACK IS_FROM_NOTIFICATION ::"
-                                     + KachingMeApplication.getIS_FROM_NOTIFICATION());
-                     onBackPressed();
+                Log.d("Chat",
+                        "BACK IS_FROM_NOTIFICATION ::"
+                                + KachingMeApplication.getIS_FROM_NOTIFICATION());
+                onBackPressed();
 
-                     break;
+                break;
 
-                 case R.id.menu_veiew_contact:
-                     intent = new Intent(this, UserProfile.class);
-                     intent.putExtra("jid", jid);
-                     intent.putExtra("name", home_title);
-                     startActivity(intent);
-                     break;
-                 case R.id.menu_block:
-                     if (KachingMeApplication.getIsNetAvailable()) {
-                         if (item.getTitle().equals(
-                                 getResources().getString(R.string.block))) {
-                             Log.d("Optionmenu", "Block called");
-                             new Async_Privacy().execute();
-                         } else {
-                             Log.d("Optionmenu", "Unblock called");
+            case R.id.menu_veiew_contact:
+                intent = new Intent(this, UserProfile.class);
+                intent.putExtra("jid", jid);
+                intent.putExtra("name", home_title);
+                startActivity(intent);
+                break;
+            case R.id.menu_block:
+                if (KachingMeApplication.getIsNetAvailable()) {
+                    if (item.getTitle().equals(
+                            getResources().getString(R.string.block))) {
+                        Log.d("Optionmenu", "Block called");
+                        new Async_Privacy().execute();
+                    } else {
+                        Log.d("Optionmenu", "Unblock called");
                            /* new unblock().execute(); */
-                             unblock();
-                             Log.d("Optionmenu", "Unblock called2");
-                         }
-                     } else {
+                        unblock();
+                        Log.d("Optionmenu", "Unblock called2");
+                    }
+                } else {
 
-                         new AlertUtils().Toast_call(
-                                 this,
-                                 getResources().getString(
-                                         R.string.no_internet_connection));
-                     }
-                     break;
-                 case R.id.menu_capture:
+                    new AlertUtils().Toast_call(
+                            this,
+                            getResources().getString(
+                                    R.string.no_internet_connection));
+                }
+                break;
+            case R.id.menu_capture:
 
-                     selectImage();
+                selectImage();
 
-                     break;
+                break;
 
-                 case R.id.audio_file:
+            case R.id.audio_file:
 
-                     // Intent intent2 = new Intent(Intent.ACTION_GET_CONTENT);
-                     // intent2.setType("audio/*");
-                     // startActivityForResult(intent2, RESULT_CODE_AUDIO);
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.printMsg("Permission Granted");
+                    startActivity(new Intent(this, SongList.class));
+                    finish();
+                } else {
+                    Constant.permissionRequest(this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
 
-                     startActivity(new Intent(this, SongList.class));
+                break;
 
-                     break;
-                 case R.id.clear_chat:
-                     AlertDialog.Builder b = new AlertDialog.Builder(mParentActivity);
-                     b.setMessage("Are you sure you want to clear this chat ?")
-                             .setCancelable(false);
-                     b.setPositiveButton(getResources().getString(R.string.cancel),
-                             new DialogInterface.OnClickListener() {
-                                 public void onClick(DialogInterface dialog, int id) {
-                                     dialog.cancel();
+            case R.id.clear_chat:
+                AlertDialog.Builder b = new AlertDialog.Builder(mParentActivity);
+                b.setMessage("Are you sure you want to clear this chat ?")
+                        .setCancelable(false);
+                b.setPositiveButton(getResources().getString(R.string.cancel),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
 
-                                 }
-                             });
-                     b.setNegativeButton(getResources().getString(R.string.Ok),
-                             new DialogInterface.OnClickListener() {
-                                 public void onClick(DialogInterface dialog, int id) {
-                                     dialog.cancel();
-                                     dbAdapter.setDeleteMessages_Non_secret_chat(jid);
+                            }
+                        });
+                b.setNegativeButton(getResources().getString(R.string.Ok),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
+                                dbAdapter.setDeleteMessages_Non_secret_chat(jid);
 
-                                     ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
-                                 }
-                             });
+                                ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
+                            }
+                        });
 
-                     AlertDialog alert = b.create();
-                     alert.show();
+                AlertDialog alert = b.create();
+                alert.show();
 
-                     break;
-                 case R.id.menu_image:
-                     // image_picker(1);
-                     // create Intent to take a picture and return control to the calling
-                     // application
-                     intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                break;
+            case R.id.menu_image:
+                // image_picker(1);
+                // create Intent to take a picture and return control to the calling
+                // application
+                intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                     fileUri = Utils.getOutputMediaFileUri(1);
-                     // create a file to save the image
-                     intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-                     // file name
+                fileUri = Utils.getOutputMediaFileUri(1);
+                // create a file to save the image
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+                // file name
 
-                     // start the image capture Intent
-                     startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
-                     break;
-                 case R.id.menu_videos:
-                     // image_picker(2);
-                     intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                // start the image capture Intent
+                startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+                break;
+            case R.id.menu_videos:
 
-                     fileUri = Utils.getOutputMediaFileUri(2); // create a file to save
-                     // the video
-                     intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-                     // file name
-                     intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0.8); // set the
-                     // video
-                     // image
-                     // quality
-                     // to high
-                     intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 26214400);
-                     // start the Video Capture Intent
-                     startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.CAMERA)) {
 
-                     break;
-                 case R.id.menu_location:
-                     intent = new Intent(this, LocationShare.class);
-                     startActivityForResult(intent, 44);
-                     break;
-                 case R.id.menu_contact:
-                     intent = new Intent(Intent.ACTION_PICK,
-                             ContactsContract.Contacts.CONTENT_URI);
-                     startActivityForResult(intent, 55);
-                     break;
-                 case R.id.menu_file:
-                     intent = new Intent(getBaseContext(), FileDialog.class);
-                     intent.putExtra(FileDialog.START_PATH, "/mnt");
+                    // image_picker(2);
+                    intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
 
-                     // can user select directories or not
-                     intent.putExtra(FileDialog.CAN_SELECT_DIR, false);
-                     intent.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
-                     // alternatively you can set file filter
-                     intent.putExtra(FileDialog.FORMAT_FILTER, new String[]{"ade",
-                             "adp", "bat", "chm", "cmd", "com", "cpl", "exe", "hta",
-                             "ins", "isp", "jse", "lib", "lnk", "mde", "msc", "msp",
-                             "mst", "pif", "scr", "sct", "shb", "sys", "vb", "vbe",
-                             "vbs", "vxd", "wsc", "wsf", "wsh"});
-                     startActivityForResult(intent, 77);
-                     break;
-                 // case R.id.menu_google_drive_file:
-                 // openGoogleDriveFiles();
-                 // break;
+                    fileUri = Utils.getOutputMediaFileUri(2); // create a file to save
+                    // the video
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+                    // file name
+                    intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0.8); // set the
+                    // video
+                    // image
+                    // quality
+                    // to high
+                    intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 26214400);
+                    // start the Video Capture Intent
+                    startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+                } else {
+                    Constant.permissionRequest(this, Manifest.permission.CAMERA, Constant.PERMISSION_CODE_MISCEL);
+                }
+
+                break;
+
+            case R.id.menu_location:
+                locationShare();
+                break;
+            case R.id.menu_contact:
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.printMsg("Permission Granted");
+                    intent = new Intent(Intent.ACTION_PICK,
+                            ContactsContract.Contacts.CONTENT_URI);
+                    startActivityForResult(intent, 55);
+                } else {
+                    Constant.permissionRequest(ChatTest.this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
+                break;
+            case R.id.menu_file:
+                intent = new Intent(getBaseContext(), FileDialog.class);
+                intent.putExtra(FileDialog.START_PATH, "/mnt");
+
+                // can user select directories or not
+                intent.putExtra(FileDialog.CAN_SELECT_DIR, false);
+                intent.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
+                // alternatively you can set file filter
+                intent.putExtra(FileDialog.FORMAT_FILTER, new String[]{"ade",
+                        "adp", "bat", "chm", "cmd", "com", "cpl", "exe", "hta",
+                        "ins", "isp", "jse", "lib", "lnk", "mde", "msc", "msp",
+                        "mst", "pif", "scr", "sct", "shb", "sys", "vb", "vbe",
+                        "vbs", "vxd", "wsc", "wsf", "wsh"});
+                startActivityForResult(intent, 77);
+                break;
+            // case R.id.menu_google_drive_file:
+            // openGoogleDriveFiles();
+            // break;
                /*
                 * case R.id.menu_karaoke:
                 *
                 * Intent intentka = new Intent(mParentActivity, Test.class);
                 * startActivity(intentka); break;
                 */
-                 case R.id.menu_self_des:
+            case R.id.menu_self_des:
 
-                     if (KachingMeApplication.getIsNetAvailable()) {
-                         Show_Self_desc_time(selected_self_desc_index);
-                     } else {
-                         new AlertUtils().Toast_call(
-                                 this,
-                                 getResources().getString(
-                                         R.string.no_internet_connection));
-                     }
-                     break;
-                 case R.id.menu_star:
-                     Intent intentst = new Intent(mParentActivity, DealsActivity.class);
-                     startActivity(intentst);
-                     if (menu != null) {
-                         MenuItem item1 = menu.findItem(R.id.menu_star);
-                         Constant.printMsg("onclcik 3" + item1);
-                         if (item1 != null) {
-                             Constant.printMsg("onclcik 4");
-                             menu.findItem(R.id.menu_star).setVisible(false);
+                if (KachingMeApplication.getIsNetAvailable()) {
+                    Show_Self_desc_time(selected_self_desc_index);
+                } else {
+                    new AlertUtils().Toast_call(
+                            this,
+                            getResources().getString(
+                                    R.string.no_internet_connection));
+                }
+                break;
+            case R.id.menu_star:
+                Intent intentst = new Intent(mParentActivity, DealsActivity.class);
+                startActivity(intentst);
+                if (menu != null) {
+                    MenuItem item1 = menu.findItem(R.id.menu_star);
+                    Constant.printMsg("onclcik 3" + item1);
+                    if (item1 != null) {
+                        Constant.printMsg("onclcik 4");
+                        menu.findItem(R.id.menu_star).setVisible(false);
 
-                         }
-                     }
-                     break;
-                 case R.id.menu_call:
-                     Intent callIntent = new Intent(Intent.ACTION_CALL);
-                     callIntent.setData(Uri
-                             .parse("tel:+" + jid.toString().split("@")[0]));
-                     startActivity(callIntent);
-                     break;
+                    }
+                }
+                break;
+            case R.id.menu_call:
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.CALL_PHONE)) {
+                    Constant.printMsg("Permission Granted");
+                    Intent callIntent = new Intent(Intent.ACTION_CALL);
+                    callIntent.setData(Uri
+                            .parse("tel:+" + jid.toString().split("@")[0]));
+                    startActivity(callIntent);
+                } else {
+                    Constant.permissionRequest(this, Manifest.permission.CALL_PHONE, Constant.PERMISSION_CODE_CONTACTS);
+                }
 
-                 case R.id.menu_lock_chat:
-                     if (item.getTitle().toString() == res.getString(R.string.lock_chat)
-                             .toString()) {
-                         lock_input(txt_title.getText().toString(), jid, true);
-                     } else {
-                         lock_input(txt_title.getText().toString(), jid, false);
-                     }
-                     break;
-                 // case R.id.menu_zzle:
-                 // menuclick = false;
-                 //
-                 // if (!edt_msg.getText().toString().trim().equals("")) {
-                 // menuclick = true;
-                 // Constant.bux = sharedPrefs.getLong("buxvalue", 0);
-                 //
-                 // Long buxval = Constant.bux + Constant.zzlepoints;
-                 // Constant.bux = buxval;
-                 //
-                 // Editor e = sharedPrefs.edit();
-                 // e.putLong("buxvalue", buxval);
-                 // e.commit();
-                 //
-                 // sendMessage("<z>" + edt_msg.getText().toString());
-                 // } else {
-                 // Alert();
-                 //
-                 // }
-                 //
-                 // break;
+                break;
 
-                 default:
-                     break;
-             }
+            case R.id.menu_lock_chat:
+                if (item.getTitle().toString() == res.getString(R.string.lock_chat)
+                        .toString()) {
+                    lock_input(txt_title.getText().toString(), jid, true);
+                } else {
+                    lock_input(txt_title.getText().toString(), jid, false);
+                }
+                break;
+            // case R.id.menu_zzle:
+            // menuclick = false;
+            //
+            // if (!edt_msg.getText().toString().trim().equals("")) {
+            // menuclick = true;
+            // Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+            //
+            // Long buxval = Constant.bux + Constant.zzlepoints;
+            // Constant.bux = buxval;
+            //
+            // Editor e = sharedPrefs.edit();
+            // e.putLong("buxvalue", buxval);
+            // e.commit();
+            //
+            // sendMessage("<z>" + edt_msg.getText().toString());
+            // } else {
+            // Alert();
+            //
+            // }
+            //
+            // break;
 
-             return super.onOptionsItemSelected(item);
-         }
+            default:
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 
     void doBindService() {
 
@@ -3509,7 +3756,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
         notifManager.cancelAll();
         NotificationHandler.Instance().resetCounter();
 
-      //  ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
+        //  ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
         super.onRestart();
     }
 
@@ -3536,16 +3783,48 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             filter.addAction("update_tick");
             filter.addAction("update_left");
             filter.addAction("image_upload");
+            filter.addAction("download_set_image");
+            filter.addAction("download_set_video");
+            filter.addAction("download_set_audio");
             filter.addAction("remove_subtitle");
             filter.addAction("getjid_online");
             filter.addAction("update_image_cancel");
             filter.addAction("update_audio_cancel");
             filter.addAction("update_video_cancel");
+            filter.addAction("update_auto_response");
 
             registerReceiver(lastseen_event, filter);
 
             mLedText = Constant.mZzleText;
-            mAttachKachingFeature();
+
+            try {
+                ArrayList<String> blocked = KachingMeApplication.getBlocked_user();
+                Constant.printMsg("blocked test msg send   " + jid);
+
+                if (Constant.attachNym || Constant.mKons || Constant.mBazzle || Constant.mBuxAccept || Constant.mBuxReject || Constant.mDonateBux || Constant.mself_destruct_time || Constant.mZzle || Constant.karaoke || Constant.songlist) {
+                    if (blocked.contains(jid)) {
+                        Constant.attachNym = false;
+                        Constant.mKons = false;
+                        Constant.mBazzle = false;
+                        Constant.mBuxAccept = false;
+                        Constant.mBuxReject = false;
+                        Constant.mDonateBux = false;
+                        Constant.mself_destruct_time = false;
+                        Constant.mZzle = false;
+                        Constant.karaoke = false;
+                        Constant.songlist = false;
+                        callBlockedUserAlert();
+
+                    } else {
+
+                        mAttachKachingFeature();
+
+                    }
+                }
+            } catch (Exception e) {
+
+            }
+
 
             getSupportActionBar().hide();
             mParentActivity = this;
@@ -3553,6 +3832,7 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             Constant.userStatus = Constant.ONLINE_STATUS;
             //        doBindService();
             getJidOnlineStatus(jid);
+            fetchNymFrom();
 
             updateReadMessages();
 
@@ -3653,21 +3933,26 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
 
         try {
 
-                for(int i=0; i<list.size(); i++)
-                {
-                    MediaPlayer player = list.get(i);
-                    if(player!=null) {
+            for (int i = 0; i < list.size(); i++) {
+                MediaPlayer player = list.get(i);
+                if (player != null) {
 
-                        if(player.isPlaying())
+                    if (player.isPlaying())
                         player.pause();
-                    }
                 }
+            }
+            for (int i = 0; i < PlayBtnlist.size(); i++) {
+
+                Button btn = PlayBtnlist.get(i);
+
+                mBtnClick = 0;
+                btn.setBackgroundResource(R.drawable.ic_action_audio_play);
+            }
 
             topMenuHideFunction();
 
 
             //handler.removeCallbacks(null);
-
 
 
             Constant.printMsg("PPPPPPPPPPPPPPPPPPPPPPus");
@@ -3700,14 +3985,19 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                 Constant.printMsg(" BBBB INside Presence typing");
 
 
-                Message msg = new Message(jid, Message.Type.chat);
+                Message msg = null;
+                try {
+                    msg = new Message(JidCreate.from(jid), Message.Type.chat);
+                } catch (XmppStringprepException e) {
+                    e.printStackTrace();
+                }
                 msg.setStanzaId(status);
 
                 if (mIsMirrorEnabled)
-                    if(mChatFooterEdittext.getText().toString().length()>0){
+                    if (mChatFooterEdittext.getText().toString().length() > 0) {
                         msg.setBody(status + "@" + mChatFooterEdittext.getText().toString());
 
-                    }else{
+                    } else {
                         msg.setBody(status + "@" + " ");
 
                     }
@@ -3726,9 +4016,9 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                     if (TempConnectionService.connection != null) {
                         if (TempConnectionService.connection.isConnected() && TempConnectionService.connection.isAuthenticated())
 
-                            Constant.printMsg("jflfa"+msg.toXML());
+                            Constant.printMsg("jflfa" + msg.toXML());
 
-                            TempConnectionService.connection.sendStanza(msg);
+                        TempConnectionService.connection.sendStanza(msg);
                     }
 
 
@@ -3778,7 +4068,12 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             public void run() {
                 try {
 
-                    Message msg = new Message(jid, Message.Type.chat);
+                    Message msg = null;
+                    try {
+                        msg = new Message(JidCreate.from(jid), Message.Type.chat);
+                    } catch (XmppStringprepException e) {
+                        e.printStackTrace();
+                    }
                     msg.setStanzaId(msg_id);
                     // msg.setBody(stringmsg);
                     msg.setBody(Utils.EncryptMessage(stringmsg));
@@ -3795,33 +4090,42 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
                                 sp.getInt(jid + "_self_desc_time", 0));
                     }
 
-                    if(TempConnectionService.connection!=null)
-                    Constant.printMsg("FFFFFFFFFFFFFFF" + connection
-                            + "        " + connection.isConnected());
+
+
+                    if (TempConnectionService.connection != null)
+                        Constant.printMsg("FFFFFFFFFFFFFFF" + connection
+                                + "        " + TempConnectionService.connection.isConnected() + " " + TempConnectionService.connection.isAuthenticated());
                     else {
                         Constant.printMsg("FFFFFFFFFFFFFFF connection null ");
 
                         startService(new Intent(ChatTest.this, TempConnectionService.class));
                     }
 
-                    // chatManager = ChatManager.getInstanceFor(connection);
 
-                    chat = TempConnectionService.chatmanager.createChat(jid,
+                    chat = TempConnectionService.chatmanager.createChat(JidCreate.entityBareFrom(jid),
                             TempConnectionService.mChatCreatedListener.getMessageListener());
-                    DeliveryReceiptRequest.addTo(msg);
-                    dest_list.add(Constant.mselected_self_destruct_time);
-                    //                    stopService(new Intent(mParentActivity,DestructService.class));
-                    //                    startService(new Intent(mParentActivity,DestructService.class));
+//                    DeliveryReceiptRequest.addTo(msg);
+//                    dest_list.add(Constant.mselected_self_destruct_time);
+//                    //                    stopService(new Intent(mParentActivity,DestructService.class));
+//                    //                    startService(new Intent(mParentActivity,DestructService.class));
+//                  //  Jid jid = JidCreate.from(toJid + "@" + MyApplication.CHAT_DOMAIN);
+//                    chat = ChatManager.getInstanceFor(TempConnectionService.connection)
+//                            .createChat(JidCreate.entityBareFrom(jid));
+//                    chat.sendMessage(body);
 
-
+                    //  chat = ChatManager.getInstanceFor(TempConnectionService.connection).createChat(JidCreate.entityFullFrom(jid), TempConnectionService.mChatCreatedListener.getMessageListener());
+                    //  chat.sendMessage(msg);
                     if (Connectivity.isOnline(mParentActivity) == true && Connectivity.isTempConnection()) {
-                        // chat.sendMessage(msg);
+                        chat.sendMessage(msg);
                         status_msg = 2;
-                        TempConnectionService.connection.sendStanza(msg);
+//                        TempConnectionService.connection.sendStanza(msg);
 
                         Constant.mselected_self_destruct_time = 0;
 
                         Constant.printMsg("dataaa ::::::: " + status_msg + "     " + msg.toString());
+                    }else if(!Connectivity.isTempConnection())
+                    {
+                        startService(new Intent(ChatTest.this, TempConnectionService.class));
                     }
 
                     // if (KachingMeApplication.getIsNetAvailable()) {
@@ -3872,8 +4176,8 @@ public class ChatTest extends AppCompatActivity implements XMPPConnection,
             msggetset.setSelf_des_time(sp.getInt(jid + "_self_desc_time", 0));
             msggetset.setIs_owner(IS_OWNER);
             msggetset.setPostion(msg_list.size());
-Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
-            Constant.printMsg("DEEEEESSSSSTTTTT2 "+msg_list.size());
+            Constant.printMsg("DDDDDDSJSJJSJS" + msg_list.size());
+            Constant.printMsg("DEEEEESSSSSTTTTT2 " + msg_list.size());
 
 //            if (adaptor != null) {
 //
@@ -3883,7 +4187,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 //            }
 
             long id_insert = dbAdapter.setInsertMessages(msggetset);
-            msggetset.set_id((int)id_insert);
+            msggetset.set_id((int) id_insert);
 
             msg_list.add(msggetset);
             mPositionKey.add(msggetset.getKey_id());
@@ -4033,62 +4337,71 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 @Override
                 public void run() {
                     // TODO Auto-generated method stub
-                    ArrayList<MessageGetSet> unreadMessageList = new ArrayList<MessageGetSet>();
-                    unreadMessageList = dbAdapter.getUnreadMessages(jid);
-                    Constant.printMsg("Unread Message Called...::" +
-                            unreadMessageList.size());
+                    try {
+                        ArrayList<MessageGetSet> unreadMessageList = new ArrayList<MessageGetSet>();
+                        unreadMessageList = dbAdapter.getUnreadMessages(jid);
+                        Constant.printMsg("Unread Message Called...::" +
+                                unreadMessageList.size());
 
 
-                    for (final MessageGetSet messageGetSet : unreadMessageList) {
+                        for (final MessageGetSet messageGetSet : unreadMessageList) {
 
-                        dbAdapter.setUpdateMessage_display(jid,
-                                messageGetSet.getKey_id());
+                            dbAdapter.setUpdateMessage_display(jid,
+                                    messageGetSet.getKey_id());
 
-                        final Message ack = new Message(jid,
-                                Message.Type.chat);
+                            final Message ack = new Message(JidCreate.from(jid),
+                                    Message.Type.chat);
 
-                        if (TempConnectionService.connection != null) {
-                            if (TempConnectionService.connection.isConnected()) {
 
-                                ack.setSubject(Constant.STATUS_DISPLAYED);
-                                ack.addExtension(new DeliveryReceipt(messageGetSet
-                                        .getKey_id()));
-                                try {
-                                    Constant.printMsg("GGGGGGGGGGGGGGGSIU"
-                                            + messageGetSet.getKey_id());
+                            if (TempConnectionService.connection != null) {
+                                if (TempConnectionService.connection.isConnected()) {
 
-                                    TempConnectionService.connection
-                                            .sendStanza(ack);
-                                } catch (NotConnectedException e) {
-                                    e.printStackTrace();
+                                    ack.setSubject(Constant.STATUS_DISPLAYED);
+                                    ack.addExtension(new DeliveryReceipt(messageGetSet
+                                            .getKey_id()));
+                                    try {
+                                        Constant.printMsg("GGGGGGGGGGGGGGGSIU"
+                                                + messageGetSet.getKey_id());
+
+                                        try {
+                                            TempConnectionService.connection
+                                                    .sendStanza(ack);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
+                                    } catch (NotConnectedException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+
+                                    mPendingDeliveryAckMessege.add(messageGetSet
+                                            .getKey_id() + "#" + jid);
+
                                 }
                             } else {
-
                                 mPendingDeliveryAckMessege.add(messageGetSet
                                         .getKey_id() + "#" + jid);
-
                             }
-                        } else {
-                            mPendingDeliveryAckMessege.add(messageGetSet
-                                    .getKey_id() + "#" + jid);
+
+                            // StatusListenerMethods.sendReceipt(jid,
+                            // messageGetSet.getKey_id(),
+                            // Constant.STATUS_DISPLAYED);
+
                         }
 
-                        // StatusListenerMethods.sendReceipt(jid,
-                        // messageGetSet.getKey_id(),
-                        // Constant.STATUS_DISPLAYED);
-
+                        mFinalPendingDeliveryAckMessege
+                                .addAll(mPendingDeliveryAckMessege);
+                        Constant.printMsg("AAAAAAAAAAAAAAAAAA!!!!"
+                                + mPendingDeliveryAckMessege);
+                        Constant.printMsg("AAAAAAAAAAAAAAAAAASSSSSSSSSSS!!!!"
+                                + mFinalPendingDeliveryAckMessege);
+                        Editor prefsEditor = myPrefs.edit();
+                        prefsEditor.putStringSet("pending_delivery_msg",
+                                mFinalPendingDeliveryAckMessege);
+                        prefsEditor.commit();
+                    } catch (XmppStringprepException e) {
+                        e.printStackTrace();
                     }
-
-                    mFinalPendingDeliveryAckMessege
-                            .addAll(mPendingDeliveryAckMessege);
-                    Constant.printMsg("AAAAAAAAAAAAAAAAAA!!!!"
-                            + mPendingDeliveryAckMessege);
-                    Constant.printMsg("AAAAAAAAAAAAAAAAAASSSSSSSSSSS!!!!"
-                            + mFinalPendingDeliveryAckMessege);
-                    Editor prefsEditor = myPrefs.edit();
-                    prefsEditor.putStringSet("pending_delivery_msg",
-                            mFinalPendingDeliveryAckMessege);
-                    prefsEditor.commit();
 
                 }
             });
@@ -4151,20 +4464,19 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             }
 
-            String mRemainingJid="";
-            String mFinalBlockedUser=null;
-            mFinalBlockedUser = sp.getString(Constant.BLOCKED_USERS,"");
+            String mRemainingJid = "";
+            String mFinalBlockedUser = null;
+            mFinalBlockedUser = sp.getString(Constant.BLOCKED_USERS, "");
             String[] parts = mFinalBlockedUser.split("-");
 
-            ArrayList mBlockedList=new ArrayList();
-            for(int j=0;j<parts.length;j++){
+            ArrayList mBlockedList = new ArrayList();
+            for (int j = 0; j < parts.length; j++) {
 
-                if(!parts[j].trim().equalsIgnoreCase(jid)) {
+                if (!parts[j].trim().equalsIgnoreCase(jid)) {
                     mBlockedList.add(parts[j]);
-                    mRemainingJid+=parts[j].trim();
+                    mRemainingJid += parts[j].trim();
                 }
             }
-
 
 
             ed.putString(Constant.BLOCKED_USERS, mRemainingJid);
@@ -4172,8 +4484,12 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             KachingMeApplication.setBlocked_user(mBlockedList);
 
-            mngr.updatePrivacyList(KachingMeApplication.getUserID(),
-                    privacy_items_updated);
+            try {
+                mngr.updatePrivacyList(KachingMeApplication.getUserID(),
+                        privacy_items_updated);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             Log.d("Privacy List", "List unblocked..");
             supportInvalidateOptionsMenu();
@@ -4182,16 +4498,15 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 if (UserBlocked == true) {
                     tvBlock.setText(getResources().getString(R.string.unblock));
                     mBlockContact.setText(getResources().getString(R.string.unblock));
-                }
-                else {
+                } else {
                     tvBlock.setText(getResources().getString(R.string.block));
                     mBlockContact.setText(getResources().getString(R.string.block));
                 }
-            } if (UserBlocked == true) {
+            }
+            if (UserBlocked == true) {
                 mBlockContact.setText(getResources().getString(R.string.unblock));
                 txt_sub_title.setVisibility(View.GONE);
-            }
-            else {
+            } else {
                 mBlockContact.setText(getResources().getString(R.string.block));
                 txt_sub_title.setVisibility(View.VISIBLE);
             }
@@ -4200,6 +4515,21 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 mChatOptionMenuBlockTxt.setText(getResources().getString(R.string.block));
             }
 
+            if (TempConnectionService.connection != null) {
+                try {
+                    if (TempConnectionService.connection.isAuthenticated()) {
+                        Presence presencePacket = new Presence(Presence.Type.subscribe);
+                        presencePacket.setTo(JidCreate.from(jid));
+                        try {
+                            TempConnectionService.connection.sendStanza(presencePacket);
+                        } catch (NotConnectedException e1) {
+                            e1.printStackTrace();
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
 
 
         } catch (XMPPException e) {// ACRA.getErrorReporter().handleException(e);
@@ -4262,24 +4592,21 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
-        if (requestCode == Constants.REQUEST_CODE && resultCode == RESULT_OK && imageReturnedIntent != null)
-        {
+        if (requestCode == Constants.REQUEST_CODE && resultCode == RESULT_OK && imageReturnedIntent != null) {
             Constant.mSelectedImage = new ArrayList();
 
             ArrayList<Image> images = imageReturnedIntent.getParcelableArrayListExtra(Constants.INTENT_EXTRA_IMAGES);
 
             StringBuffer stringBuffer = new StringBuffer();
 
-            for (int i = 0, l = images.size(); i < l; i++)
-            {
+            for (int i = 0, l = images.size(); i < l; i++) {
                 stringBuffer.append(images.get(i).path + "|");
 
                 Constant.mSelectedImage.add(images.get(i).path);
             }
             Constant.mImagepath = stringBuffer.toString();
 
-            if (resultCode == RESULT_OK)
-            {
+            if (resultCode == RESULT_OK) {
                 imagesPathList = new ArrayList<>();
 
                 isFirstCall = false;
@@ -4288,8 +4615,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                 System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath);
 
-                for (int i = 0; i < imagesPath.length; i++)
-                {
+                for (int i = 0; i < imagesPath.length; i++) {
                     System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath[i]);
 
                     imagesPathList.add(imagesPath[i]);
@@ -4302,35 +4628,25 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                     length = length / 1024;
 
-                    if (length > 16384)
-                    {
+                    if (length > 16384) {
                         new AlertManager().showAlertDialog(this, getResources().getString(R.string.imagesize_must_be_smaller), true);
-                    }
-                    else
-                    {
-                        Thread t = new Thread(new Runnable()
-                        {
+                    } else {
+                        Thread t = new Thread(new Runnable() {
                             @Override
-                            public synchronized void run()
-                            {
+                            public synchronized void run() {
                                 // TODO Auto-generated method stub
 
-                                try
-                                {
-                                    for (int i = 0; i < Constant.mSelectedImage.size(); i++)
-                                    {
+                                try {
+                                    for (int i = 0; i < Constant.mSelectedImage.size(); i++) {
                                         Constant.printMsg("IIIIIIIII");
 
                                         Constant.printMsg("test path sender::::::::::::: " + Constant.mSelectedImage.get(i) + "   " + i);
 
-                                        synchronized (this)
-                                        {
+                                        synchronized (this) {
                                             uploadFile(String.valueOf(Constant.mSelectedImage.get(i)), true);
                                         }
                                     }
-                                }
-                                catch (Exception e)
-                                {
+                                } catch (Exception e) {
                                     // TODO Auto-generated catch block
                                     e.printStackTrace();
                                 }
@@ -4464,7 +4780,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             // final int pos = j;
 
 
-
                             Thread t = new Thread(new Runnable() {
 
                                 @Override
@@ -4485,7 +4800,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                             }
 
 
-                                        //    k = k + 1;
+                                            //    k = k + 1;
 
 //                                            Thread.sleep(1000);
 
@@ -4621,153 +4936,80 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             case RESULT_CODE_CONTACT:
                 if (resultCode == Activity.RESULT_OK) {
 
-                    Uri contactData = imageReturnedIntent.getData();
-                    Cursor phones = this.getContentResolver().query(contactData,
-                            null, null, null, null);
-                    phones.moveToFirst();
-
-                    String id_data = phones.getString(
-                            phones.getColumnIndex(ContactsContract.Contacts._ID));
-
-                    if (Integer.parseInt(phones.getString(phones.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                        Cursor pCur = mParentActivity.getContentResolver().query(
-                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                                null,
-                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                                new String[]{id_data}, null);
-                        while (pCur.moveToNext()) {
-                            numberContactSend = pCur.getString(pCur.getColumnIndex("data1"));
-                            if(numberContactSend!=null)
-                            {
-
-                                numberContactSend = numberContactSend.replaceAll("\\p{P}","");
-                                numberContactSend = numberContactSend.replaceAll(" ","");
-                                numberContactSend = numberContactSend.replaceAll("-","");
-                            }
-
-                            Constant.printMsg("Diliiip " + numberContactSend );
-                        }
-                        pCur.close();
-                    }
-
-
-                    String lookupKey = phones.getString(phones
-                            .getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
-                    Constant.printMsg("in contactsssss ::em,aill before "  );
-                    String id = contactData.getLastPathSegment();
-                    Constant.printMsg("in contactsssss ::em,aill before" + lookupKey);
-                    cursor = getContentResolver().query(Email.CONTENT_URI, null,
-                            Email.CONTACT_ID + "=?", new String[]{id}, null);
-
-                    if (cursor.moveToFirst()) {
-                        Constant.printMsg("in contactsssss ::em,ail inside loop");
-                        int emailIdx = cursor.getColumnIndex(Email.DATA);
-                        email = cursor.getString(emailIdx);
-                        Log.v("emaillll", "Got email: " + email);
-                    }
-
-                    Uri uri = Uri.withAppendedPath(
-                            ContactsContract.Contacts.CONTENT_VCARD_URI, lookupKey);
-                    AssetFileDescriptor fd;
                     try {
-                        fd = this.getContentResolver().openAssetFileDescriptor(uri,
-                                "r");
-                        FileInputStream fis = fd.createInputStream();
-                        byte[] buf = new byte[(int) fd.getDeclaredLength()];
-                        fis.read(buf);
-                        String vCard = new String(buf);
-                        Intent intent = new Intent(this, SendContact.class);
-                        intent.putExtra("vcard", vCard);
-                        intent.putExtra("email_id", email);
-                        startActivityForResult(intent, 66);
-                        Log.d("Vcard", vCard);
+                        Uri contactData = imageReturnedIntent.getData();
+                        Cursor phones = this.getContentResolver().query(contactData,
+                                null, null, null, null);
+                        phones.moveToFirst();
 
-                        // Get size in bytes to update media network usage
-                        long size = (long) fd.getDeclaredLength();
-                        updateMediaNetwork(size);
-                    } catch (Exception e1) {// ACRA.getErrorReporter().handleException(e1);
+                        String id_data = phones.getString(
+                                phones.getColumnIndex(ContactsContract.Contacts._ID));
 
-                        e1.printStackTrace();
+                        if (Integer.parseInt(phones.getString(phones.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
+                            Cursor pCur = mParentActivity.getContentResolver().query(
+                                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                                    null,
+                                    ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                    new String[]{id_data}, null);
+                            while (pCur.moveToNext()) {
+                                numberContactSend = pCur.getString(pCur.getColumnIndex("data1"));
+                                if (numberContactSend != null) {
 
-                    }
+                                    numberContactSend = numberContactSend.replaceAll("\\p{P}", "");
+                                    numberContactSend = numberContactSend.replaceAll(" ", "");
+                                    numberContactSend = numberContactSend.replaceAll("-", "");
+                                }
 
-                }{
-
-                try {
-                    Uri contactData = imageReturnedIntent.getData();
-                    Cursor phones = this.getContentResolver().query(contactData,
-                            null, null, null, null);
-                    phones.moveToFirst();
-
-                    String id_data = phones.getString(
-                            phones.getColumnIndex(ContactsContract.Contacts._ID));
-
-                    if (Integer.parseInt(phones.getString(phones.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-                        Cursor pCur = mParentActivity.getContentResolver().query(
-                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                                null,
-                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
-                                new String[]{id_data}, null);
-                        while (pCur.moveToNext()) {
-                            numberContactSend = pCur.getString(pCur.getColumnIndex("data1"));
-                            if(numberContactSend!=null)
-                            {
-
-                                numberContactSend = numberContactSend.replaceAll("\\p{P}","");
-                                numberContactSend = numberContactSend.replaceAll(" ","");
-                                numberContactSend = numberContactSend.replaceAll("-","");
+                                Constant.printMsg("Diliiip " + numberContactSend);
                             }
-
-                            Constant.printMsg("Diliiip " + numberContactSend );
+                            pCur.close();
                         }
-                        pCur.close();
+
+
+                        String lookupKey = phones.getString(phones
+                                .getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
+                        Constant.printMsg("in contactsssss ::em,aill before ");
+                        String id = contactData.getLastPathSegment();
+                        Constant.printMsg("in contactsssss ::em,aill before" + lookupKey);
+                        cursor = getContentResolver().query(Email.CONTENT_URI, null,
+                                Email.CONTACT_ID + "=?", new String[]{id}, null);
+
+                        if (cursor.moveToFirst()) {
+                            Constant.printMsg("in contactsssss ::em,ail inside loop");
+                            int emailIdx = cursor.getColumnIndex(Email.DATA);
+                            email = cursor.getString(emailIdx);
+                            Log.v("emaillll", "Got email: " + email);
+                        }
+
+                        Uri uri = Uri.withAppendedPath(
+                                ContactsContract.Contacts.CONTENT_VCARD_URI, lookupKey);
+                        AssetFileDescriptor fd;
+                        try {
+                            fd = this.getContentResolver().openAssetFileDescriptor(uri,
+                                    "r");
+                            FileInputStream fis = fd.createInputStream();
+                            byte[] buf = new byte[(int) fd.getDeclaredLength()];
+                            fis.read(buf);
+                            String vCard = new String(buf);
+                            Intent intent = new Intent(this, SendContact.class);
+                            intent.putExtra("vcard", vCard);
+                            intent.putExtra("email_id", email);
+                            startActivityForResult(intent, 66);
+                            Log.d("Vcard", vCard);
+
+                            // Get size in bytes to update media network usage
+                            long size = (long) fd.getDeclaredLength();
+                            updateMediaNetwork(size);
+                        } catch (Exception e1) {// ACRA.getErrorReporter().handleException(e1);
+
+                            e1.printStackTrace();
+
+                        }
+                    } catch (Exception e) {
+
                     }
-
-
-                    String lookupKey = phones.getString(phones
-                            .getColumnIndex(ContactsContract.Contacts.LOOKUP_KEY));
-                    Constant.printMsg("in contactsssss ::em,aill before "  );
-                    String id = contactData.getLastPathSegment();
-                    Constant.printMsg("in contactsssss ::em,aill before" + lookupKey);
-                    cursor = getContentResolver().query(Email.CONTENT_URI, null,
-                            Email.CONTACT_ID + "=?", new String[]{id}, null);
-
-                    if (cursor.moveToFirst()) {
-                        Constant.printMsg("in contactsssss ::em,ail inside loop");
-                        int emailIdx = cursor.getColumnIndex(Email.DATA);
-                        email = cursor.getString(emailIdx);
-                        Log.v("emaillll", "Got email: " + email);
-                    }
-
-                    Uri uri = Uri.withAppendedPath(
-                            ContactsContract.Contacts.CONTENT_VCARD_URI, lookupKey);
-                    AssetFileDescriptor fd;
-                    try {
-                        fd = this.getContentResolver().openAssetFileDescriptor(uri,
-                                "r");
-                        FileInputStream fis = fd.createInputStream();
-                        byte[] buf = new byte[(int) fd.getDeclaredLength()];
-                        fis.read(buf);
-                        String vCard = new String(buf);
-                        Intent intent = new Intent(this, SendContact.class);
-                        intent.putExtra("vcard", vCard);
-                        intent.putExtra("email_id", email);
-                        startActivityForResult(intent, 66);
-                        Log.d("Vcard", vCard);
-
-                        // Get size in bytes to update media network usage
-                        long size = (long) fd.getDeclaredLength();
-                        updateMediaNetwork(size);
-                    } catch (Exception e1) {// ACRA.getErrorReporter().handleException(e1);
-
-                        e1.printStackTrace();
-
-                    }
-                } catch (Exception e) {
 
                 }
-
-            }
                 break;
             case 66:
                 if (resultCode == RESULT_OK) {
@@ -4896,7 +5138,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 
                 if (resultCode == RESULT_OK) {
-                    dbAdapter.updateIsInContactList(jid, 1,null);
+                    dbAdapter.updateIsInContactList(jid, 1, null);
                     Intent i = new Intent(mParentActivity, SliderTesting.class);
                     startActivity(i);
                     finish();
@@ -4911,50 +5153,50 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         }
     }
 
-
     public synchronized void uploadFile(String strURL, boolean is_image) {
         synchronized (this) {
-        i++;
-        Constant.printMsg("getting url:::>>>>>>>>>" + strURL + "  " + i);
-        // int i = 0;
-        Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+            i++;
+            Constant.printMsg("getting url:::>>>>>>>>>" + strURL + "  " + i);
+            // int i = 0;
+            sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this);
+            Constant.bux = sharedPrefs.getLong("buxvalue", 0);
 
-        Long buxval = Constant.bux + Constant.imagepoints;
-        Constant.bux = buxval;
+            Long buxval = Constant.bux + Constant.imagepoints;
+            Constant.bux = buxval;
 
-        int point = sharedPrefs.getInt("imgpoint", 0);
+            int point = sharedPrefs.getInt("imgpoint", 0);
 
-        Constant.totalimg = point;
+            Constant.totalimg = point;
 
-        Constant.totalimg = Count + Constant.totalimg;
+            Constant.totalimg = Count + Constant.totalimg;
 
-        Editor e2 = sharedPrefs.edit();
-        e2.putInt("imgpoint", Constant.totalimg);
-        e2.commit();
+            Editor e2 = sharedPrefs.edit();
+            e2.putInt("imgpoint", Constant.totalimg);
+            e2.commit();
 
-        Editor e1 = sharedPrefs.edit();
-        e1.putLong("buxvalue", buxval);
-        e1.commit();
+            Editor e1 = sharedPrefs.edit();
+            e1.putLong("buxvalue", buxval);
+            e1.commit();
 
-        String time = "" + System.currentTimeMillis();
-        String File_name = time + String.valueOf(i) + ".jpg";
-        Constant.printMsg("fillleeeeeee::::::::" + File_name + "  " + i);
-        String file_path = "";
-        int media_duration = 0;
-        int size = 0;
-        byte[] thumb = null;
+            String time = "" + System.currentTimeMillis();
+            String File_name = time + String.valueOf(i) + ".jpg";
+            Constant.printMsg("fillleeeeeee::::::::" + File_name + "  " + i);
+            String file_path = "";
+            int media_duration = 0;
+            int size = 0;
+            byte[] thumb = null;
 
-        String strMyImagePath = null;
-        Bitmap scaledBitmap = null;
+            String strMyImagePath = null;
+            Bitmap scaledBitmap = null;
 
-        if (is_image) {
+            if (is_image) {
 
-            try {
+                try {
 
-                byte[] byteArray = null;
-                ByteArrayOutputStream outstream = new ByteArrayOutputStream();
-                ByteArrayOutputStream outstream_thumb = new ByteArrayOutputStream();
-                // Part 1: Decode image
+                    byte[] byteArray = null;
+                    ByteArrayOutputStream outstream = new ByteArrayOutputStream();
+                    ByteArrayOutputStream outstream_thumb = new ByteArrayOutputStream();
+                    // Part 1: Decode image
 //                Bitmap unscaledBitmap = ScalingUtilities.decodeFile(strURL,
 //                        480, 800);
 
@@ -4973,22 +5215,22 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     unscaledBitmap.recycle();
                 }*/
 
-                Bitmap thumb_bitmap =  new CompressImage().compressImage(strURL, file_path,13);
-                thumb_bitmap.compress(Bitmap.CompressFormat.JPEG, 80,
-                        outstream_thumb);
-                thumb = outstream_thumb.toByteArray();
+                    Bitmap thumb_bitmap = new CompressImage().compressImage(strURL, file_path, 13);
+                    thumb_bitmap.compress(Bitmap.CompressFormat.JPEG, 80,
+                            outstream_thumb);
+                    thumb = outstream_thumb.toByteArray();
 
-                Constant.printMsg("Compress thumb:::::::" + thumb.length);
+                    Constant.printMsg("Compress thumb:::::::" + thumb.length);
 
-                boolean success = (new File(Constant.local_image_dir))
-                        .mkdirs();
-                if (!success) {
-                    Log.w("directory not created", "directory not created");
-                }
+                    boolean success = (new File(Constant.local_image_dir))
+                            .mkdirs();
+                    if (!success) {
+                        Log.w("directory not created", "directory not created");
+                    }
 
-                file_path = Constant.local_image_dir + File_name;
-                new CompressImage().compressImage(strURL, file_path,1);
-                Constant.printMsg("file pathhhhhh:::::::" + file_path);
+                    file_path = Constant.local_image_dir + File_name;
+                    new CompressImage().compressImage(strURL, file_path, 1);
+                    Constant.printMsg("file pathhhhhh:::::::" + file_path);
                /* FileOutputStream stream = new FileOutputStream(file_path);
 
                 byteArray = outstream.toByteArray();
@@ -4996,99 +5238,99 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 stream.write(byteArray);
                 stream.close();*/
 
-                // Toast.makeText(mParentActivity, "Downloading Completed",
-                // Toast.LENGTH_SHORT).show();
-            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-                e.printStackTrace();
-            }
-
-        } else {
-            file_path = strURL;
-            Constant.printMsg("file path from strurl::::>>>>" + file_path);
-            Bitmap video_thumb = ThumbnailUtils.createVideoThumbnail(file_path,
-                    MediaStore.Images.Thumbnails.MINI_KIND);
-
-            ByteArrayOutputStream outstream = new ByteArrayOutputStream();
-            video_thumb.compress(Bitmap.CompressFormat.JPEG, 50, outstream);
-
-            thumb = outstream.toByteArray();
-
-            File f = new File(strURL);
-            File_name = f.getName();
-            size = (int) f.length();
-            try {
-                MediaPlayer mp = new MediaPlayer();
-                mp.setDataSource(file_path);
-                mp.prepare();
-
-                media_duration = mp.getDuration();
-
-                Log.d("Media", "Duration::" + media_duration);
-            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-                e.printStackTrace();
-            }
-            Log.d("Video Thumb size", "Video Thumbsize::" + (size / 1024)
-                    / 1024 + " MB");
-
-            try {
-                if (!f.getPath().equals(Constant.local_video_dir + File_name)) {
-                    Utils.Copyfile(f, new File(Constant.local_video_dir
-                            + File_name));
+                    // Toast.makeText(mParentActivity, "Downloading Completed",
+                    // Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
 
-        MessageGetSet msggetset = new MessageGetSet();
-        String packet_id = "" + new Date().getTime();
-
-        msggetset.setData("");
-        msggetset.setKey_from_me(0);
-        msggetset.setKey_id("" + packet_id);
-        msggetset.setKey_remote_jid(jid);
-        msggetset.setNeeds_push(1);
-        msggetset.setSend_timestamp(new Date().getTime());
-        msggetset.setStatus(3);
-        msggetset.setTimestamp(new Date().getTime());
-        msggetset.setThumb_image(thumb);
-        msggetset.setMedia_name(File_name);
-        msggetset.setPostion(k);
-        if (file_path.contains(".")) {
-            Constant.printMsg("file path from strurl::::>>>>" + file_path);
-
-            Constant.printMsg("file name:;" + File_name);
-
-            msggetset.setMedia_mime_type(new Utils().getMimeType(file_path));
-            if (is_image) {
-                msggetset.setMedia_wa_type("" + 1);
             } else {
-                msggetset.setMedia_wa_type("" + 2);
-            }
-            msggetset.setMedia_url(null);
-            msggetset.setRow_data(thumb);
-            msggetset.setMedia_duration(media_duration);
-            msggetset.setMedia_size(size);
-            msggetset.setIs_sec_chat(sec);
-            msggetset.setSelf_des_time(selected_self_desc_time);
-            long id_insert = dbAdapter.setInsertMessages(msggetset);
-            msggetset.set_id((int) id_insert);
+                file_path = strURL;
+                Constant.printMsg("file path from strurl::::>>>>" + file_path);
+                Bitmap video_thumb = ThumbnailUtils.createVideoThumbnail(file_path,
+                        MediaStore.Images.Thumbnails.MINI_KIND);
 
-            // Get size in double to update media network usage
-            try {
+                ByteArrayOutputStream outstream = new ByteArrayOutputStream();
+                video_thumb.compress(Bitmap.CompressFormat.JPEG, 50, outstream);
+
+                thumb = outstream.toByteArray();
 
                 File f = new File(strURL);
-                long bite = (long) f.length();
-                Constant.printMsg("Double :" + bite);
-                updateMediaNetwork(bite);
+                File_name = f.getName();
+                size = (int) f.length();
+                try {
+                    MediaPlayer mp = new MediaPlayer();
+                    mp.setDataSource(file_path);
+                    mp.prepare();
 
-            } catch (Exception e) {
+                    media_duration = mp.getDuration();
 
+                    Log.d("Media", "Duration::" + media_duration);
+                } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+                    e.printStackTrace();
+                }
+                Log.d("Video Thumb size", "Video Thumbsize::" + (size / 1024)
+                        / 1024 + " MB");
+
+                try {
+                    if (!f.getPath().equals(Constant.local_video_dir + File_name)) {
+                        Utils.Copyfile(f, new File(Constant.local_video_dir
+                                + File_name));
+                    }
+                } catch (IOException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
             }
 
+            MessageGetSet msggetset = new MessageGetSet();
+            String packet_id = "" + new Date().getTime();
 
-            if(is_image) {
+            msggetset.setData("");
+            msggetset.setKey_from_me(0);
+            msggetset.setKey_id("" + packet_id);
+            msggetset.setKey_remote_jid(jid);
+            msggetset.setNeeds_push(1);
+            msggetset.setSend_timestamp(new Date().getTime());
+            msggetset.setStatus(3);
+            msggetset.setTimestamp(new Date().getTime());
+            msggetset.setThumb_image(thumb);
+            msggetset.setMedia_name(File_name);
+            msggetset.setPostion(k);
+            if (file_path.contains(".")) {
+                Constant.printMsg("file path from strurl::::>>>>" + file_path);
+
+                Constant.printMsg("file name:;" + File_name);
+
+                msggetset.setMedia_mime_type(new Utils().getMimeType(file_path));
+                if (is_image) {
+                    msggetset.setMedia_wa_type("" + 1);
+                } else {
+                    msggetset.setMedia_wa_type("" + 2);
+                }
+                msggetset.setMedia_url(null);
+                msggetset.setRow_data(thumb);
+                msggetset.setMedia_duration(media_duration);
+                msggetset.setMedia_size(size);
+                msggetset.setIs_sec_chat(sec);
+                msggetset.setSelf_des_time(selected_self_desc_time);
+                long id_insert = dbAdapter.setInsertMessages(msggetset);
+                msggetset.set_id((int) id_insert);
+
+                // Get size in double to update media network usage
+                try {
+
+                    File f = new File(strURL);
+                    long bite = (long) f.length();
+                    Constant.printMsg("Double :" + bite);
+                    updateMediaNetwork(bite);
+
+                } catch (Exception e) {
+
+                }
+
+
+                if (is_image) {
                /* msg_list.add(msggetset);
                 mPositionKey.add(msggetset.getKey_id());
                 dest_list_msgids.add(id_insert);
@@ -5108,24 +5350,24 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     }
                 });
 */
-                ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
-            }else{
-                ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
-            }
+                    ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
+                } else {
+                    ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
+                }
 
 
-            //                    if(Constant.mselected_self_destruct_time!=0)
-            //                    {
-            //                        database_destList.add(new DestructGetter(stringmsg, id_insert));
-            //
-            //
-            //                    }
+                //                    if(Constant.mselected_self_destruct_time!=0)
+                //                    {
+                //                        database_destList.add(new DestructGetter(stringmsg, id_insert));
+                //
+                //
+                //                    }
 
 
 //            ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
 
 //            new FetchChat().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
-            // edt_msg.setText("");
+                // edt_msg.setText("");
 //            msg_list.add(msggetset);
 //            dest_list_msgids.add(id_insert);
 //            dest_list_bombids.add(R.drawable.black_bomb);
@@ -5163,25 +5405,25 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 //                });
 //            }
 
-        } else {
-            Toast.makeText(getApplicationContext(), "Please Select Valid File",
-                    Toast.LENGTH_SHORT).show();
-        }
-        int msg_id = dbAdapter.getLastMsgid_chat(jid, sec);
-        Constant.printMsg("looooollll   " + msg_id);
+            } else {
+                Toast.makeText(getApplicationContext(), "Please Select Valid File",
+                        Toast.LENGTH_SHORT).show();
+            }
+            int msg_id = dbAdapter.getLastMsgid_chat(jid, sec);
+            Constant.printMsg("looooollll   " + msg_id);
 
-        if (dbAdapter.isExistinChatList_chat(jid, sec)) {
-            dbAdapter.setUpdateChat_lits_chat(jid, msg_id, sec);
-        } else {
-            dbAdapter.setInsertChat_list_chat(jid, msg_id, sec);
-        }
+            if (dbAdapter.isExistinChatList_chat(jid, sec)) {
+                dbAdapter.setUpdateChat_lits_chat(jid, msg_id, sec);
+            } else {
+                dbAdapter.setInsertChat_list_chat(jid, msg_id, sec);
+            }
 
 
 //        Intent login_broadcast = new Intent("chat");
 //        login_broadcast.putExtra("jid", "" + jid);
 //        getApplicationContext().sendBroadcast(login_broadcast);
+        }
     }
-  }
 
 //    public void uploadLogo(byte[] strURL, boolean is_image) {
 //        int i = 0;
@@ -5402,8 +5644,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 @Override
                 public void run() {
                     initializeListElememts(1);
-                    rightAudioChat();
-                    setRightAudio_Old();
+                    if (!Constant.songlist && !Constant.karaoke) {
+                        rightAudioChat();
+                        setRightAudio_Old();
+                    }
                     k = k + 1;
 
                     mRightTipLayout.requestFocus();
@@ -5654,22 +5898,24 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                     if (chat == null) {
 
-                        chat = TempConnectionService.chatmanager.createChat(
-                                jid,
+                        chat = TempConnectionService.chatmanager.createChat(JidCreate.entityBareFrom(jid),
                                 TempConnectionService.mChatCreatedListener.getMessageListener());
+
+                        Constant.printMsg("setmeg::::::::::>>>>>" + msg);
                     }
                     // MessageEventManager.addNotificationsRequests(msg, true,
                     // true, true, true);
-                    Constant.printMsg("setmeg::::::::::>>>>>" + msg);
+
                     // chat.sendMessage(msg);
 
-                    if (Connectivity.isOnline(mParentActivity) == true
-                            && TempConnectionService.connection.isConnected() == true && TempConnectionService.connection.isAuthenticated() == true) {
-                        chat.sendMessage(msg);
-                        status_msg = 2;
-                        // TempConnectionService.connection.sendStanza(msg);
+                    if (Connectivity.isOnline(mParentActivity) == true) {
+                        if (TempConnectionService.connection.isConnected() == true && TempConnectionService.connection.isAuthenticated() == true) {
+                            chat.sendMessage(msg);
+                            status_msg = 2;
+                            // TempConnectionService.connection.sendStanza(msg);
 
-                        Constant.printMsg("dataaa ::::::: " + status_msg);
+                            Constant.printMsg("dataaa ::::::: " + status_msg);
+                        }
                     }
 
                     // TempConnectionService.connection.sendStanza(msg);
@@ -5681,10 +5927,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             }
         };
         thread.start();
-//        Intent login_broadcast = new Intent("chat");
-//        login_broadcast.putExtra("jid", "" + jid);
-//        getApplicationContext().sendBroadcast(login_broadcast);
-//
+        Intent login_broadcast = new Intent("chat");
+        login_broadcast.putExtra("jid", "" + jid);
+        getApplicationContext().sendBroadcast(login_broadcast);
+
 //        new FetchChat().execute();
     }
 
@@ -5695,7 +5941,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         final String packet_id = "" + new Date().getTime();
 
         Constant.printMsg("vcard  " + vcard.toString());
-        Constant.printMsg("Diliiip " + name+","+numberContactSend );
+        Constant.printMsg("Diliiip " + name + "," + numberContactSend);
 
         msggetset.setData(vcard);
         msggetset.setKey_from_me(0);
@@ -5706,7 +5952,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         msggetset.setStatus(3);
         msggetset.setTimestamp(new Date().getTime());
         msggetset.setThumb_image(null);
-        msggetset.setMedia_name(name+","+numberContactSend);
+        msggetset.setMedia_name(name + "," + numberContactSend);
         msggetset.setMedia_wa_type("" + 5);
         msggetset.setRow_data(avatar);
         msggetset.setIs_sec_chat(sec);
@@ -5796,7 +6042,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         JivePropertiesManager.addProperty(msg, "thumb_image",
                                 avatar);
                     }
-                    JivePropertiesManager.addProperty(msg, "media_name", name+","+numberContactSend);
+                    JivePropertiesManager.addProperty(msg, "media_name", name + "," + numberContactSend);
                     if (sec == 0) {
                         JivePropertiesManager.addProperty(msg, "is_sec_chat",
                                 sec);
@@ -5807,8 +6053,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     // chatManager = ChatManager.getInstanceFor(connection);
                     if (chat == null) {
 
-                        chat = TempConnectionService.chatmanager.createChat(
-                                jid,
+                        chat = TempConnectionService.chatmanager.createChat(JidCreate.entityBareFrom(jid),
                                 TempConnectionService.mChatCreatedListener.getMessageListener());
                     }
 
@@ -5947,8 +6192,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
     public void voice_dialog() {
         myRecorder = new MediaRecorder();
         myRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        myRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        myRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
         boolean success = (new File(Constant.local_audio_dir)).mkdirs();
         final Dialog dialog = new Dialog(this);
@@ -5986,8 +6231,21 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         btn_record.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Log.e("Record", "Long Pressed");
+                Constant.printMsg("kfsfsfslkdflksdf");
+                try {
+                    presence_recording();
+                    myRecorder.start();
+                } catch (Exception e) {
+                    // ACRA.getErrorReporter().handleException(e);
+                    e.printStackTrace();
+                }
+
+                ch.setBase(SystemClock.elapsedRealtime());
+                Log.e("Record", "Action Up");
+                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_record));
                 ch.start();
+                is_startrec = false;
+                // ch.start();
                 return true;
             }
         });
@@ -5998,87 +6256,81 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 // TODO Auto-generated method stub
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     if (!is_started) {
-                        try {
-                            presence_recording();
-                            myRecorder.start();
-                        } catch (Exception e) {
-                            // ACRA.getErrorReporter().handleException(e);
-                            e.printStackTrace();
-                        }
 
-                        ch.setBase(SystemClock.elapsedRealtime());
-                        Log.e("Record", "Action Up");
-                        btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_record));
-                        ch.start();
                         is_started = true;
-                        is_startrec = false;
+
+                        //  return false;
                     }
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     if (!is_startrec) {
-                        Log.e("Record", "Action Down");
-                        Log.e("Action Down", "Down" + is_startrec);
-
-                        btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_send));
-
-                        ch.stop();
-                        timer.cancel();
-                        String chrono_text = ch.getText().toString();
-
-                        if (chrono_text.equalsIgnoreCase("00:00")) {
-                            ch.stop();
-                            btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
-                            Toast.makeText(getApplicationContext(), "Hold To Record", Toast.LENGTH_LONG).show();
-                            is_startrec = true;
-                            is_started = true;
-                        }
                         try {
-                            if (myRecorder != null) {
-                                myRecorder.stop();
-                                myRecorder.release();
-                                myRecorder = null;
-                            }
+                            Log.e("Record", "Action Down");
+                            Log.e("Action Down", "Down" + is_startrec);
 
-                            File f = new File(file_path);
-                            String File_name = f.getName();
-                            int size = (int) f.length();
-                            int mediaDuration = 0;
+                            btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_send));
 
-                            MediaPlayer mediaAudioPlayer = new MediaPlayer();
-                            mediaAudioPlayer.setDataSource(file_path);
-                            mediaAudioPlayer.prepare();
-                            mediaDuration = mediaAudioPlayer.getDuration();
+                            ch.stop();
+                            timer.cancel();
+                            String chrono_text = ch.getText().toString();
 
-                            is_startrec = false;
-                            is_started = false;
-
-                            Log.e("Chat Test Duration", mediaDuration + "\n" + size + "\n" + File_name);
-                        } catch (IllegalStateException e) {
-                            Log.e("Chat Test Illegal", is_started + "\n" + is_startrec + "\n" + e.toString());
-
-                            e.printStackTrace();
-
-                            if (is_startrec) {
-                                is_started = false;
-                                is_startrec = false;
-                                Log.e("Illegal Status", is_started + "\n" + is_startrec);
-                            } else {
+                            if (chrono_text.equalsIgnoreCase("00:00")) {
+                                ch.stop();
+                                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
+                                Toast.makeText(getApplicationContext(), "Hold To Record", Toast.LENGTH_LONG).show();
+                                is_startrec = true;
                                 is_started = true;
-                                is_startrec = false;
-                                Log.e("Illegal Status", is_started + "\n" + is_startrec);
                             }
-                        } catch (RuntimeException e) {
-                            Log.e("Chat Test Runtime", is_started + "\n" + is_startrec + "\n" + e.toString());
-                            e.printStackTrace();
-                            btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
-                            is_startrec = true;
-                            is_started = false;
-                        } catch (IOException e) {
-                            Log.e("Chat Test", e.toString());
-                            e.printStackTrace();
+                            try {
+                                if (myRecorder != null) {
+                                    myRecorder.stop();
+                                    myRecorder.release();
+                                    myRecorder = null;
+                                }
+
+                                File f = new File(file_path);
+                                String File_name = f.getName();
+                                int size = (int) f.length();
+                                int mediaDuration = 0;
+
+                                MediaPlayer mediaAudioPlayer = new MediaPlayer();
+                                mediaAudioPlayer.setDataSource(file_path);
+                                mediaAudioPlayer.prepare();
+                                mediaDuration = mediaAudioPlayer.getDuration();
+
+                                is_startrec = false;
+                                is_started = false;
+
+                                Log.e("Chat Test Duration", mediaDuration + "\n" + size + "\n" + File_name);
+                            } catch (IllegalStateException e) {
+                                Log.e("Chat Test Illegal", is_started + "\n" + is_startrec + "\n" + e.toString());
+
+                                e.printStackTrace();
+
+                                if (is_startrec) {
+                                    is_started = false;
+                                    is_startrec = false;
+                                    Log.e("Illegal Status", is_started + "\n" + is_startrec);
+                                } else {
+                                    is_started = true;
+                                    is_startrec = false;
+                                    Log.e("Illegal Status", is_started + "\n" + is_startrec);
+                                }
+                            } catch (RuntimeException e) {
+                                Log.e("Chat Test Runtime", is_started + "\n" + is_startrec + "\n" + e.toString());
+                                e.printStackTrace();
+                                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
+                                is_startrec = true;
+                                is_started = false;
+                            } catch (IOException e) {
+                                Log.e("Chat Test", e.toString());
+                                e.printStackTrace();
+                            }
+                        } catch (Exception e) {
                         }
+
                     }
                 }
-                return true;
+                return false;
             }
         });
 
@@ -6135,48 +6387,56 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (Constant.mself_destruct_time == true) {
-                    Constant.mself_destruct_msg = edt_msg.getText().toString().trim();
-                    Constant.mself_jid = jid;
-                    Constant.mself_destruct_time = false;
-                    System.out.println("called self destruct send condition inside the btn click");
-                    if (Constant.mself_destruct_msg.toString().length() != 0) {
-                        dest_msg_list.add(Constant.mselected_self_destruct_time);
-                        Constant.printMsg("msg:::"
-                                + Constant.mself_destruct_msg + "time::::"
-                                + Constant.mselected_self_destruct_time);
 
-                        int point = sharedPrefs.getInt("destpoint", 0);
-                        Constant.totaldest = point;
-                        Constant.totaldest = Count + Constant.totaldest;
+                try {
+                    if (Constant.mselected_self_destruct_time != 0) {
 
-                        Editor e2 = sharedPrefs.edit();
-                        e2.putInt("destpoint", Constant.totaldest);
-                        e2.commit();
+                        if (Constant.mself_destruct_time == true) {
+                            Constant.mself_destruct_msg = edt_msg.getText().toString().trim();
+                            Constant.mself_jid = jid;
+                            Constant.mself_destruct_time = false;
+                            System.out.println("called self destruct send condition inside the btn click");
+                            if (Constant.mself_destruct_msg.toString().length() != 0) {
+                                dest_msg_list.add(Constant.mselected_self_destruct_time);
+                                Constant.printMsg("msg:::"
+                                        + Constant.mself_destruct_msg + "time::::"
+                                        + Constant.mselected_self_destruct_time);
 
-                        Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+                                int point = sharedPrefs.getInt("destpoint", 0);
+                                Constant.totaldest = point;
+                                Constant.totaldest = Count + Constant.totaldest;
 
-                        Long buxval1 = Constant.bux + Constant.desTpoint;
-                        Constant.bux = buxval1;
-                        Constant.printMsg("dest buxxxx:::::" + buxval1 + "   " + Constant.totaldest + "   " + Constant.bux);
+                                Editor e2 = sharedPrefs.edit();
+                                e2.putInt("destpoint", Constant.totaldest);
+                                e2.commit();
 
-                        Editor e3 = sharedPrefs.edit();
-                        e3.putLong("buxvalue", buxval1);
-                        e3.commit();
-                        mDest = true;
+                                Constant.bux = sharedPrefs.getLong("buxvalue", 0);
 
-                        sendMessage("<s>"
-                                + Constant.mselected_self_destruct_time + "-"
-                                + Constant.mself_destruct_msg + "-"
-                                + Constant.mself_jid);
+                                Long buxval1 = Constant.bux + Constant.desTpoint;
+                                Constant.bux = buxval1;
+                                Constant.printMsg("dest buxxxx:::::" + buxval1 + "   " + Constant.totaldest + "   " + Constant.bux);
 
-                        Constant.printMsg("Destruct service called 1" + GlobalBroadcast.isServiceRunning(DestructService.class.getCanonicalName(), mParentActivity));
+                                Editor e3 = sharedPrefs.edit();
+                                e3.putLong("buxvalue", buxval1);
+                                e3.commit();
+                                mDest = true;
 
-                        if (!GlobalBroadcast.isServiceRunning(DestructService.class.getCanonicalName(), mParentActivity)) {
-                            Constant.printMsg("Destruct service called 2" + GlobalBroadcast.isServiceRunning(DestructService.class.getCanonicalName(), mParentActivity));
-                            startService(new Intent(mParentActivity, DestructService.class));
+                                sendMessage("<s>"
+                                        + Constant.mselected_self_destruct_time + "-"
+                                        + Constant.mself_destruct_msg + "-"
+                                        + Constant.mself_jid);
+
+                                Constant.printMsg("Destruct service called 1" + GlobalBroadcast.isServiceRunning(DestructService.class.getCanonicalName(), mParentActivity));
+
+                                if (!GlobalBroadcast.isServiceRunning(DestructService.class.getCanonicalName(), mParentActivity)) {
+                                    Constant.printMsg("Destruct service called 2" + GlobalBroadcast.isServiceRunning(DestructService.class.getCanonicalName(), mParentActivity));
+                                    startService(new Intent(mParentActivity, DestructService.class));
+                                }
+                            }
                         }
                     }
+                } catch (Exception e) {
+
                 }
             }
         });
@@ -6187,7 +6447,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 // TODO Auto-generated method stub
 
 
-                if(mPopup){
+                if (mPopup) {
                     downArrowClickAction();
                 }
                 System.out.println("selected time postion:::::" + which);
@@ -6243,7 +6503,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             // chatManager = ChatManager.getInstanceFor(connection);
             if (chat == null) {
 
-                chat = TempConnectionService.chatmanager.createChat(jid,
+                chat = TempConnectionService.chatmanager.createChat(JidCreate.entityBareFrom(jid),
                         TempConnectionService.mChatCreatedListener.getMessageListener());
             }
 
@@ -6463,101 +6723,90 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
     }
 
     private void selectImage() {
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.gallery_popup);
-        dialog.setCancelable(true);
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            final Dialog dialog = new Dialog(this);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.gallery_popup);
+            dialog.setCancelable(true);
 
-        TextView mGalleryText = (TextView) dialog.findViewById(R.id.gallery_text);
-        TextView mPhotoText = (TextView) dialog.findViewById(R.id.photo_text);
-        TextView mVideoText = (TextView) dialog
-                .findViewById(R.id.video_text);
+            TextView mGalleryText = (TextView) dialog.findViewById(R.id.gallery_text);
+            TextView mPhotoText = (TextView) dialog.findViewById(R.id.photo_text);
+            TextView mVideoText = (TextView) dialog
+                    .findViewById(R.id.video_text);
 
-        LinearLayout mGalleryLayout = (LinearLayout) dialog.findViewById(R.id.header_layout);
-        LinearLayout mSelectionLayout = (LinearLayout) dialog.findViewById(R.id.selection_layout);
+            LinearLayout mGalleryLayout = (LinearLayout) dialog.findViewById(R.id.header_layout);
+            LinearLayout mSelectionLayout = (LinearLayout) dialog.findViewById(R.id.selection_layout);
 
+            LinearLayout.LayoutParams galleryLayoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            galleryLayoutParams.width = width * 60 / 100;
+            galleryLayoutParams.height = height * 5 / 100;
+            galleryLayoutParams.gravity = Gravity.CENTER;
+            mGalleryLayout.setLayoutParams(galleryLayoutParams);
 
-        LinearLayout.LayoutParams galleryLayoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        galleryLayoutParams.width = width * 60 / 100;
-        galleryLayoutParams.height = height * 5 / 100;
-        galleryLayoutParams.gravity = Gravity.CENTER;
-        mGalleryLayout.setLayoutParams(galleryLayoutParams);
+            LinearLayout.LayoutParams text_layout = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            text_layout.width = width * 60 / 100;
+            text_layout.height = width * 21 / 100;
+            text_layout.gravity = Gravity.CENTER;
+            mSelectionLayout.setLayoutParams(text_layout);
 
+            LinearLayout.LayoutParams textparams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            textparams.width = width * 60 / 100;
+            textparams.leftMargin = width * 5 / 100;
+            textparams.height = width * 10 / 100;
+            textparams.gravity = Gravity.CENTER;
+            mPhotoText.setLayoutParams(textparams);
+            mVideoText.setLayoutParams(textparams);
+            mGalleryText.setLayoutParams(textparams);
+            mGalleryText.setGravity(Gravity.CENTER | Gravity.LEFT);
+            mGalleryText.setLeft(width * 5 / 100);
+            mVideoText.setGravity(Gravity.CENTER | Gravity.LEFT);
+            mPhotoText.setGravity(Gravity.CENTER | Gravity.LEFT);
+            Constant.typeFace(this, mGalleryText);
+            Constant.typeFace(this, mVideoText);
+            Constant.typeFace(this, mPhotoText);
 
-        LinearLayout.LayoutParams text_layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        text_layout.width = width * 60 / 100;
-        text_layout.height = width * 21 / 100;
-        text_layout.gravity = Gravity.CENTER;
-        mSelectionLayout.setLayoutParams(text_layout);
+            if (width >= 600) {
+                mGalleryText.setTextSize(17);
+                mPhotoText.setTextSize(17);
+                mVideoText.setTextSize(17);
+            } else if (width > 501 && width < 600) {
+                mGalleryText.setTextSize(16);
+                mPhotoText.setTextSize(16);
+                mVideoText.setTextSize(16);
+            } else if (width > 260 && width < 500) {
+                mGalleryText.setTextSize(15);
+                mPhotoText.setTextSize(15);
+                mVideoText.setTextSize(15);
+            } else if (width <= 260) {
+                mGalleryText.setTextSize(14);
+                mPhotoText.setTextSize(14);
+                mVideoText.setTextSize(14);
+            }
 
-
-        LinearLayout.LayoutParams textparams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        textparams.width = width * 60 / 100;
-        textparams.leftMargin = width * 5 / 100;
-        textparams.height = width * 10 / 100;
-        textparams.gravity = Gravity.CENTER;
-        mPhotoText.setLayoutParams(textparams);
-        mVideoText.setLayoutParams(textparams);
-        mGalleryText.setLayoutParams(textparams);
-        mGalleryText.setGravity(Gravity.CENTER | Gravity.LEFT);
-        mGalleryText.setLeft(width * 5 / 100);
-        mVideoText.setGravity(Gravity.CENTER | Gravity.LEFT);
-        mPhotoText.setGravity(Gravity.CENTER | Gravity.LEFT);
-        Constant.typeFace(this, mGalleryText);
-        Constant.typeFace(this, mVideoText);
-        Constant.typeFace(this, mPhotoText);
-
-
-        if (width >= 600) {
-
-            mGalleryText.setTextSize(17);
-            mPhotoText.setTextSize(17);
-            mVideoText.setTextSize(17);
-
-        } else if (width > 501 && width < 600) {
-
-            mGalleryText.setTextSize(16);
-            mPhotoText.setTextSize(16);
-            mVideoText.setTextSize(16);
-
-        } else if (width > 260 && width < 500) {
-
-            mGalleryText.setTextSize(15);
-            mPhotoText.setTextSize(15);
-            mVideoText.setTextSize(15);
-
-        } else if (width <= 260) {
-
-            mGalleryText.setTextSize(14);
-            mPhotoText.setTextSize(14);
-            mVideoText.setTextSize(14);
-
+            mPhotoText.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                    image_picker(1);
+                }
+            });
+            mVideoText.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                    image_picker(2);
+                }
+            });
+            dialog.show();
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
         }
-
-
-        mPhotoText.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                image_picker(1);
-            }
-        });
-        mVideoText.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                image_picker(2);
-            }
-        });
-        dialog.show();
-
-
     }
 
     @Override
@@ -6661,7 +6910,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         update_sent_count(sent_msg_count);
         // mDownArrow.setImageResource(R.drawable.rt_arrow);
         // Constant.mTouch = false;
-        if(mPopup){
+        if (mPopup) {
             downArrowClickAction();
         }
         isClicked = true;
@@ -6787,7 +7036,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                         Constant.printMsg("QQQQQQQ" + splited[i]);
 
-                        if (containsCaseInsensitive(splited[i],mFinalNyms)) {
+                        if (containsCaseInsensitive(splited[i], mFinalNyms)) {
 
                             Constant.printMsg("QQQQQQQ1111" + splited[i]);
 
@@ -6889,10 +7138,13 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             selectedtext.clear();
             Constant.printMsg("SSSSSSS" + edt_msg.getText().toString());
             nymcount = 0;
-        }
-        else
-        {
-            voice_dialog();
+        } else {
+            if (Constant.checkPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO)) {
+                Constant.printMsg("Permission Granted");
+                voice_dialog();
+            } else {
+                Constant.permissionRequest(this, Manifest.permission.RECORD_AUDIO, Constant.PERMISSION_CODE_MISCEL);
+            }
         }
     }
 
@@ -6962,307 +7214,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         }
     }
 
-    @Override
-    public void addAsyncStanzaListener(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addConnectionListener(ConnectionListener arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addOneTimeSyncCallback(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addPacketInterceptor(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    @Deprecated
-    public void addPacketListener(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addPacketSendingListener(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addSyncStanzaListener(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public PacketCollector createPacketCollector(StanzaFilter arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PacketCollector createPacketCollector(Configuration arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PacketCollector createPacketCollectorAndSend(IQ arg0)
-            throws NotConnectedException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PacketCollector createPacketCollectorAndSend(StanzaFilter arg0,
-                                                        Stanza arg1) throws NotConnectedException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public int getConnectionCounter() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public <F extends ExtensionElement> F getFeature(String arg0, String arg1) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public FromMode getFromMode() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void setFromMode(FromMode arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public String getHost() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public long getLastStanzaReceived() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public long getPacketReplyTimeout() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public void setPacketReplyTimeout(long arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public int getPort() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public String getServiceName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public String getStreamId() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public String getUser() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean hasFeature(String arg0, String arg1) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isAnonymous() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isAuthenticated() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isConnected() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isSecureConnection() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isUsingCompression() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public IQRequestHandler registerIQRequestHandler(IQRequestHandler arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean removeAsyncStanzaListener(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void removeConnectionListener(ConnectionListener arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void removePacketCollector(PacketCollector arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void removePacketInterceptor(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    @Deprecated
-    public boolean removePacketListener(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void removePacketSendingListener(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean removeSyncStanzaListener(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void send(PlainStreamElement arg0) throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendIqWithResponseCallback(IQ arg0, StanzaListener arg1)
-            throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendIqWithResponseCallback(IQ arg0, StanzaListener arg1,
-                                           ExceptionCallback arg2) throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendIqWithResponseCallback(IQ arg0, StanzaListener arg1,
-                                           ExceptionCallback arg2, long arg3) throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    @Deprecated
-    public void sendPacket(Stanza arg0) throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendStanza(Stanza arg0) throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendStanzaWithResponseCallback(Stanza arg0, StanzaFilter arg1,
-                                               StanzaListener arg2) throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendStanzaWithResponseCallback(Stanza arg0, StanzaFilter arg1,
-                                               StanzaListener arg2, ExceptionCallback arg3)
-            throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendStanzaWithResponseCallback(Stanza arg0, StanzaFilter arg1,
-                                               StanzaListener arg2, ExceptionCallback arg3, long arg4)
-            throws NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public IQRequestHandler unregisterIQRequestHandler(IQRequestHandler arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IQRequestHandler unregisterIQRequestHandler(String arg0,
-                                                       String arg1, Type arg2) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     /**
      * Down Arrow button clicked functionality
@@ -7366,7 +7317,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 @Override
                 public void onClick(View v) {
 
-                    if(mPopup){
+                    if (mPopup) {
                         downArrowClickAction();
                     }
 
@@ -7379,7 +7330,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             });
 
-            autodes.setOnClickListener(new OnClickListener() {
+            /*autodes.setOnClickListener(new OnClickListener() {
 
                 @Override
                 public void onClick(View v) {
@@ -7399,19 +7350,57 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                 "Please enter some text",
                                 Toast.LENGTH_SHORT).show();
                     }
-
                 }
 
+            });*/
+
+            autodes.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (edt_msg.getText().toString().length() != 0) {
+                        if (Connectivity.isOnline(mParentActivity)) {
+                            try {
+                                String[] words = edt_msg.getText().toString().split("\\s+");
+
+                                Constant.printMsg("Destruct Msg ::: 04 " + words.length + "   " + mFinalNyms);
+
+                                if (mFinalNyms.size() > 0) {
+                                    Toast.makeText(getApplicationContext(), "Can't Able to Send Nymn Message as DesT", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    Show_Self_desc_time(selected_self_desc_index);
+
+                                    Constant.mselfdestruct = true;
+                                }
+
+                                Constant.printMsg("Destruct Msg ::: ff " + Constant.mChatText);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+                            Constant.printMsg("Destruct Msg ::: 00 " + Constant.mself_destruct_msg);
+                        } else {
+                            Toast.makeText(getApplicationContext(),
+                                    "Check Your Network Connection",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(getApplicationContext(),
+                                "Please enter some text",
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                }
             });
 
-            mdazzle.setOnClickListener(new OnClickListener() {
+            /*mdazzle.setOnClickListener(new OnClickListener() {
 
                 @Override
                 public void onClick(View v) {
                     // TODO Auto-generated method stub
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
 
-                    if(mPopup){
+                    if (mPopup)
+                    {
                         downArrowClickAction();
                     }
 
@@ -7423,24 +7412,33 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                     Constant.mChatText = "";
 
-                    try {
+                    try
+                    {
+                        boolean mTempIsMatch = false;
                         String[] words = edt_msg.getText().toString().split("\\s+");
-                        if (mMessegeList.size() > 0) {
+                        Constant.printMsg("fralkjf" + words.length + "   " + mFinalNyms);
+                        if (mFinalNyms.size() > 0)
+                        {
                             for (int i = 0; i < words.length; i++) {
-                                for (int j = 0; j < mMessegeList.size(); j++) {
-
+                                mTempIsMatch = false;
+                                for (int j = 0; j < mFinalNyms.size(); j++) {
+                                    Constant.printMsg("fralkjf000" + words[i] + "   " + mFinalNyms);
                                     try {
 
-                                        if (mMessegeList.get(j).toString().substring(0, mMessegeList.get(j).toString().length() - 1).equalsIgnoreCase(words[i].substring(0, words[i].length() - 1))) {
+                                        if (mFinalNyms.get(j).toString().substring(0, mFinalNyms.get(j).toString().length() - 1).equalsIgnoreCase(words[i].substring(0, words[i].length() - 1))) {
 
                                             Constant.mChatText += words[i].substring(0, words[i].length() - 1) + " ";
-
-                                        } else {
-                                            Constant.mChatText += words[i] + " ";
+                                            Constant.printMsg("fralkjf111" + Constant.mChatText);
+                                            mTempIsMatch = true;
                                         }
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
+                                }
+                                if (mTempIsMatch == false) {
+                                    Constant.printMsg("fralkjf222" + Constant.mChatText);
+
+                                    Constant.mChatText += words[i] + " ";
                                 }
                             }
                         } else {
@@ -7453,12 +7451,37 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     Intent intent = new Intent(mParentActivity,
                             DazzPlainActivity.class);
                     startActivity(intent);
-                    //                }
-
-                 //   mPopup = false;
 
                 }
+            });*/
+
+            mdazzle.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (mPopup) {
+                        downArrowClickAction();
+                    }
+
+                    Constant.mChatText = "";
+
+                    try {
+                        String[] words = edt_msg.getText().toString().split("\\s+");
+
+                        Constant.printMsg("fralkjf" + words.length + "   " + mFinalNyms);
+
+                        if (mFinalNyms.size() > 0) {
+                            Toast.makeText(getApplicationContext(), "Can't Able to Send Nymn Message as DazZ", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Constant.mChatText = edt_msg.getText().toString();
+                            Intent intent = new Intent(mParentActivity, DazzPlainActivity.class);
+                            startActivity(intent);
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             });
+
             mbazzle.setOnClickListener(new OnClickListener() {
 
                 @Override
@@ -7466,14 +7489,14 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     // TODO Auto-generated method stub
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
 
-                    if(mPopup){
+                    if (mPopup) {
                         downArrowClickAction();
                     }
                     Intent intentka = new Intent(mParentActivity,
                             KaraokeListActivity.class);
                     startActivity(intentka);
 
-                   // mPopup = false;
+                    // mPopup = false;
 
                 }
             });
@@ -7485,7 +7508,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     // TODO Auto-generated method stub
 
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
-                    if(mPopup){
+                    if (mPopup) {
                         downArrowClickAction();
                     }
 
@@ -7494,7 +7517,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             KonsHomeScreen.class);
                     startActivity(intent);
 
-                 //   mPopup = false;
+                    //   mPopup = false;
 
                 }
             });
@@ -7519,6 +7542,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 anim.setFillEnabled(true);
                 anim.setFillAfter(true);
                 mChatFooterSlideMenuImg.startAnimation(anim);
+                mSliderMenuLayout.setVisibility(View.VISIBLE);
 
                 TranslateAnimation anim1 = new TranslateAnimation(-(width * 75 / 100), 0, 0, 0);
                 anim1.setDuration(500); // 1000 ms = 1second
@@ -7530,6 +7554,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         mSliderMenuLayout.layout(mSliderMenuLayout.getLeft(),
                                 mSliderMenuLayout.getTop(), mSliderMenuLayout.getRight(),
                                 mSliderMenuLayout.getBottom());
+
                         mSliderMenuLayout.setVisibility(View.VISIBLE);
 
                     }
@@ -7549,9 +7574,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     }
 
                 });
-
-                mSliderMenuLayout.startAnimation(anim1);
                 anim1.setFillAfter(true);
+                mSliderMenuLayout.startAnimation(anim1);
 
 
 //                popupWindow.setAnimationStyle(R.style.AnimationPopup);
@@ -7649,7 +7673,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mChatTypingTxt.setMovementMethod(new ScrollingMovementMethod());
 //            mChatTypingTxt.setedFocusable(false);
 //            mChatTypingTxt.setFocusableInTouchMode(false);
-
 
 
             mchatHeadBackLayout = (LinearLayout) findViewById(R.id.mchatlayoutHeadBack);
@@ -7779,17 +7802,19 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             LinearLayout.LayoutParams footerSlideMenuParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            footerSlideMenuParams.width = width * 7 / 100;
-            footerSlideMenuParams.height = height * 2 / 100;
+            footerSlideMenuParams.width = width * 6 / 100;
+            footerSlideMenuParams.height = width * 4 / 100;
             footerSlideMenuParams.gravity = Gravity.CENTER;
             mChatFooterSlideMenuImg.setLayoutParams(footerSlideMenuParams);
-
 
             LinearLayout.LayoutParams footerDownArrowParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.MATCH_PARENT);
-            footerDownArrowParams.width = width * 13 / 100;
+            footerDownArrowParams.width = width * 11 / 100;
+            footerDownArrowParams.height = width * 11 / 100;
             footerDownArrowParams.gravity = Gravity.CENTER | Gravity.CENTER;
+            footerDownArrowParams.leftMargin = 2 * width / 100;
+            footerDownArrowParams.rightMargin = 1 * width / 100;
             mDownArrowLayout.setLayoutParams(footerDownArrowParams);
 
             LinearLayout.LayoutParams footerEdittextLayoutParams = new LinearLayout.LayoutParams(
@@ -7820,6 +7845,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             footerSendBtnParams.width = width * 11 / 100;
             footerSendBtnParams.height = width * 11 / 100;
             footerSendBtnParams.leftMargin = width * 2 / 100;
+            footerSendBtnParams.rightMargin = width * 1 / 100;
             footerSendBtnParams.gravity = Gravity.CENTER_VERTICAL;
             mChatFooterSendBtn.setLayoutParams(footerSendBtnParams);
 
@@ -7833,7 +7859,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             LinearLayout.LayoutParams.WRAP_CONTENT);
                     listviewParams.width = width;
 //                    listviewParams.topMargin = height * 8 / 100;
-                    listviewParams.gravity = Gravity.BOTTOM|Gravity.BOTTOM;
+                    listviewParams.gravity = Gravity.BOTTOM | Gravity.BOTTOM;
 //                    listviewParams.bottomMargin = mChatFooterLayout.getHeight() + 2;
                     listview.setLayoutParams(listviewParams);
                     listview.scrollTo(0, listview.getHeight());
@@ -7849,23 +7875,16 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mScrollViewParams.bottomMargin = height * 11 / 100;
             mScrollView.setLayoutParams(mScrollViewParams);
 
-            if (width >= 600)
-            {
+            if (width >= 600) {
                 mChatHedderUserTxt.setTextSize(16);
                 mChatHedderUserStatusTxt.setTextSize(14);
-            }
-            else if (width > 501 && width < 600)
-            {
+            } else if (width > 501 && width < 600) {
                 mChatHedderUserTxt.setTextSize(14);
                 mChatHedderUserStatusTxt.setTextSize(12);
-            }
-            else if (width > 260 && width < 500)
-            {
+            } else if (width > 260 && width < 500) {
                 mChatHedderUserTxt.setTextSize(13);
                 mChatHedderUserStatusTxt.setTextSize(11);
-            }
-            else if (width <= 260)
-            {
+            } else if (width <= 260) {
                 mChatHedderUserTxt.setTextSize(12);
                 mChatHedderUserStatusTxt.setTextSize(11);
             }
@@ -8229,19 +8248,29 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                Intent intent = new Intent(Intent.ACTION_PICK,
-                        ContactsContract.Contacts.CONTENT_URI);
-                startActivityForResult(intent, 55);
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.printMsg("Permission Granted");
+                    Intent intent = new Intent(Intent.ACTION_PICK,
+                            ContactsContract.Contacts.CONTENT_URI);
+                    startActivityForResult(intent, 55);
+                } else {
+                    Constant.permissionRequest(ChatTest.this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
             }
         });
         mChatMenuAudioImg.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                startActivity(new Intent(mParentActivity, SongList.class));
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.printMsg("Permission Granted");
+                    startActivity(new Intent(mParentActivity, SongList.class));
+                    finish();
+                } else {
+                    Constant.permissionRequest(mParentActivity, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
             }
         });
-
 
         // Layout click
         mChatMenuGalleryLayout.setOnClickListener(new OnClickListener() {
@@ -8251,6 +8280,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 selectImage();
             }
         });
+
         mChatMenuShootLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -8272,20 +8302,34 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 locationShare();
             }
         });
+
         mChatMenuContactLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                Intent intent = new Intent(Intent.ACTION_PICK,
-                        ContactsContract.Contacts.CONTENT_URI);
-                startActivityForResult(intent, 55);
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.printMsg("Permission Granted");
+                    Intent intent = new Intent(Intent.ACTION_PICK,
+                            ContactsContract.Contacts.CONTENT_URI);
+                    startActivityForResult(intent, 55);
+                } else {
+                    Constant.permissionRequest(ChatTest.this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
             }
         });
+
         mChatMenuAudioLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                startActivity(new Intent(mParentActivity, SongList.class));
+
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.printMsg("Permission Granted");
+                    startActivity(new Intent(ChatTest.this, SongList.class));
+                    finish();
+                } else {
+                    Constant.permissionRequest(ChatTest.this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
             }
         });
     }
@@ -8352,6 +8396,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 viewUserProfile();
             }
         });
+
         mChatOptionMenuBlockLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -8383,8 +8428,19 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         mChatOptionMenuMirrorchatLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                topMenuHideFunction();
-                mirrorChat();
+                try {
+                    ArrayList<String> blocked = KachingMeApplication.getBlocked_user();
+                    Constant.printMsg("blocked test msg send   " + jid);
+
+                    if (blocked.contains(jid)) {
+                        callBlockedUserAlert();
+                    } else {
+                        topMenuHideFunction();
+                        mirrorChat();
+                    }
+                } catch (Exception e) {
+
+                }
             }
         });
     }
@@ -8415,8 +8471,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                             clearDataList();
 
-                            if(iSize>0)
-                            updateForHomeScreenList();
+                            if (iSize > 0)
+                                updateForHomeScreenList();
 
                             dest_list = new ArrayList<Integer>();
                             dest_list_msgids = new ArrayList<Integer>();
@@ -8467,7 +8523,19 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         Intent callIntent = new Intent(Intent.ACTION_CALL);
         callIntent.setData(Uri
                 .parse("tel:+" + jid.toString().split("@")[0]));
-        startActivity(callIntent);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+
+            startActivity(callIntent);
+            return;
+        }
+
     }
 
     /**
@@ -8516,51 +8584,66 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
      * Video recording start
      */
     public void startVideoRecording() {
-        try {
-            // image_picker(2);
-            Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            Constant.printMsg("Permission Granted");
 
-            fileUri = Utils.getOutputMediaFileUri(2); // create a file to save
-            // the video
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-            // file name
-            intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0.8); // set the
-            // video
-            // image
-            // quality
-            // to high
-            intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 26214400);
-            // start the Video Capture Intent
-            startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
-        } catch (Exception e) {
+            try {
+                // image_picker(2);
+                Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
 
+                fileUri = Utils.getOutputMediaFileUri(2); // create a file to save
+                // the video
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+                // file name
+                intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0.8); // set the
+                // video
+                // image
+                // quality
+                // to high
+                intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 26214400);
+                // start the Video Capture Intent
+                startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+            } catch (Exception e) {
+
+            }
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
         }
+
     }
 
     /**
      * Capture Image
      */
     public void imageCapture() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        fileUri = Utils.getOutputMediaFileUri(1);
-        // create a file to save the image
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-        // file name
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        // start the image capture Intent
-        startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+            fileUri = Utils.getOutputMediaFileUri(1);
+            // create a file to save the image
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+            // file name
+
+            // start the image capture Intent
+            startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.WRITE_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+        }
     }
 
     /**
      * Share location
      */
     public void locationShare() {
-        Intent intent = new Intent(this, LocationShare.class);
-        startActivityForResult(intent, 44);
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)) {
+            Constant.printMsg("Permission Granted");
+            Intent intent = new Intent(this, LocationShare.class);
+            startActivityForResult(intent, 44);
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.ACCESS_FINE_LOCATION, Constant.PERMISSION_CODE_LOCATION);
+        }
     }
-
-
 
     public void mAddMethod(Intent intent) {
 
@@ -8705,64 +8788,70 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
     }
 
     public void fetchNymFrom() {
-        try {
-            SQLException e;
-            Throwable th;
-            Dbhelper dbhelper = new Dbhelper(getApplicationContext());
-            Cursor c = null;
-            ChatDictionary.mDictionaryList.clear();
-            ChatDictionary.mDictionaryMeaningList.clear();
 
-            try {
-                String query = "SELECT * FROM nym ORDER BY name ";
-                Dbhelper db = new Dbhelper(getApplicationContext());
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
                 try {
-                    c = db.open().getDatabaseObj().rawQuery(query, null);
-                    int idIndex = c.getColumnIndex("id");
-                    int txnm = c.getColumnIndex(Contacts.PeopleColumns.NAME);
-                    int mnnm = c.getColumnIndex("meaning");
-                    Constant.printMsg("The pending cart list in db ::::"
-                            + c.getCount());
-                    if (c.getCount() > 0) {
-                        while (c.moveToNext()) {
-                            String tx = c.getString(txnm);
-                            String mn = c.getString(mnnm);
-                            Integer idnm = Integer.valueOf(c.getInt(idIndex));
-                            System.out
-                                    .println("dbadd:nym:" + tx + "  " + mn + "  ");
-                            ChatDictionary.mDictionaryList.add(tx);
-                            ChatDictionary.mDictionaryMeaningList.add(mn);
+                    SQLException e;
+                    Throwable th;
+                    Dbhelper dbhelper = new Dbhelper(getApplicationContext());
+                    Cursor c = null;
+                    ChatDictionary.mDictionaryList.clear();
+                    ChatDictionary.mDictionaryMeaningList.clear();
+
+                    try {
+                        String query = "SELECT * FROM nym ORDER BY name ";
+                        Dbhelper db = new Dbhelper(getApplicationContext());
+                        try {
+                            c = db.open().getDatabaseObj().rawQuery(query, null);
+                            int idIndex = c.getColumnIndex("id");
+                            int txnm = c.getColumnIndex(Contacts.PeopleColumns.NAME);
+                            int mnnm = c.getColumnIndex("meaning");
+                            Constant.printMsg("The pending cart list in db ::::"
+                                    + c.getCount());
+                            if (c.getCount() > 0) {
+                                while (c.moveToNext()) {
+                                    String tx = c.getString(txnm);
+                                    String mn = c.getString(mnnm);
+                                    Integer idnm = Integer.valueOf(c.getInt(idIndex));
+                                    System.out
+                                            .println("dbadd:nym:" + tx + "  " + mn + "  ");
+                                    ChatDictionary.mDictionaryList.add(tx);
+                                    ChatDictionary.mDictionaryMeaningList.add(mn);
+                                }
+                            } else {
+                                Constant.printMsg("there is nothing in db::");
+                            }
+                            c.close();
+                            db.close();
+                            dbhelper = db;
+                        } catch (SQLException e2) {
+                            e = e2;
+                            dbhelper = db;
+                        } catch (Throwable th2) {
+                            th = th2;
+                            dbhelper = db;
                         }
-                    } else {
-                        Constant.printMsg("there is nothing in db::");
+                    } catch (SQLException e3) {
+                        e = e3;
+                        try {
+                            Constant.printMsg("Sql exception in pending shop details ::::"
+                                    + e.toString());
+                            c.close();
+                            dbhelper.close();
+                        } catch (Throwable th3) {
+                            th = th3;
+                            c.close();
+                            dbhelper.close();
+
+                        }
                     }
-                    c.close();
-                    db.close();
-                    dbhelper = db;
-                } catch (SQLException e2) {
-                    e = e2;
-                    dbhelper = db;
-                } catch (Throwable th2) {
-                    th = th2;
-                    dbhelper = db;
-                }
-            } catch (SQLException e3) {
-                e = e3;
-                try {
-                    Constant.printMsg("Sql exception in pending shop details ::::"
-                            + e.toString());
-                    c.close();
-                    dbhelper.close();
-                } catch (Throwable th3) {
-                    th = th3;
-                    c.close();
-                    dbhelper.close();
+                } catch (Exception e1) {
 
                 }
             }
-        } catch (Exception e1) {
-
-        }
+        }).start();
     }
 
     @Override
@@ -8781,7 +8870,12 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Message msg = new Message(jid, Message.Type.chat);
+                Message msg = null;
+                try {
+                    msg = new Message(JidCreate.from(jid), Message.Type.chat);
+                } catch (XmppStringprepException e) {
+                    e.printStackTrace();
+                }
                 msg.setStanzaId(Constant.STATUS_RECORDING);
 
                 msg.setBody(Constant.STATUS_RECORDING);
@@ -8799,8 +8893,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         }, 0, 1000);
     }
 
-    public int valueText()
-    {
+    public int valueText() {
         pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String textSizePref = pref.getString("pref_font_size", "16");
         int textSize = Integer.valueOf(textSizePref);
@@ -8811,31 +8904,35 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
     void rightTextChat() {
 
         try {
+
             mRightTextview = new EmojiconTextView(mParentActivity);
             mRightTextview.setGravity(Gravity.LEFT);
             mRightTextview.setTextColor(Color.parseColor("#000000"));
-            mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, width * 2 / 100);
             mRightTextview.setId(k);
 
             mRightSenderTimeText = new TextView(mParentActivity);
             mRightSenderTimeText.setGravity(Gravity.LEFT);
             mRightSenderTimeText.setTextSize(getTimeTxtSize());
             mRightSenderTimeText.setTextColor(Color.parseColor("#000000"));
-            mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             mRightTextview.setLayoutParams(textviewParams);
-            mRightSenderTimeText.setLayoutParams(textviewParams);
+
+            LinearLayout.LayoutParams textviewParams1 = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            textviewParams1.gravity = Gravity.RIGHT | Gravity.BOTTOM;
+            mRightSenderTimeText.setLayoutParams(textviewParams1);
 
             LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
-            textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.FILL_PARENT);
 //            textfooterParams.topMargin = width * 1 / 100;
+            textfooterParams.gravity = Gravity.END | Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
@@ -8846,7 +8943,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightTickMark = new ImageView(mParentActivity);
             mRightTickMark.setId(k + 600000);
             mRightTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightTickMark.setPadding((int) width * 2 / 100, 0, (int) width * 1 / 100, width * 1 / 100);
+            mRightTickMark.setLayoutParams(textviewParams1);
 
             FrameLayout.LayoutParams right_bomb_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -8858,25 +8955,108 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             mRightDestTime = new TextView(mParentActivity);
             mRightDestTime.setBackgroundResource(R.drawable.black_bomb);
+            mRightDestTime.setTag("Bomb");
             mRightDestTime.setGravity(Gravity.CENTER);
             mRightDestTime.setTextColor(Color.parseColor("#ffffff"));
             mRightDestTime.setLayoutParams(right_bomb_params);
             mRightDestTime.setVisibility(View.INVISIBLE);
-            int poscount=k + 100000;
+            int poscount = k + 100000;
             mRightDestTime.setId(poscount);
-
-            Constant.printMsg("DEEEEESSSSSTTTTT1 "+poscount);
 
             textFooterLayout.addView(mRightTickMark);
             textFooterLayout.addView(mRightSenderTimeText);
-            mRightChatLayout.addView(mRightTextview);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout TemptextFooterLayout = new LinearLayout(mParentActivity);
+            TemptextFooterLayout.setLayoutParams(textfooterParams);
+            TemptextFooterLayout.setBackgroundResource(R.drawable.shadow_effect);
+
+            if (msg_list.get(k).getData().length() > 20 && msg_list.get(k).getData().length() <= 40) {
+
+                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                mRightTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, 0, width * 1 / 100);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, 0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+
+            } else if (msg_list.get(k).getData().length() > 40) {
+
+                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                mRightTickMark.setPadding((int) width * 2 / 100, 0, 0, width * 1 / 100);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, 0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+
+            } else {
+                TemptextFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
+                TemptextFooterLayout.setPadding(0, (int) width * 2 / 100, 0, (int) width * 4 / 100);
+                mRightTickMark.setPadding(width * 1 / 100, 0, 0, 0);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 1 / 100, 0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, 0);
+
+
+            }
+            try {
+                String text = msg_list.get(k).getData().toString();
+
+                if (text.length() > 3) {
+
+                    char s = text.charAt(0);
+                    char s1 = text.charAt(1);
+                    char s2 = text.charAt(2);
+
+                    if ((s == '<' && s1 == '-') || (s1 == 'b' && s2 == '>') || (s1 == 'z' && s2 == '>') || (s1 == 'l' && s2 == '>') || (s1 == 'x' && s2 == '>')) {
+                        Constant.printMsg("DEEEEESSSSSTTTTT1 " + text.substring(2).length() + "    " + text.substring(2));
+
+                        TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                        mRightTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, 0, width * 1 / 100);
+                        mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, 0);
+                        mRightSenderTimeText.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+
+                    } else if (s == '<') {
+                        if (s1 == 's' && s2 == '>') {
+
+                            String self_destruct = text.substring(3)
+                                    .toString();
+                            String[] parts = self_destruct.split("-");
+                            String part1 = parts[0];
+                            String part2 = parts[1];
+                            String part3 = parts[2];
+
+                            if (part2.length() > 20) {
+                                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                                mRightTickMark.setPadding((int) width * 2 / 100, 0, 0, width * 1 / 100);
+                                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, 0);
+                                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+
+                            } else {
+
+                                TemptextFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
+                                TemptextFooterLayout.setPadding(0, (int) width * 2 / 100, 0, (int) width * 4 / 100);
+                                mRightTickMark.setPadding(width * 1 / 100, 0, 0, 0);
+                                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 1 / 100, 0);
+                                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, 0);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
+
+            TemptextFooterLayout.addView(mRightTextview);
+            TemptextFooterLayout.addView(textFooterLayout);
+            mRightChatLayout.addView(TemptextFooterLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightDestTime);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
+
+            mRightDestTime.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (v.getTag().toString().equalsIgnoreCase("Resp"))
+                        Toast.makeText(getApplicationContext(), "Auto Response Message", Toast.LENGTH_SHORT).show();
+                }
+            });
 
             if (width >= 600) {
 
@@ -8917,26 +9097,18 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
         try {
             mRightImageChat = new ImageView(mParentActivity);
-            mRightImageChat.setPadding((int) width * 3 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
-            mRightImageChat.setScaleType(ImageView.ScaleType.FIT_XY);
+            mRightImageChat.setAdjustViewBounds(true);
+            mRightImageChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mRightImageChat.setMaxWidth(width * 65 / 100);
+            mRightImageChat.setMaxHeight(height * 40 / 100);
+            mRightImageChat.setMinimumWidth(width * 30 / 100);
+            mRightImageChat.setMinimumHeight(height * 23 / 100);
 
             mRightImageTextTime = new TextView(mParentActivity);
-            mRightImageTextTime.setGravity(Gravity.RIGHT);
+//            mRightImageTextTime.setGravity(Gravity.RIGHT|Gravity.BOTTOM);
             mRightImageTextTime.setTextSize(getTimeTxtSize());
             mRightImageTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightImageTextTime.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
-            //        mRightSenderTimeText.setText(time);
-
-            FrameLayout.LayoutParams textviewParams = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.width = width * 63 / 100;
-            textviewParams.height = height * 30 / 100;
-            textviewParams.topMargin = width * 2 / 100;
-            textviewParams.rightMargin =  width * 1 / 100;
-            textviewParams.gravity = Gravity.CENTER;
-            mRightImageChat.setLayoutParams(textviewParams);
-            //        mRightSenderTimeText.setLayoutParams(textviewParams);
+            mRightImageTextTime.setPadding(width * 1 / 100, width * 2 / 100, 0, 0);
 
             FrameLayout ImachChatLayout = new FrameLayout(mParentActivity);
 
@@ -8951,7 +9123,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightImageChatCancel.setBackgroundResource(R.drawable.ic_action_content_remove);
 
             mRightImageProgress = new ProgressBar(mParentActivity);
-            mRightImageProgress.setId(k+900000);
+            mRightImageProgress.setId(k + 900000);
 
 
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
@@ -8983,7 +9155,9 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.FILL_PARENT);
+//            textfooterParams.gravity=Gravity.CENTER_VERTICAL;
+            textfooterParams.gravity = Gravity.END | Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
@@ -8994,13 +9168,42 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightImageTickMark = new ImageView(mParentActivity);
             mRightImageTickMark.setId(k + 600000);
             mRightImageTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightImageTickMark.setPadding((int) width * 2 / 100, 0, (int) width * 1 / 100, width * 1 / 100);
+            mRightImageTextTime.setLayoutParams(mRightTickMarkParams);
+            mRightImageTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
 
             textFooterLayout.addView(mRightImageTickMark);
             textFooterLayout.addView(mRightImageTextTime);
 
-            mRightChatLayout.addView(ImachChatLayout);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width * 2 / 100, width * 2 / 100, width * 2 / 100, width * 1 / 100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect);
+            mTempLayout.addView(ImachChatLayout);
+            mTempLayout.addView(textFooterLayout);
+
+//            mTempLayout.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+
+////            mTempLayout.addView(textFooterLayout);
+//
+////            LinearLayout.LayoutParams mRightChatLayoutParams = new LinearLayout.LayoutParams(
+////                    LinearLayout.LayoutParams.WRAP_CONTENT,
+////                    LinearLayout.LayoutParams.WRAP_CONTENT);
+////            mRightChatLayoutParams.width = (int) width * 65 / 100;
+////            mRightChatLayoutParams.height = (int) height * 32 / 100;
+////            mRightChatLayoutParams.leftMargin = (int) width * 19 / 100;
+////            mTempLayout.setLayoutParams(mRightChatLayoutParams);
+//
+//            mTempLayout.addView(ImachChatLayout);
+//
+//            LinearLayout mTempLayoutwithStatus=new LinearLayout(mParentActivity);
+//            mTempLayoutwithStatus.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+//            mTempLayoutwithStatus.setBackgroundResource(R.drawable.shadow_effect);
+//            mTempLayoutwithStatus.addView(mTempLayout);
+//            mTempLayoutwithStatus.addView(textFooterLayout);
+
+            mRightChatLayout.addView(mTempLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
@@ -9015,26 +9218,35 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
     void rightVideoChat() {
 
         try {
+
             mRightVideoChat = new ImageView(mParentActivity);
-            mRightVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+            mRightVideoChat.setAdjustViewBounds(true);
             mRightVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mRightVideoChat.setMaxWidth(width * 65 / 100);
+            mRightVideoChat.setMaxHeight(width * 65 / 100);
+            mRightVideoChat.setMinimumWidth(width * 30 / 100);
+            mRightVideoChat.setMinimumHeight(height * 23 / 100);
+//            mRightVideoChat = new ImageView(mParentActivity);
+//            mRightVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+//            mRightVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
             mRightVideoTimeText = new TextView(mParentActivity);
             mRightVideoTimeText.setGravity(Gravity.RIGHT);
             mRightVideoTimeText.setTextSize(getTimeTxtSize());
             mRightVideoTimeText.setTextColor(Color.parseColor("#000000"));
-            mRightVideoTimeText.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mRightVideoTimeText.setPadding(width * 1 / 100, width * 2 / 100, 0, 0);
+
             //        mRightSenderTimeText.setText(time);
 
 
             FrameLayout.LayoutParams mLeftVideoChatParams = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftVideoChatParams.width = width * 59 / 100;
-            mLeftVideoChatParams.height = height * 30 / 100;
-            mLeftVideoChatParams.topMargin = width * 2 / 100;
-            mLeftVideoChatParams.gravity = Gravity.CENTER;
-            mRightVideoChat.setLayoutParams(mLeftVideoChatParams);
+////            mLeftVideoChatParams.width = width * 59 / 100;
+////            mLeftVideoChatParams.height = height * 30 / 100;
+////            mLeftVideoChatParams.topMargin = width * 2 / 100;
+//            mLeftVideoChatParams.gravity = Gravity.CENTER;
+//            mRightVideoChat.setLayoutParams(mLeftVideoChatParams);
             //        mRightSenderTimeText.setLayoutParams(textviewParams);
 
             FrameLayout mLeftVideoChatLayout = new FrameLayout(mParentActivity);
@@ -9062,7 +9274,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             left_download_icon_params.gravity = Gravity.CENTER;
             mRightVideoChatUpload.setLayoutParams(left_download_icon_params);
             mRightVideoChatCancel.setLayoutParams(left_download_icon_params);
-       //     mRightVideoProgress.setLayoutParams(left_download_icon_params);
+            //     mRightVideoProgress.setLayoutParams(left_download_icon_params);
             mRightVideoButtonPlay.setLayoutParams(left_download_icon_params);
 
             FrameLayout.LayoutParams left_upload_icon_params = new FrameLayout.LayoutParams(
@@ -9090,7 +9302,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             videoimage.height = width * 8 / 100;
             videoimage.topMargin = width * 1 / 100;
             videoimage.gravity = Gravity.CENTER_VERTICAL;
-            videoimage.leftMargin = width * 3 / 100;
+            videoimage.leftMargin = width * 2 / 100;
 
             mRightVideoImgOverlay = new ImageView(mParentActivity);
             mRightVideoImgOverlay.setBackgroundResource(R.drawable.frame_overlay_gallery_video);
@@ -9105,7 +9317,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             mRightVideoDuration = new TextView(mParentActivity);
             mRightVideoDuration.setTextColor(Color.parseColor("#ffffff"));
-            mRightVideoDuration.setText("1");
             mRightVideoDuration.setLayoutParams(videoDuration_params);
 
             FrameLayout.LayoutParams videoSize_params = new FrameLayout.LayoutParams(
@@ -9113,7 +9324,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             videoSize_params.gravity = Gravity.RIGHT;
             videoSize_params.topMargin = width * 3 / 100;
-            videoSize_params.rightMargin = width * 5 / 100;
+            videoSize_params.rightMargin = width * 4 / 100;
 
 
             mRightVideoSize = new TextView(mParentActivity);
@@ -9138,7 +9349,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.FILL_PARENT);
+            textfooterParams.gravity = Gravity.END | Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
@@ -9146,16 +9358,53 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             mRightTickMarkParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
 
+//            mRightImageTickMark = new ImageView(mParentActivity);
+//            mRightImageTickMark.setId(k + 600000);
+//            mRightImageTickMark.setLayoutParams(mRightTickMarkParams);
+//            mRightImageTextTime.setLayoutParams(mRightTickMarkParams);
+//            mRightImageTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
+
             mRightVideoTickMark = new ImageView(mParentActivity);
             mRightVideoTickMark.setId(k + 600000);
             mRightVideoTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightVideoTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            mRightVideoTimeText.setLayoutParams(mRightTickMarkParams);
+            mRightVideoTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
 
             textFooterLayout.addView(mRightVideoTickMark);
             textFooterLayout.addView(mRightVideoTimeText);
 
-            mRightChatLayout.addView(mLeftVideoChatLayout);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width * 2 / 100, width * 2 / 100, width * 2 / 100, width * 1 / 100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect);
+            mTempLayout.addView(mLeftVideoChatLayout);
+            mTempLayout.addView(textFooterLayout);
+
+//            mTempLayout.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+
+////            mTempLayout.addView(textFooterLayout);
+//
+////            LinearLayout.LayoutParams mRightChatLayoutParams = new LinearLayout.LayoutParams(
+////                    LinearLayout.LayoutParams.WRAP_CONTENT,
+////                    LinearLayout.LayoutParams.WRAP_CONTENT);
+////            mRightChatLayoutParams.width = (int) width * 65 / 100;
+////            mRightChatLayoutParams.height = (int) height * 32 / 100;
+////            mRightChatLayoutParams.leftMargin = (int) width * 19 / 100;
+////            mTempLayout.setLayoutParams(mRightChatLayoutParams);
+//
+//            mTempLayout.addView(ImachChatLayout);
+//
+//            LinearLayout mTempLayoutwithStatus=new LinearLayout(mParentActivity);
+//            mTempLayoutwithStatus.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+//            mTempLayoutwithStatus.setBackgroundResource(R.drawable.shadow_effect);
+//            mTempLayoutwithStatus.addView(mTempLayout);
+//            mTempLayoutwithStatus.addView(textFooterLayout);
+
+            mRightChatLayout.addView(mTempLayout);
+
+//            mRightChatLayout.addView(mLeftVideoChatLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
@@ -9201,6 +9450,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             textviewParams.gravity = Gravity.CENTER_VERTICAL;
 
             mRightContactTextView = new EmojiconTextView(mParentActivity);
+            mRightContactTextView.setSingleLine(true);
             mRightContactTextView.setGravity(Gravity.CENTER_VERTICAL);
             mRightContactTextView.setTextColor(Color.parseColor("#000000"));
             mRightContactTextView.setTypeface(Typeface.DEFAULT_BOLD);
@@ -9213,7 +9463,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightContactTextTime.setGravity(Gravity.LEFT);
             mRightContactTextTime.setTextSize(getTimeTxtSize());
             mRightContactTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightContactTextTime.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mRightContactTextTime.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
             //        mRightSenderTimeText.setText(time);
 
             LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(
@@ -9241,12 +9491,12 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightContactTickMark = new ImageView(mParentActivity);
             mRightContactTickMark.setId(k + 600000);
             mRightContactTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightContactTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            mRightContactTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 1 / 100, width * 1 / 100);
 
             textFooterLayout.addView(mRightContactTickMark);
             textFooterLayout.addView(mRightContactTextTime);
 
-
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
             mRightChatLayout.addView(contactLayout);
             mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
@@ -9293,29 +9543,30 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
         try {
             mLeftTextview = new EmojiconTextView(mParentActivity);
-            mLeftTextview.setGravity(Gravity.LEFT);
+//            mLeftTextview.setGravity(Gravity.LEFT);
             mLeftTextview.setTextColor(Color.parseColor("#000000"));
-            mLeftTextview.setPadding((int) width * 2 / 100, 0, (int) width * 2 / 100, width * 2 / 100);
             mLeftTextview.setId(k);
+//            mLeftTextview.setBackgroundResource(R.drawable.shadow_effect_left);
+
             //        mLeftTextview.setText(text);
 
             mLeftSenderTimeText = new TextView(mParentActivity);
-            mLeftSenderTimeText.setGravity(Gravity.LEFT);
+//            mLeftSenderTimeText.setGravity(Gravity.LEFT);
             mLeftSenderTimeText.setTextSize(getTimeTxtSize());
             mLeftSenderTimeText.setTextColor(Color.parseColor("#000000"));
-            mLeftSenderTimeText.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
             //        mLeftSenderTimeText.setText(time);
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.gravity=Gravity.LEFT;
+            textviewParams.gravity = Gravity.LEFT;
             mLeftTextview.setLayoutParams(textviewParams);
 
             LinearLayout.LayoutParams mLeftSenderTimeTextParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftSenderTimeTextParams.rightMargin = width * 47 / 100;
+            mLeftSenderTimeTextParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+            //            mLeftSenderTimeTextParams.rightMargin = width * 47 / 100;
             mLeftSenderTimeText.setLayoutParams(mLeftSenderTimeTextParams);
 
 
@@ -9330,15 +9581,80 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             mRightDestTime = new TextView(mParentActivity);
             mRightDestTime.setBackgroundResource(R.drawable.black_bomb);
+            mRightDestTime.setTag("Bomb");
             mRightDestTime.setGravity(Gravity.CENTER);
             mRightDestTime.setTextColor(Color.parseColor("#ffffff"));
             mRightDestTime.setLayoutParams(left_bomb_params);
             mRightDestTime.setVisibility(View.INVISIBLE);
             mRightDestTime.setId(k + 100000);
 
+            LinearLayout.LayoutParams mLeftSenderTimeTextParamsa = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            mLeftSenderTimeTextParamsa.gravity = Gravity.LEFT;
+            LinearLayout lay = new LinearLayout(mParentActivity);
+            lay.setBackgroundResource(R.drawable.shadow_effect_left);
+            lay.setLayoutParams(mLeftSenderTimeTextParamsa);
 
-            mRightChatLayout.addView(mLeftTextview);
-            mRightChatLayout.addView(mLeftSenderTimeText);
+            if (msg_list.get(k).getData().length() > 20) {
+                lay.setOrientation(LinearLayout.VERTICAL);
+                mLeftTextview.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 2 / 100, 0);
+                mLeftSenderTimeText.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+            } else {
+                lay.setOrientation(LinearLayout.HORIZONTAL);
+                mLeftTextview.setPadding((int) width * 2 / 100, 0, (int) width * 2 / 100, width * 2 / 100);
+                mLeftSenderTimeText.setPadding((int) width * 1 / 100, 3, (int) width * 2 / 100, 0);
+                lay.setPadding(0, (int) width * 2 / 100, 0, (int) width * 3 / 100);
+            }
+            try {
+                String text = msg_list.get(k).getData().toString();
+
+                if (text.length() > 3) {
+
+                    char s = text.charAt(0);
+                    char s1 = text.charAt(1);
+                    char s2 = text.charAt(2);
+
+                    if ((s == '<' && s1 == '-') || (s1 == 'b' && s2 == '>') || (s1 == 'z' && s2 == '>') || (s1 == 'l' && s2 == '>') || (s1 == 'x' && s2 == '>')) {
+                        Constant.printMsg("DEEEEESSSSSTTTTT1 " + text.substring(2).length() + "    " + text.substring(2));
+
+                        lay.setOrientation(LinearLayout.VERTICAL);
+                        mLeftTextview.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 2 / 100, 0);
+                        mLeftSenderTimeText.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+
+                    } else if (s == '<') {
+                        if (s1 == 's' && s2 == '>') {
+
+                            String self_destruct = text.substring(3)
+                                    .toString();
+                            String[] parts = self_destruct.split("-");
+                            String part1 = parts[0];
+                            String part2 = parts[1];
+                            String part3 = parts[2];
+
+                            if (part2.length() > 20) {
+                                lay.setOrientation(LinearLayout.VERTICAL);
+                                mLeftTextview.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 2 / 100, 0);
+                                mLeftSenderTimeText.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+
+                            } else {
+
+                                lay.setOrientation(LinearLayout.HORIZONTAL);
+                                mLeftTextview.setPadding((int) width * 2 / 100, 0, (int) width * 2 / 100, width * 2 / 100);
+                                mLeftSenderTimeText.setPadding((int) width * 1 / 100, 3, (int) width * 2 / 100, 0);
+                                lay.setPadding(0, (int) width * 2 / 100, 0, (int) width * 3 / 100);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
+
+            lay.addView(mLeftTextview);
+            lay.addView(mLeftSenderTimeText);
+
+            mRightChatLayout.addView(lay);
+//            mRightChatLayout.addView(mLeftSenderTimeText);
             mRightTipLayout.addView(mRightDestTime);
             mRightTipLayout.addView(mRightChatLayout);
 
@@ -9346,6 +9662,13 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             mDynamicView.addView(mRightTipLayout);
 
+            mRightDestTime.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (v.getTag().toString().equalsIgnoreCase("Resp"))
+                        Toast.makeText(getApplicationContext(), "Auto Response Message", Toast.LENGTH_SHORT).show();
+                }
+            });
 
             if (width >= 600) {
 
@@ -9384,40 +9707,47 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
         try {
             mLeftImageChat = new ImageView(mParentActivity);
-            mLeftImageChat.setPadding((int) width * 3 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
-//            mLeftImageChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+            mLeftImageChat.setId(k + 150000);
+            mLeftImageChat.setAdjustViewBounds(true);
             mLeftImageChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mLeftImageChat.setMaxWidth(width * 65 / 100);
+            mLeftImageChat.setMaxHeight(height * 40 / 100);
+            mLeftImageChat.setMinimumWidth(width * 30 / 100);
+            mLeftImageChat.setMinimumHeight(height * 23 / 100);
+
 
             mLeftImageTextTime = new TextView(mParentActivity);
             mLeftImageTextTime.setGravity(Gravity.LEFT);
             mLeftImageTextTime.setTextSize(getTimeTxtSize());
             mLeftImageTextTime.setTextColor(Color.parseColor("#000000"));
-            mLeftImageTextTime.setPadding((int) width * 2 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+            mLeftImageTextTime.setPadding(0, (int) width * 2 / 100, 0, 0);
             //        mLeftImageTextTime.setText(time);
 
             LinearLayout.LayoutParams mLeftSenderTimeTextParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftSenderTimeTextParams.rightMargin = width * 47/ 100;
+            mLeftSenderTimeTextParams.gravity = Gravity.LEFT;
             mLeftImageTextTime.setLayoutParams(mLeftSenderTimeTextParams);
 
-            FrameLayout.LayoutParams textviewParams = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.width = width * 57 / 100;
-            textviewParams.height = height * 30 / 100;
-            textviewParams.topMargin = width * 2 / 100;
-            textviewParams.gravity = Gravity.CENTER;
-            mLeftImageChat.setLayoutParams(textviewParams);
+//            FrameLayout.LayoutParams textviewParams = new FrameLayout.LayoutParams(
+//                    LinearLayout.LayoutParams.WRAP_CONTENT,
+//                    LinearLayout.LayoutParams.WRAP_CONTENT);
+//            textviewParams.width = width * 57 / 100;
+//            textviewParams.height = height * 30 / 100;
+//            textviewParams.topMargin = width * 2 / 100;
+//            textviewParams.gravity = Gravity.CENTER;
+//            mLeftImageChat.setLayoutParams(textviewParams);
             //        mRightSenderTimeText.setLayoutParams(textviewParams);
 
             FrameLayout ImachChatLayout = new FrameLayout(mParentActivity);
 
             mLeftImageChatDownload = new ImageView(mParentActivity);
+            mLeftImageChatDownload.setId(k + 160000);
             mLeftImageChatDownload.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mLeftImageChatDownload.setBackgroundResource(R.drawable.image_download_normal);
 
             mLeftImagetProgressBar = new ProgressBar(mParentActivity);
+            mLeftImagetProgressBar.setId(k + 170000);
 
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -9433,9 +9763,16 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             ImachChatLayout.addView(mLeftImageChatDownload);
             ImachChatLayout.addView(mLeftImagetProgressBar);
 
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width * 2 / 100, width * 2 / 100, width * 2 / 100, width * 1 / 100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect_left);
+            mTempLayout.addView(ImachChatLayout);
+            mTempLayout.addView(mLeftImageTextTime);
 
-            mRightChatLayout.addView(ImachChatLayout);
-            mRightChatLayout.addView(mLeftImageTextTime);
+            mRightChatLayout.addView(mTempLayout);
+//            mRightChatLayout.addView(mLeftImageTextTime);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
@@ -9452,45 +9789,59 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
         try {
             mLeftVideoChat = new ImageView(mParentActivity);
-            mLeftVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
-            mLeftVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mLeftVideoChat.setAdjustViewBounds(true);
+            mLeftVideoChat.setScaleType(ImageView.ScaleType.CENTER);
+            mLeftVideoChat.setMaxWidth(width * 65 / 100);
+            mLeftVideoChat.setMaxHeight(width * 65 / 100);
+            mLeftVideoChat.setMinimumWidth(width * 30 / 100);
+            mLeftVideoChat.setMinimumHeight(height * 23 / 100);
+            mLeftVideoChat.setId(k + 180000);
+
+//            mLeftVideoChat = new ImageView(mParentActivity);
+//            mLeftVideoChat.setId(k + 180000 );
+//            mLeftVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+//            mLeftVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
             mLeftVideoTimeText = new TextView(mParentActivity);
             mLeftVideoTimeText.setGravity(Gravity.LEFT);
             mLeftVideoTimeText.setTextSize(getTimeTxtSize());
             mLeftVideoTimeText.setTextColor(Color.parseColor("#000000"));
-            mLeftVideoTimeText.setPadding((int) width * 2 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+            mLeftVideoTimeText.setPadding(width * 1 / 100, width * 2 / 100, 0, 0);
+//            mLeftVideoTimeText.setPadding((int) width * 2 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
             //        mLeftImageTextTime.setText(time);
 
             LinearLayout.LayoutParams mLeftSenderTimeTextParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.FILL_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftSenderTimeTextParams.rightMargin = width * 47 / 100;
+            mLeftSenderTimeTextParams.gravity = Gravity.LEFT;
             mLeftVideoTimeText.setLayoutParams(mLeftSenderTimeTextParams);
             //        mLeftVideoTimeText.setText(time);
 
-            FrameLayout.LayoutParams mLeftVideoChatParams = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftVideoChatParams.width = width * 60 / 100;
-            mLeftVideoChatParams.height = height * 30 / 100;
-            mLeftVideoChatParams.topMargin = width * 2 / 100;
-            mLeftVideoChatParams.gravity = Gravity.CENTER;
-            mLeftVideoChat.setLayoutParams(mLeftVideoChatParams);
+//            FrameLayout.LayoutParams mLeftVideoChatParams = new FrameLayout.LayoutParams(
+//                    LinearLayout.LayoutParams.WRAP_CONTENT,
+//                    LinearLayout.LayoutParams.WRAP_CONTENT);
+//            mLeftVideoChatParams.width = width * 60 / 100;
+//            mLeftVideoChatParams.height = height * 30 / 100;
+//            mLeftVideoChatParams.topMargin = width * 2 / 100;
+//            mLeftVideoChatParams.gravity = Gravity.CENTER;
+//            mLeftVideoChat.setLayoutParams(mLeftVideoChatParams);
             //        mRightSenderTimeText.setLayoutParams(textviewParams);
 
             FrameLayout mLeftVideoChatLayout = new FrameLayout(mParentActivity);
 
             mLeftVideoChatDownload = new ImageView(mParentActivity);
+            mLeftVideoChatDownload.setId(k + 190000);
             mLeftVideoChatDownload.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mLeftVideoChatDownload.setBackgroundResource(R.drawable.image_download_normal);
 
             mLeftVideoButtonPlay = new ImageView(mParentActivity);
+            mLeftVideoButtonPlay.setId(k + 210000);
             mLeftVideoButtonPlay.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mLeftVideoButtonPlay.setBackgroundResource(R.drawable.videooverlay);
 
 
             mLeftVideoProgress = new ProgressBar(mParentActivity);
+            mLeftVideoProgress.setId(k + 220000);
 
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -9518,7 +9869,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             videoimage.height = width * 8 / 100;
             videoimage.gravity = Gravity.LEFT;
             videoimage.bottomMargin = width * 1 / 100;
-            videoimage.leftMargin = width * 4 / 100;
+            videoimage.leftMargin = width * 2 / 100;
 
             mLeftVideoImgOverlay = new ImageView(mParentActivity);
             mLeftVideoImgOverlay.setBackgroundResource(R.drawable.frame_overlay_gallery_video);
@@ -9541,8 +9892,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             videoSize_params.gravity = Gravity.RIGHT;
             videoSize_params.topMargin = width * 1 / 100;
-            videoSize_params.rightMargin = width * 5 / 100;
-            videoSize_params.leftMargin = width * 47 / 100;
+            videoSize_params.rightMargin = width * 2 / 100;
+            videoSize_params.leftMargin = width * 49 / 100;
 
 
             mLeftVideoSize = new TextView(mParentActivity);
@@ -9556,21 +9907,23 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             mLeftVideoChatLayout.addView(mLeftVideoChat);
 
-            if (msg_list.get(k).getMedia_name() != null) {
 
-
-                mLeftVideoChatLayout.addView(mLeftVideoButtonPlay);
-
-            } else {
-                mLeftVideoChatLayout.addView(mLeftVideoChatDownload);
-                mLeftVideoChatLayout.addView(mLeftVideoProgress);
-
-            }
+            mLeftVideoChatLayout.addView(mLeftVideoButtonPlay);
+            mLeftVideoChatLayout.addView(mLeftVideoChatDownload);
+            mLeftVideoChatLayout.addView(mLeftVideoProgress);
             mLeftVideoChatLayout.addView(videoFooter);
 
 
-            mRightChatLayout.addView(mLeftVideoChatLayout);
-            mRightChatLayout.addView(mLeftVideoTimeText);
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width * 2 / 100, width * 2 / 100, width * 2 / 100, width * 1 / 100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect_left);
+            mTempLayout.addView(mLeftVideoChatLayout);
+            mTempLayout.addView(mLeftVideoTimeText);
+
+            mRightChatLayout.addView(mTempLayout);
+//            mRightChatLayout.addView(mLeftVideoTimeText);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
@@ -9629,7 +9982,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mLeftContactTextTime.setGravity(Gravity.LEFT);
             mLeftContactTextTime.setTextSize(getTimeTxtSize());
             mLeftContactTextTime.setTextColor(Color.parseColor("#000000"));
-            mLeftContactTextTime.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mLeftContactTextTime.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
             //        mLeftImageTextTime.setText(time);
 
             LinearLayout.LayoutParams mLeftSenderTimeTextParams = new LinearLayout.LayoutParams(
@@ -9646,7 +9999,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             contactLayout.addView(mLeftContactTextView);
             contactLayout.addView(mLeftContactAvathor);
-
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
             mRightChatLayout.addView(contactLayout);
             mRightChatLayout.addView(mLeftContactTextTime);
             mRightTipLayout.addView(mRightChatLayout);
@@ -9745,7 +10098,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightChatLayout = new LinearLayout(mParentActivity);
             mRightChatLayout.setGravity(Gravity.RIGHT);
             mRightChatLayout.setOrientation(LinearLayout.VERTICAL);
-            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
+//            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
 
             FrameLayout.LayoutParams mRightChatLayoutParams = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -9793,7 +10146,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 } else {
                     Bitmap bm = null;
 
-                     bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
+                    bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                     ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                     mSenderRoundImage.setImageDrawable(mSenderImage);
                 }
@@ -9870,7 +10223,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightChatLayout.setGravity(Gravity.RIGHT);
             mRightChatLayout.setOrientation(LinearLayout.VERTICAL);
 //            mRightChatLayout.setBackgroundColor(Color.parseColor("#cdcdcd"));
-            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
+//            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
 
             FrameLayout.LayoutParams mRightChatLayoutParams = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -9903,24 +10256,22 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mSenderRoundImage.setLayoutParams(mRoundImageParams);
 
 
-            if(Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification")){
+            if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification")) {
 
-                if(Constant.mReciverAvathor!=null){
+                if (Constant.mReciverAvathor != null) {
 
-                    ProfileRoundImg  mSenderImage=new ProfileRoundImg(Constant.mReciverAvathor);
+                    ProfileRoundImg mSenderImage = new ProfileRoundImg(Constant.mReciverAvathor);
                     mSenderRoundImage.setImageDrawable(mSenderImage);
 
-                }else{
+                } else {
                     System.gc();
-                    Bitmap  bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
+                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                     ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                     mSenderRoundImage.setImageDrawable(mSenderImage);
                 }
 
 
-            }
-
-            else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("chat")) {
+            } else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("chat")) {
 
                 try {
                     if (UserChatList.mProfileImagesList.size() > 0) {
@@ -9931,7 +10282,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                     } else {
                         System.gc();
-                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,  Util.getBitmapOptions());
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                         mSenderRoundImage.setImageDrawable(mSenderImage);
                     }
@@ -9939,7 +10290,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                 }
 
-            }else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("contact")) {
+            } else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("contact")) {
 
                 Constant.printMsg("LLLLLLLIS" + "   " + FavouriteContacts.mPosition + "  " + FavouriteContacts.mProfileImagesList);
 
@@ -9960,16 +10311,13 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                 }
 
-            }else{
-
-
+            } else {
 
 
                 try {
 
                     System.gc();
-                    if(avatar!=null)
-                    {
+                    if (avatar != null) {
 
 
                         Bitmap bmp = BitmapFactory.decodeByteArray(avatar,
@@ -9991,20 +10339,19 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 }
             }
 
-            Constant.printMsg("LLLLLLLIS info left"+mSenderRoundImage.getDrawable());
+            Constant.printMsg("LLLLLLLIS info left" + mSenderRoundImage.getDrawable());
 
-            try{
-                if(mSenderRoundImage.getDrawable()==null){
+            try {
+                if (mSenderRoundImage.getDrawable() == null) {
                     System.gc();
-                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,Util.getBitmapOptions());
+                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                     ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                     mSenderRoundImage.setImageDrawable(mSenderImage);
 
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
-
 
 
             mRightTipLayout.addView(mTipImage);
@@ -10016,14 +10363,18 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         mRightTipLayout.setOnTouchListener(new OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-
-                v.requestFocus();
-                v.setFocusableInTouchMode(true);
-
-                if(!mIsLogClick) {
+                if (mIsLogClick) {
+                    v.requestFocus();
+                    v.setFocusableInTouchMode(true);
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 }
+
+
+////                if(!mIsLogClick) {
+//                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+////                }
                 return false;
             }
         });
@@ -10034,128 +10385,197 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                 topMenuHideFunction();
 
-                Constant.printMsg("GGGGGGGGGGGGGGGGGGGGGGGGPOPO"+mIsLogClick);
+                Constant.printMsg("GGGGGGGGGGGGGGGGGGGGGGGGPOPO" + mIsLogClick);
 
 
                 if (mIsLogClick) {
 
-                    Constant.printMsg("GGGGGGGGGGGGGGGGGGGGGGGGPOPO");
+                    try {
+//                        topMenuHideFunction();
 
-
-                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
-                    String splText = msg_list.get(v.getId()-200000).getData();
-
-
-                    if (mOnLongSelectedPostions.contains(v.getId() - 200000)) {
-
-                        boolean isOneMedia = false;
-                        boolean isSple = false;
-
-
-                        for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
-
-                            Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(i).toString() + "   " + String.valueOf(v.getId() - 200000));
-
-
-                            if(!getCopyPastMediaType(mediaType))
-                            {
-                                isOneMedia = true;
-                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
-                            }
-
-                           else  if(chekNynmDazzKon(splText))
-                            {
-                                isSple = true;
-                            }
-
-                            if (mOnLongSelectedPostions.get(i) == v.getId() - 200000) {
-
-                                Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
-                                v.setBackgroundColor(Color.parseColor("#00000000"));
-                                mOnLongSelectedPostions.remove(i);
-
-                                isOneMedia = false;
-                                isSple = false;
-
-
-
-                            }
-                        }
-
-                        if(isOneMedia)
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-                        }
-
-                        if(isSple)
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-                        }
-
-                    } else {
-
-                        if(!getCopyPastMediaType(mediaType))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
-
-                       else if(chekNynmDazzKon(splText))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
-
-                        mOnLongSelectedPostions.add((v.getId() - 200000));
-                        v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
-
-                    }
-
-
-                    if (mOnLongSelectedPostions.size() <= 0) {
-
-                        mOnLongSelectedPostions.clear();
-                        mIsLogClick = false;
-                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
-                        mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+//                        mIsLogClick = true;
 
                         LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.WRAP_CONTENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT);
-                        hedderTextParams.width = width * 50 / 100;
+                        hedderTextParams.width = width * 40 / 100;
                         hedderTextParams.leftMargin = width * 3 / 100;
                         hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
                         mChatHedderTextLayout.setLayoutParams(hedderTextParams);
 
-
                         LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.WRAP_CONTENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT);
-                        hedderAttachmentParams.width = width * 4 / 100;
+                        hedderAttachmentParams.width = width * 11 / 100;
                         hedderAttachmentParams.height = width * 8 / 100;
                         hedderAttachmentParams.gravity = Gravity.CENTER;
                         mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
 
-                        LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT);
-                        hedderMenuParams.width = (width * 2 / 100) - 2;
-                        hedderMenuParams.height = width * 7 / 100;
-                        hedderMenuParams.gravity = Gravity.CENTER;
-                        mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+                        mChatHedderCopyLayout.setVisibility(View.VISIBLE);
 
-                        mChatHedderCopyLayout.setVisibility(View.GONE);
+
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                        Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId() - 200000));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                        String splText = msg_list.get(v.getId() - 200000).getData();
+
+                        if (mOnLongSelectedPostions.contains((v.getId() - 200000))) {
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                if (mOnLongSelectedPostions.get(i) == (v.getId() - 200000)) {
+
+                                    Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                    v.setBackgroundColor(Color.parseColor("#00000000"));
+                                    mOnLongSelectedPostions.remove(i);
+
+                                }
+
+                            }
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+
+                        } else {
+
+                            mOnLongSelectedPostions.add((v.getId() - 200000));
+                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                        }
+
+                        if (mOnLongSelectedPostions.size() == 0) {
+                            mIsLogClick = false;
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                            hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 50 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                            hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 4 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                            LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderMenuParams.width = (width * 2 / 100) - 2;
+                            hedderMenuParams.height = width * 7 / 100;
+                            hedderMenuParams.gravity = Gravity.CENTER;
+                            mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderCopyLayout.setVisibility(View.GONE);
+                        }
+                    } catch (Exception e) {
+
                     }
-
-                }else{
+                } else {
                     edt_msg.requestFocus();
                 }
-
-
 
 
             }
@@ -10197,29 +10617,16 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                     Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId() - 200000));
 
-                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
-                    String splText = msg_list.get(v.getId()-200000).getData();
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                    String splText = msg_list.get(v.getId() - 200000).getData();
 
                     if (mOnLongSelectedPostions.contains((v.getId() - 200000))) {
 
                         boolean isOneMedia = false;
                         boolean isSple = false;
+                        boolean isDoneteBux = false;
 
                         for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
-
-                            Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(i).toString() + "   " + String.valueOf(v.getId() - 200000));
-                            if(!getCopyPastMediaType(mediaType))
-                            {
-                                isOneMedia = true;
-                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
-                            }
-
-                           else if(chekNynmDazzKon(splText))
-                            {
-                                isSple = true;
-                            }
-
-
 
                             if (mOnLongSelectedPostions.get(i) == (v.getId() - 200000)) {
 
@@ -10227,43 +10634,137 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                 v.setBackgroundColor(Color.parseColor("#00000000"));
                                 mOnLongSelectedPostions.remove(i);
 
-                                isOneMedia = false;
+                            }
 
-                                isSple = false;
+                        }
 
+                        for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                            String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                            String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                            Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                            if (!getCopyPastMediaType(mediaType)) {
+                                isOneMedia = true;
+                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                            }
+                            if (chekNynmDazzKon(tempSplText)) {
+                                isSple = true;
+                            }
+                            if (chekDonate(tempSplText)) {
+                                isDoneteBux = true;
                             }
                         }
 
-                        if(isOneMedia)
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                        if (isOneMedia) {
+
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+                        if (isSple) {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+                        if (isDoneteBux) {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
                         }
 
-                        if(isSple)
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
+                        if (!isOneMedia && !isSple && !isDoneteBux) {
                             mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
                         }
+
 
                     } else {
-
-                        if(!getCopyPastMediaType(mediaType))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
-                       else if(chekNynmDazzKon(splText))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
 
                         mOnLongSelectedPostions.add((v.getId() - 200000));
                         v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
 
+                        boolean isOneMedia = false;
+                        boolean isSple = false;
+                        boolean isDoneteBux = false;
+
+                        for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                            String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                            String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                            Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                            if (!getCopyPastMediaType(mediaType)) {
+                                isOneMedia = true;
+                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                            }
+                            if (chekNynmDazzKon(tempSplText)) {
+                                isSple = true;
+                            }
+                            if (chekDonate(tempSplText)) {
+                                isDoneteBux = true;
+                            }
+                        }
+
+                        if (isOneMedia) {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+                        if (isSple) {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+                        if (isDoneteBux) {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+
+                        if (!isOneMedia && !isSple && !isDoneteBux) {
+                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+
+                    }
+
+                    if (mOnLongSelectedPostions.size() == 0) {
+                        mIsLogClick = false;
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                        hedderTextParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderTextParams.width = width * 50 / 100;
+                        hedderTextParams.leftMargin = width * 3 / 100;
+                        hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                        mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                        hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderAttachmentParams.width = width * 4 / 100;
+                        hedderAttachmentParams.height = width * 8 / 100;
+                        hedderAttachmentParams.gravity = Gravity.CENTER;
+                        mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                        LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderMenuParams.width = (width * 2 / 100) - 2;
+                        hedderMenuParams.height = width * 7 / 100;
+                        hedderMenuParams.gravity = Gravity.CENTER;
+                        mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                        mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                        mChatHedderCopyLayout.setVisibility(View.GONE);
                     }
                 } catch (Exception e) {
 
@@ -10353,7 +10854,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightAudioTextTime.setGravity(Gravity.LEFT);
             mRightAudioTextTime.setTextSize(getTimeTxtSize());
             mRightAudioTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightAudioTextTime.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mRightAudioTextTime.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
 
             LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
             textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -10372,7 +10873,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mRightAudioTickMark = new ImageView(mParentActivity);
             mRightAudioTickMark.setId(k + 600000);
             mRightAudioTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightAudioTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            mRightAudioTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 1 / 100, width * 1 / 100);
 
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
@@ -10407,6 +10908,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             textFooterLayout.addView(mRightAudioTickMark);
             textFooterLayout.addView(mRightAudioTextTime);
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
             mRightChatLayout.addView(audioLayout);
             mRightChatLayout.addView(audioTimeLayout);
             mRightChatLayout.addView(textFooterLayout);
@@ -10470,6 +10972,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mLeftAudioBtnPlay.setLayoutParams(playBtnParams);
 
             mLeftAudioBtnCancel = new Button(mParentActivity);
+            mLeftAudioBtnCancel.setId(k + 410000);
             mLeftAudioBtnCancel.setBackgroundResource(R.drawable.ic_action_content_remove);
             mLeftAudioBtnCancel.setLayoutParams(playBtnParams);
 
@@ -10482,7 +10985,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             seekBarParams.gravity = Gravity.CENTER_VERTICAL;
 
             mLeftAudioSeekBar = new SeekBar(mParentActivity);
-            mLeftAudioSeekBar.setId(k+500000);
+            mLeftAudioSeekBar.setId(k + 500000);
             mLeftAudioSeekBar.setLayoutParams(seekBarParams);
 
 
@@ -10501,6 +11004,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             mLeftAudioDownloadProgress = new ProgressBar(mParentActivity, null,
                     android.R.attr.progressBarStyleHorizontal);
+            mLeftAudioDownloadProgress.setId(k + 420000);
             mLeftAudioDownloadProgress.setPadding(0, 0, width * 2 / 100, 0);
             mLeftAudioDownloadProgress.setLayoutParams(audioUploadProgressParams);
 
@@ -10529,7 +11033,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             mLeftAudioTextTime.setGravity(Gravity.LEFT);
             mLeftAudioTextTime.setTextSize(getTimeTxtSize());
             mLeftAudioTextTime.setTextColor(Color.parseColor("#000000"));
-            mLeftAudioTextTime.setPadding((int) width * 4 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+            mLeftAudioTextTime.setPadding((int) width * 4 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
 
             LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
             textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -10578,6 +11082,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             textFooterLayout.addView(mLeftAudioTickMark);
             textFooterLayout.addView(mLeftAudioTextTime);
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
             mRightChatLayout.addView(audioLayout);
             mRightChatLayout.addView(audioTimeLayout);
             mRightChatLayout.addView(textFooterLayout);
@@ -10616,16 +11121,19 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             }
         } catch (Exception e) {
 
+            Constant.printMsg("......Chat Audio exp.." + e.toString());
+
         }
 
     }
 
     public void setRightChatText() {
 
-        Constant.printMsg("MUC text msg Right 1:" + k + "  " + msg_list.get(k).getData().toString());
-
 
         try {
+
+            Constant.printMsg("MUC text msg Right 1:" + k + "  " + msg_list.get(k).getData().toString());
+
             if (msg_list.get(k).getStatus() == 3) {
                 mRightTickMark.setImageResource(R.drawable.message_unsent);
             } else if (msg_list.get(k).getStatus() == 2) {
@@ -10733,7 +11241,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         mTextMsg.setTypeface(null, Color.RED);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
 //                        mTextMsg.setTextSize(valueText());
@@ -10764,7 +11272,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         mTextMsg.setTypeface(null, Color.YELLOW);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         mTextMsg.setTextSize(valueText());
@@ -10802,7 +11310,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         mTextMsg.setTypeface(null, Color.RED);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
 //                        mTextMsg.setTextSize(valueText());
@@ -11007,7 +11515,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         bubbleImgParams.height = Constant.screenHeight * 9 / 100;
                         bubbleImgParams.gravity = Gravity.RIGHT;
                         bubbleImgParams.topMargin = Constant.screenWidth * 2 / 100;
-                        bubbleImgParams.rightMargin = Constant.screenWidth * 2/ 100;
+                        bubbleImgParams.rightMargin = Constant.screenWidth * 2 / 100;
 
                         mTextMsg.setLayoutParams(bubbleImgParams);
                         mTextMsg.setGravity(Gravity.CENTER);
@@ -11056,7 +11564,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -11079,7 +11587,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         mTextMsg.setTypeface(null, Color.BLACK);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(Constant.screenWidth);
+//                        mTextMsg.setMinimumWidth(Constant.screenWidth);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -11107,18 +11615,30 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             MBuxs = Long.valueOf(part1);
 
                             new getDonation().execute();
-
-
                         }
+                    } else if (s1 == 'o' && s2 == '>') {
+                        mRightDestTime.setVisibility(View.VISIBLE);
+                        mRightDestTime.setBackgroundResource(R.drawable.ic_error_outline_red_24dp);
+                        mRightDestTime.setTag("Resp");
 
+                        String self_destruct = msg_list.get(k).getData();
+                        String[] parts = text.split("-");
+                        String part1 = parts[0];
+                        String part2 = parts[1];
+//                        String part3 = parts[2];
 
+                        mTextMsg.setText(part2);
+                        mTextMsg.setTextColor(Color.BLACK);
+//                        mTextMsg.setBackground(null);
+
+                        Constant.printMsg("testststststtstststskkkkkk" + part1 + part2);
                     } else if (s1 == 'a' && s2 == '>') {
 
                         mTextMsg.setText("You Accept buxs");
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
                         mTextMsg.setTextColor(Color.BLACK);
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -11127,14 +11647,12 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
-                    }
-                    else if (s1 == 'r' && s2 == '>')
-                    {
+                    } else if (s1 == 'r' && s2 == '>') {
                         mTextMsg.setText("You Rejected buxs");
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
                         mTextMsg.setTextColor(Color.BLACK);
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -11143,14 +11661,13 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
-                    }
-                    else {
+                    } else {
 
 
                         mTextMsg.setTextColor(Color.BLACK);
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         mTextMsg.setTextSize(valueText());
@@ -11168,7 +11685,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     mTextMsg.setTextColor(Color.BLACK);
                     mTextMsg.setTypeface(null, Color.BLACK);
                     mTextMsg.setBackground(null);
-                    mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                    mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                     mTextMsg.setGravity(Gravity.CENTER
                             | Gravity.LEFT);
                     mTextMsg.setTextSize(valueText());
@@ -11218,10 +11735,203 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     //                EmojiconTextView mTextMsg = (EmojiconTextView) v
                     //                        .findViewById(R.id.right_chat_text);
 
-                    boolean toggle = true;
-                    int position = (Integer) v.getTag();
+                    if (mIsLogClick) {
 
-                    String text = mTextMsg.getText().toString();
+
+                        try {
+                            topMenuHideFunction();
+
+                            mIsLogClick = true;
+
+                            LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 40 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                            LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 11 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                            Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                            String splText = msg_list.get(v.getId()).getData();
+
+                            if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                    if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                        Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                        mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                        mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                        mOnLongSelectedPostions.remove(i);
+
+                                    }
+
+                                }
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+
+                            } else {
+
+                                mOnLongSelectedPostions.add((v.getId()));
+                                mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                            }
+
+                            if (mOnLongSelectedPostions.size() == 0) {
+                                mIsLogClick = false;
+                                mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                                mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                                hedderTextParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderTextParams.width = width * 50 / 100;
+                                hedderTextParams.leftMargin = width * 3 / 100;
+                                hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                                mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                                hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderAttachmentParams.width = width * 4 / 100;
+                                hedderAttachmentParams.height = width * 8 / 100;
+                                hedderAttachmentParams.gravity = Gravity.CENTER;
+                                mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                                LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderMenuParams.width = (width * 2 / 100) - 2;
+                                hedderMenuParams.height = width * 7 / 100;
+                                hedderMenuParams.gravity = Gravity.CENTER;
+                                mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderCopyLayout.setVisibility(View.GONE);
+                            }
+                        } catch (Exception e) {
+
+                        }
+
+
+                    } else {
+
+                        boolean toggle = true;
+                        int position = (Integer) v.getTag();
+
+                        String text = mTextMsg.getText().toString();
 
 
 //                    if (mTextMsg.getCurrentTextColor() == -65536) {
@@ -11235,78 +11945,276 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 //                        mParentActivity.startActivity(intent);
 //                    }
 
-                    if (mTextMsg.getCurrentTextColor() == -256) {
+                        if (mTextMsg.getCurrentTextColor() == -256) {
 
-                        OrientationGroup.mZzleTextor = mTextMsg
-                                .getText().toString();
-
-                        // HorizonalSlideshow.mZzleTextor = mTextMsg
-                        // .getText().toString();
-
-                        Intent intent = new Intent(mParentActivity,
-                                OrientationGroup.class);
-                        mParentActivity.startActivity(intent);
-
-                        // }
-
-                    }
-                    if (mTextMsg.getCurrentTextColor() == -65536) {
-                        MessageGetSet selectedItem1 = Constant.msg_list_adapter
-                                .get(position);
-                        if (selectedItem1.getData().startsWith("<x>")) {
-
-                            Constant.mZzleText = mTextMsg.getText()
-                                    .toString();
-
-
-
-                            BannerActivityChat.mZzleText = mTextMsg
+                            OrientationGroup.mZzleTextor = mTextMsg
                                     .getText().toString();
 
-
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityChat.mZzleTextBackground = part1;
-                            BannerActivityChat.mZzleTextColor = part3;
-                            BannerActivityChat.mZzleTextSize = part4;
-                            BannerActivityChat.mZzleTextSpeed = part2;
+                            // HorizonalSlideshow.mZzleTextor = mTextMsg
+                            // .getText().toString();
 
                             Intent intent = new Intent(mParentActivity,
-                                    BannerActivityChat.class);
+                                    OrientationGroup.class);
                             mParentActivity.startActivity(intent);
-                        }else {
-                            Constant.zzle = false;
 
-                            BannerActivityLED.mZzleText = mTextMsg
-                                    .getText().toString();
+                            // }
 
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityLED.mZzleTextBackground =part5;
-                            BannerActivityLED.mZzleTextSpeed =part3;
-                            BannerActivityLED.mZzleTextSize =part4;
+                        }
+                        if (mTextMsg.getCurrentTextColor() == -65536) {
+                            MessageGetSet selectedItem1 = Constant.msg_list_adapter
+                                    .get(position);
+                            if (selectedItem1.getData().startsWith("<x>")) {
 
-                            Intent intent = new Intent(mParentActivity,
-                                    BannerActivityLED.class);
-                            mParentActivity.startActivity(intent);
+                                Constant.mZzleText = mTextMsg.getText()
+                                        .toString();
+
+
+                                BannerActivityChat.mZzleText = mTextMsg
+                                        .getText().toString();
+
+
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityChat.mZzleTextBackground = part1;
+                                BannerActivityChat.mZzleTextColor = part3;
+                                BannerActivityChat.mZzleTextSize = part4;
+                                BannerActivityChat.mZzleTextSpeed = part2;
+
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityChat.class);
+                                mParentActivity.startActivity(intent);
+                            } else {
+                                Constant.zzle = false;
+
+                                BannerActivityLED.mZzleText = mTextMsg
+                                        .getText().toString();
+
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityLED.mZzleTextBackground = part5;
+                                BannerActivityLED.mZzleTextSpeed = part3;
+                                BannerActivityLED.mZzleTextSize = part4;
+
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityLED.class);
+                                mParentActivity.startActivity(intent);
+                            }
                         }
                     }
                 }
 
             });
+
+            mTextMsg.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+
+
+                    try {
+                        topMenuHideFunction();
+
+                        mIsLogClick = true;
+
+                        LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderTextParams.width = width * 40 / 100;
+                        hedderTextParams.leftMargin = width * 3 / 100;
+                        hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                        mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                        LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderAttachmentParams.width = width * 11 / 100;
+                        hedderAttachmentParams.height = width * 8 / 100;
+                        hedderAttachmentParams.gravity = Gravity.CENTER;
+                        mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                        mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                        Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                        String splText = msg_list.get(v.getId()).getData();
+
+                        if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                    Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                    mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                    mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                    mOnLongSelectedPostions.remove(i);
+
+                                }
+
+                            }
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+
+                        } else {
+
+                            mOnLongSelectedPostions.add((v.getId()));
+                            mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                            mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                        }
+
+                        if (mOnLongSelectedPostions.size() == 0) {
+                            mIsLogClick = false;
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                            hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 50 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                            hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 4 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                            LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderMenuParams.width = (width * 2 / 100) - 2;
+                            hedderMenuParams.height = width * 7 / 100;
+                            hedderMenuParams.gravity = Gravity.CENTER;
+                            mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderCopyLayout.setVisibility(View.GONE);
+                        }
+                    } catch (Exception e) {
+
+                    }
+
+
+                    return true;
+                }
+            });
+
         } catch (Exception e) {
 
         }
@@ -11315,8 +12223,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
     }
 
     public void setLeftChatText() {
-
-
         try {
             // Set timestamp
             Date date = new Date();
@@ -11437,8 +12343,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                 .equalsIgnoreCase("0")) {
                             Constant.mDefaultScroll = false;
                         }
-
-
 
 
                         if (Constant.msg_list_adapter
@@ -11586,7 +12490,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         }
 
 
-
                         if (Constant.msg_list_adapter
                                 .get(Constant.msg_list_adapter
                                         .size() - 1).getData() != null) {
@@ -11627,7 +12530,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                                         if (Constant.mDefaultScroll == true) {
 
-                                            if(k==msg_list.size()-1) {
+                                            if (k == msg_list.size() - 1) {
                                                 BannerActivityDazzAdapter.mZzleText = scrollpart5;
                                                 BannerActivityDazzAdapter.mZzleTexTime = scrollpart6;
                                                 Intent intent = new Intent(
@@ -11649,6 +12552,21 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                         txt_msg.setLayoutParams(bubbleImgParams);
 
+                    } else if (s1 == 'o' && s2 == '>') {
+                        mRightDestTime.setVisibility(View.VISIBLE);
+                        mRightDestTime.setBackgroundResource(R.drawable.ic_error_outline_red_24dp);
+                        mRightDestTime.setTag("Resp");
+
+                        String self_destruct = msg_list.get(k).getData();
+                        String[] parts = text.split("-");
+                        String part1 = parts[0];
+                        String part2 = parts[1];
+
+                        txt_msg.setText(part2);
+                        txt_msg.setTextColor(Color.BLACK);
+                        //txt_msg.setBackground(null);
+
+                        Constant.printMsg("testststststtstststskkkkkk" + part1 + part2);
                     } else if (s1 == 's' && s2 == '>') {
 
                         /*LinearLayout.LayoutParams bubbleImgParams = new LinearLayout.LayoutParams(
@@ -11687,7 +12605,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                         mself_destruct_list.add(String.valueOf(k));
                         Constant.mself_id = k;
-
 
 
                     } else if (s1 == 'k' && s2 == '>') {
@@ -11780,7 +12697,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         txt_msg.setText(part3);
 
 
-
                         LinearLayout.LayoutParams bubbleImgParams = new LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.WRAP_CONTENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -11799,8 +12715,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         txt_msg.setTextColor(Color.WHITE);
 
 
-
-
                         if (Constant.screenWidth >= 600) {
 
                             txt_msg.setEmojiconSize(37);
@@ -11810,7 +12724,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                 && Constant.screenWidth < 600) {
 
                             txt_msg.setEmojiconSize(36);
-
 
 
                         } else if (Constant.screenWidth > 260
@@ -11836,7 +12749,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         String part2 = parts[1];
 
 
-
                         txt_msg.setText(Constant.mSenderName
                                 + " donates " + part1
                                 + " BuxS for you");
@@ -11844,7 +12756,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         txt_msg.setTypeface(null, Color.MAGENTA);
 
                         txt_msg.setBackground(null);
-                        txt_msg.setMinimumWidth(Constant.screenWidth);
+//                        txt_msg.setMinimumWidth(Constant.screenWidth);
                         txt_msg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -11871,7 +12783,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         txt_msg.setTypeface(null, Color.BLACK);
 
                         txt_msg.setBackground(null);
-                        txt_msg.setMinimumWidth(Constant.screenWidth);
+//                        txt_msg.setMinimumWidth(Constant.screenWidth);
                         txt_msg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -11904,19 +12816,16 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         //                        // context.startActivity(intent);
                         //                    }
 
-                    }
-                    else if (s1 == 'r' && s2 == '>')
-                    {
+                    } else if (s1 == 'r' && s2 == '>') {
                         txt_msg.setText(Constant.mSenderName
                                 + " rejected your BuxS");
                         txt_msg.setTypeface(null, Color.BLACK);
                         txt_msg.setBackground(null);
-                        txt_msg.setMinimumWidth(Constant.screenWidth);
+//                        txt_msg.setMinimumWidth(Constant.screenWidth);
                         txt_msg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
-                    }
-                    else {
+                    } else {
                         txt_msg.setTextColor(Color.BLACK);
 
                         txt_msg.setBackground(null);
@@ -11959,7 +12868,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 txt_msg.setTypeface(null, Typeface.NORMAL);
 
                 txt_msg.setBackground(null);
-                txt_msg.setMinimumWidth(Constant.screenWidth);
+//                txt_msg.setMinimumWidth(Constant.screenWidth);
                 txt_msg.setTextSize(valueText());
                 txt_msg.setEmojiconSize(33);
                 LinearLayout.LayoutParams bubbleImgParams = new LinearLayout.LayoutParams(
@@ -11979,73 +12888,260 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 @Override
                 public void onClick(View v) {
                     // TODO Auto-generated method stub
+                    if (mIsLogClick) {
 
-                    final EmojiconTextView txt_msg = (EmojiconTextView) v;
+
+                        try {
+                            topMenuHideFunction();
+
+                            mIsLogClick = true;
+
+                            LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 40 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                            LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 11 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                            Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                            String splText = msg_list.get(v.getId()).getData();
+
+                            if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                    if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                        Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                        mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                        mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                        mOnLongSelectedPostions.remove(i);
+
+                                    }
+
+                                }
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+
+                            } else {
+
+                                mOnLongSelectedPostions.add((v.getId()));
+                                mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                            }
+
+                            if (mOnLongSelectedPostions.size() == 0) {
+                                mIsLogClick = false;
+                                mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                                mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                                hedderTextParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderTextParams.width = width * 50 / 100;
+                                hedderTextParams.leftMargin = width * 3 / 100;
+                                hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                                mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                                hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderAttachmentParams.width = width * 4 / 100;
+                                hedderAttachmentParams.height = width * 8 / 100;
+                                hedderAttachmentParams.gravity = Gravity.CENTER;
+                                mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                                LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderMenuParams.width = (width * 2 / 100) - 2;
+                                hedderMenuParams.height = width * 7 / 100;
+                                hedderMenuParams.gravity = Gravity.CENTER;
+                                mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderCopyLayout.setVisibility(View.GONE);
+                            }
+                        } catch (Exception e) {
+
+                        }
+
+
+                    } else {
+                        final EmojiconTextView txt_msg = (EmojiconTextView) v;
                                           /*txt_msg_layout = (LinearLayout) v
                                                   .findViewById(R.id.ll_txt_msg);*/
-                    boolean toggle = true;
-                    int position = (Integer) v.getTag();
+                        boolean toggle = true;
+                        int position = (Integer) v.getTag();
 
-                    String text = txt_msg.getText().toString();
-                    int textlength = text.length();
-                    if (txt_msg.getCurrentTextColor() == -65536) {
-                        MessageGetSet selectedItem1 = Constant.msg_list_adapter
-                                .get(position);
-                        if (selectedItem1.getData().startsWith("<x>")) {
+                        String text = txt_msg.getText().toString();
+                        int textlength = text.length();
+                        if (txt_msg.getCurrentTextColor() == -65536) {
+                            MessageGetSet selectedItem1 = Constant.msg_list_adapter
+                                    .get(position);
+                            if (selectedItem1.getData().startsWith("<x>")) {
 
-                            Constant.mZzleText = txt_msg.getText()
-                                    .toString();
+                                Constant.mZzleText = txt_msg.getText()
+                                        .toString();
 
-                            BannerActivityChat.mZzleText = txt_msg
-                                    .getText().toString();
-
-
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityChat.mZzleTextBackground = part1;
-                            BannerActivityChat.mZzleTextColor = part3;
-                            BannerActivityChat.mZzleTextSize = part4;
-                            BannerActivityChat.mZzleTextSpeed = part2;
+                                BannerActivityChat.mZzleText = txt_msg
+                                        .getText().toString();
 
 
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityChat.mZzleTextBackground = part1;
+                                BannerActivityChat.mZzleTextColor = part3;
+                                BannerActivityChat.mZzleTextSize = part4;
+                                BannerActivityChat.mZzleTextSpeed = part2;
 
 
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityChat.class);
+                                startActivity(intent);
+                            } else {
+                                Constant.zzle = false;
+
+                                BannerActivityLED.mZzleText = txt_msg
+                                        .getText().toString();
+
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityLED.mZzleTextBackground = part5;
+                                BannerActivityLED.mZzleTextSpeed = part3;
+                                BannerActivityLED.mZzleTextSize = part4;
 
 
-                            Intent intent = new Intent(mParentActivity,
-                                    BannerActivityChat.class);
-                            startActivity(intent);
-                        } else {
-                            Constant.zzle = false;
-
-                            BannerActivityLED.mZzleText = txt_msg
-                                    .getText().toString();
-
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityLED.mZzleTextBackground =part5;
-                            BannerActivityLED.mZzleTextSpeed =part3;
-                            BannerActivityLED.mZzleTextSize =part4;
-
-
-                            Intent intent = new Intent(mParentActivity,
-                                    BannerActivityLED.class);
-                            startActivity(intent);
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityLED.class);
+                                startActivity(intent);
+                            }
                         }
-                    }
 //                    if (txt_msg.getCurrentTextColor() == -65536) {
 //
 //                        Constant.zzle = false;
@@ -12059,238 +13155,463 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 //
 //                    }
 
-                    if (txt_msg.getCurrentTextColor() == -256) {
+                        if (txt_msg.getCurrentTextColor() == -256) {
 
-                        OrientationGroup.mZzleTextor = txt_msg
-                                .getText().toString();
+                            OrientationGroup.mZzleTextor = txt_msg
+                                    .getText().toString();
 
-                        // HorizonalSlideshow.mZzleTextor = txt_msg
-                        // .getText().toString();
+                            // HorizonalSlideshow.mZzleTextor = txt_msg
+                            // .getText().toString();
 
-                        Intent intent = new Intent(mParentActivity,
-                                OrientationGroup.class);
-                        startActivity(intent);
+                            Intent intent = new Intent(mParentActivity,
+                                    OrientationGroup.class);
+                            startActivity(intent);
 
-                        // }
+                            // }
 
+                        }
+                        if (txt_msg.getCurrentTextColor() == -65281) {
+
+
+                            Constant.mself_id = position;
+
+
+                            dbAdapter = KachingMeApplication
+                                    .getDatabaseAdapter();
+
+                            MessageGetSet selectedItem = null;
+
+                            // Toast.makeText(
+                            // mContext,
+                            // "not contains   "
+                            // + Constant.mself_id,
+                            // Toast.LENGTH_SHORT).show();
+
+                            ArrayList<String> mn = new ArrayList<String>();
+
+                            mn.add(String.valueOf(position));
+
+                            for (int i = 0; i < mn.size(); i++) {
+                                int p = Integer.valueOf(mn.get(i));
+                                MessageGetSet selectedItem1 = Constant.msg_list_adapter
+                                        .get(p);
+
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+                                final String part1 = parts[0];
+
+
+                                Constant.printMsg("delete id:::::"
+                                        + p
+                                        + "  "
+                                        + Constant.msg_list_adapter
+                                        .get(p)
+                                        + "    "
+                                        + selectedItem1.getKey_id()
+                                        + "     "
+                                        + selectedItem1.getIs_owner()
+                                        + "    "
+                                        + selectedItem1
+                                        .getKey_from_me()
+                                        + "   "
+                                        + selectedItem1
+                                        .getData());
+                                mkey = selectedItem1.getKey_id();
+                                mData = selectedItem1.getData()
+                                ;
+
+                                mBuxCount = part1.length();
+
+                            }
+
+                            if (mData.contains("-accepted")) {
+                                b = new AlertDialog.Builder(
+                                        ChatTest.this);
+                                b.setCancelable(false);
+                                b.setMessage("This buxs are already Accepted/Rejected")
+                                        .setCancelable(false);
+
+                                b.setNeutralButton(
+                                        getResources()
+                                                .getString(
+                                                        R.string.ok),
+                                        new DialogInterface.OnClickListener() {
+                                            public void onClick(
+                                                    DialogInterface dialog,
+                                                    int id) {
+                                                dialog.dismiss();
+
+                                            }
+                                        });
+
+                                b.setCancelable(true);
+
+                                AlertDialog alert = b.create();
+                                alert.show();
+
+                            } else {
+                                if (mBuxCount < 10) {
+                                    b = new AlertDialog.Builder(
+                                            ChatTest.this);
+                                    b.setCancelable(false);
+                                    b.setMessage("Do you accept the BuxS ?")
+                                            .setCancelable(false);
+
+                                    b.setNegativeButton(
+                                            getResources()
+                                                    .getString(
+                                                            R.string.a_yes),
+                                            new DialogInterface.OnClickListener() {
+                                                public void onClick(
+                                                        DialogInterface dialog,
+                                                        int id) {
+
+                                                    Constant.mBuxAccept = true;
+
+                                                    dbAdapter
+                                                            .setUpdateMessage(
+                                                                    mkey,
+                                                                    mData + "-accepted");
+
+                                                    Constant.msg_list_adapter
+                                                            .get(Constant.mself_id).setData(mData + "-accepted");
+
+                                                    String dazzle = txt_msg
+                                                            .getText()
+                                                            .toString();
+                                                    String[] parts = dazzle
+                                                            .split(" ");
+                                                    String part1 = parts[0];
+                                                    String part2 = parts[1];
+                                                    // String part3 =
+                                                    // parts[2];
+                                                    int len = parts.length;
+
+                                                    // String part3 =
+                                                    // parts[len - 3];
+                                                    String part3 = parts[len - 4];
+
+                                                    Long point = sp1
+                                                            .getLong(
+                                                                    "buxvalue",
+                                                                    0);
+
+                                                    Constant.userId = sp1
+                                                            .getLong(
+                                                                    "uservalue",
+                                                                    0);
+
+                                                    Long dtpoint = sp1
+                                                            .getLong(
+                                                                    "donationpoint",
+                                                                    0);
+
+                                                    Constant.bux = point;
+
+                                                    Constant.point = dtpoint;
+
+                                                    Long bx = Long
+                                                            .valueOf(part3);
+                                                    Constant.donatepoint = bx;
+                                                    Long buxvalue = Constant.bux
+                                                            + bx;
+                                                    Constant.mDonatedBux = Constant.bux
+                                                            + bx;
+
+                                                    Constant.bux = buxvalue;
+
+                                                    Editor e = sp1.edit();
+                                                    e.putLong("buxvalue",
+                                                            buxvalue);
+                                                    e.putLong("uservalue",
+                                                            Constant.userId);
+                                                    e.commit();
+
+                                                    Long pointdon = bx
+                                                            + Constant.point;
+                                                    Constant.mAcceptedBuxS = Constant.donatepoint;
+                                                    // Editor e1 =
+                                                    // sp1.edit();
+                                                    // e1.putLong(
+                                                    // "donationpoint",
+                                                    // pointdon);
+                                                    // e1.commit();
+
+                                                    Constant.point = pointdon;
+
+                                                    String mydate = java.text.DateFormat
+                                                            .getDateTimeInstance()
+                                                            .format(Calendar.getInstance()
+                                                                    .getTime());
+                                                    Constant.mPushDate = mydate;
+
+                                                    String jid = KachingMeApplication
+                                                            .getjid()
+                                                            .split("@")[0];
+
+                                                    mToNUm = Constant.mReceiverId
+                                                            .split("@")[0];
+
+                                                    name = Constant.mSenderName;
+
+                                                    SimpleDateFormat sdf = new SimpleDateFormat(
+                                                            "dd/MM/yyyy");
+
+                                                    String today = sdf
+                                                            .format(new Date());
+
+                                                    DonationDto dp = new DonationDto();
+
+                                                    dp.setName(name);
+                                                    dp.setDate(today);
+                                                    //
+                                                    // dp.setPoint(String
+                                                    // .valueOf(Constant.point));
+                                                    dp.setPoint(String
+                                                            .valueOf(Constant.donatepoint));
+                                                    dp.setStatus("credit");
+                                                    Constant.donatelust
+                                                            .add(dp);
+
+                                                    ContentValues cv = new ContentValues();
+
+                                                    cv.put("date", today);
+                                                    cv.put("points",
+                                                            Constant.donatepoint);
+                                                    cv.put("name", name);
+                                                    cv.put("status",
+                                                            "credit");
+
+                                                    insertDBDonation(cv);
+                                                    acceptBux();
+                                                }
+                                            });
+                                    b.setPositiveButton(
+                                            "Reject",
+                                            new DialogInterface.OnClickListener() {
+                                                public void onClick(
+                                                        DialogInterface dialog,
+                                                        int id) {
+
+                                                    Constant.mBuxReject = true;
+
+                                                    dbAdapter
+                                                            .setUpdateMessage(
+                                                                    mkey,
+                                                                    mData + "-accepted");
+
+                                                    Constant.msg_list_adapter
+                                                            .get(Constant.mself_id).setData(mData + "-accepted");
+                                                    rejectBux();
+                                                }
+                                            });
+                                    b.setCancelable(true);
+
+                                    AlertDialog alert = b.create();
+                                    alert.show();
+                                }
+                            }
+
+
+                        }
                     }
-                    if (txt_msg.getCurrentTextColor() == -65281) {
-
-                        Constant.mself_id = position;
-
-                        dbAdapter = KachingMeApplication
-                                .getDatabaseAdapter();
-
-                        MessageGetSet selectedItem = null;
-
-                        // Toast.makeText(
-                        // mContext,
-                        // "not contains   "
-                        // + Constant.mself_id,
-                        // Toast.LENGTH_SHORT).show();
-
-                        ArrayList<String> mn = new ArrayList<String>();
-
-                        mn.add(String.valueOf(position));
-
-                        for (int i = 0; i < mn.size(); i++) {
-                            int p = Integer.valueOf(mn.get(i));
-                            MessageGetSet selectedItem1 = Constant.msg_list_adapter
-                                    .get(p);
-
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-                            final String part1 = parts[0];
+                }
+            });
+            txt_msg.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
 
 
-                            Constant.printMsg("delete id:::::"
-                                    + p
-                                    + "  "
-                                    + Constant.msg_list_adapter
-                                    .get(p)
-                                    + "    "
-                                    + selectedItem1.getKey_id()
-                                    + "     "
-                                    + selectedItem1.getIs_owner()
-                                    + "    "
-                                    + selectedItem1
-                                    .getKey_from_me()
-                                    + "   "
-                                    + selectedItem1
-                                    .getKey_remote_jid());
-                            mkey = selectedItem1.getKey_id();
-                            mData = selectedItem1.getData()
-                                    + "-accepted";
+                    try {
+                        topMenuHideFunction();
 
-                            mBuxCount = part1.length();
+                        mIsLogClick = true;
+
+                        LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderTextParams.width = width * 40 / 100;
+                        hedderTextParams.leftMargin = width * 3 / 100;
+                        hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                        mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                        LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderAttachmentParams.width = width * 11 / 100;
+                        hedderAttachmentParams.height = width * 8 / 100;
+                        hedderAttachmentParams.gravity = Gravity.CENTER;
+                        mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                        mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                        Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                        String splText = msg_list.get(v.getId()).getData();
+
+                        if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                    Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                    mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                    mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                    mOnLongSelectedPostions.remove(i);
+
+                                }
+
+                            }
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+
+                        } else {
+
+                            mOnLongSelectedPostions.add((v.getId()));
+                            mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                            mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
 
                         }
 
-                        if (mBuxCount < 10) {
-                            b = new AlertDialog.Builder(
-                                    ChatTest.this);
-                            b.setCancelable(false);
-                            b.setMessage("Do you accept the BuxS ?")
-                                    .setCancelable(false);
+                        if (mOnLongSelectedPostions.size() == 0) {
+                            mIsLogClick = false;
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
 
-                            b.setNegativeButton(
-                                    getResources()
-                                            .getString(
-                                                    R.string.a_yes),
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(
-                                                DialogInterface dialog,
-                                                int id) {
+                            hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 50 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
 
-                                            Constant.mBuxAccept = true;
 
-                                            dbAdapter
-                                                    .setUpdateMessage(
-                                                            mkey,
-                                                            mData);
+                            hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 4 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
 
-                                            String dazzle = txt_msg
-                                                    .getText()
-                                                    .toString();
-                                            String[] parts = dazzle
-                                                    .split(" ");
-                                            String part1 = parts[0];
-                                            String part2 = parts[1];
-                                            // String part3 =
-                                            // parts[2];
-                                            int len = parts.length;
+                            LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderMenuParams.width = (width * 2 / 100) - 2;
+                            hedderMenuParams.height = width * 7 / 100;
+                            hedderMenuParams.gravity = Gravity.CENTER;
+                            mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
 
-                                            // String part3 =
-                                            // parts[len - 3];
-                                            String part3 = parts[len - 4];
-
-                                            Long point = sp1
-                                                    .getLong(
-                                                            "buxvalue",
-                                                            0);
-
-                                            Constant.userId = sp1
-                                                    .getLong(
-                                                            "uservalue",
-                                                            0);
-
-                                            Long dtpoint = sp1
-                                                    .getLong(
-                                                            "donationpoint",
-                                                            0);
-
-                                            Constant.bux = point;
-
-                                            Constant.point = dtpoint;
-
-                                            Long bx = Long
-                                                    .valueOf(part3);
-                                            Constant.donatepoint = bx;
-                                            Long buxvalue = Constant.bux
-                                                    + bx;
-                                            Constant.mDonatedBux = Constant.bux
-                                                    + bx;
-
-                                            Constant.bux = buxvalue;
-
-                                            Editor e = sp1.edit();
-                                            e.putLong("buxvalue",
-                                                    buxvalue);
-                                            e.putLong("uservalue",
-                                                    Constant.userId);
-                                            e.commit();
-
-                                            Long pointdon = bx
-                                                    + Constant.point;
-                                            Constant.mAcceptedBuxS = Constant.donatepoint;
-                                            // Editor e1 =
-                                            // sp1.edit();
-                                            // e1.putLong(
-                                            // "donationpoint",
-                                            // pointdon);
-                                            // e1.commit();
-
-                                            Constant.point = pointdon;
-
-                                            String mydate = java.text.DateFormat
-                                                    .getDateTimeInstance()
-                                                    .format(Calendar.getInstance()
-                                                            .getTime());
-                                            Constant.mPushDate = mydate;
-
-                                            String jid = KachingMeApplication
-                                                    .getjid()
-                                                    .split("@")[0];
-
-                                            mToNUm = Constant.mReceiverId
-                                                    .split("@")[0];
-
-                                            name = Constant.mSenderName;
-
-                                            SimpleDateFormat sdf = new SimpleDateFormat(
-                                                    "dd/MM/yyyy");
-
-                                            String today = sdf
-                                                    .format(new Date());
-
-                                            DonationDto dp = new DonationDto();
-
-                                            dp.setName(name);
-                                            dp.setDate(today);
-                                            //
-                                            // dp.setPoint(String
-                                            // .valueOf(Constant.point));
-                                            dp.setPoint(String
-                                                    .valueOf(Constant.donatepoint));
-                                            dp.setStatus("credit");
-                                            Constant.donatelust
-                                                    .add(dp);
-
-                                            ContentValues cv = new ContentValues();
-
-                                            cv.put("date", today);
-                                            cv.put("points",
-                                                    Constant.donatepoint);
-                                            cv.put("name", name);
-                                            cv.put("status",
-                                                    "credit");
-
-                                            insertDBDonation(cv);
-                                            Intent intent = new Intent(
-                                                    mParentActivity
-                                                    ,
-                                                    ChatTest.class);
-                                            startActivity(intent);
-                                        }
-                                    });
-                            b.setPositiveButton(
-                                    "Cancel",
-                                    new DialogInterface.OnClickListener() {
-                                        public void onClick(
-                                                DialogInterface dialog,
-                                                int id) {
-
-                                            Constant.mBuxReject = true;
-
-                                            dbAdapter
-                                                    .setUpdateMessage(
-                                                            mkey,
-                                                            mData);
-                                            finish();
-                                            Intent intent = new Intent(
-                                                    mParentActivity
-                                                    ,
-                                                    ChatTest.class);
-                                            startActivity(intent);
-                                        }
-                                    });
-                            b.setCancelable(true);
-
-                            AlertDialog alert = b.create();
-                            alert.show();
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderCopyLayout.setVisibility(View.GONE);
                         }
+                    } catch (Exception e) {
+
                     }
+
+
+                    return true;
                 }
             });
         } catch (Exception e) {
@@ -12300,11 +13621,11 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
     void myMethod(String value) {
 
-        mMessegeList=new ArrayList();
-        mMeaningList=new ArrayList();
+        mMessegeList = new ArrayList();
+        mMeaningList = new ArrayList();
         try {
             Constant.printMsg("Priya Test Nymn mymethod " + value);
-            this.Normallist = ACRAConstants.DEFAULT_STRING_VALUE;
+            this.Normallist = "";
             String[] arr = value.split(" ");
             for (String ss : arr) {
                 if (!ss.isEmpty()) {
@@ -12360,7 +13681,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     }
                 }
             }
-            Constant.printMsg("OOOOOOOOOOOOOOO"+ mMessegeList
+            Constant.printMsg("OOOOOOOOOOOOOOO" + mMessegeList
                     + mMeaningList);
             Constant.printMsg("Priya Test Nymn NormalList" + this.Normallist);
         } catch (Exception e) {
@@ -12410,14 +13731,14 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             while (index >= 0) {
                 this.Normallist = removeCharAt(this.Normallist, index);
                 this.ssb.replace(index, index + 1,
-                        ACRAConstants.DEFAULT_STRING_VALUE);
+                        "");
                 index = this.Normallist.indexOf(guess, index);
             }
             index = this.Normallist.indexOf(guess1);
             while (index >= 0) {
                 this.Normallist = removeCharAt(this.Normallist, index);
                 this.ssb.replace(index, index + 1,
-                        ACRAConstants.DEFAULT_STRING_VALUE);
+                        "");
                 index = this.Normallist.indexOf(guess1, index);
             }
 
@@ -12453,297 +13774,291 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
     }
 
     public void setRightImage() {
-       try {
-
-
-        if (msg_list.get(k).getStatus() == 3) {
-            mRightImageTickMark.setImageResource(R.drawable.message_unsent);
-        } else if (msg_list.get(k).getStatus() == 2) {
-            mRightImageTickMark
-                    .setImageResource(R.drawable.receipt_from_server);
-        } else if (msg_list.get(k).getStatus() == 1 || msg_list.get(k).getStatus() == 0) {
-            mRightImageTickMark
-                    .setImageResource(R.drawable.receipt_from_target);
-        } else if (msg_list.get(k).getStatus() == -1) {
-            mRightImageTickMark
-                    .setImageResource(R.drawable.receipt_read);
-        }
-
-
-        String fromuser = msg_list.get(k).getKey_remote_jid();
-        // Set timestamp
-        Date date = new Date();
-        date.setTime(msg_list.get(k).getSend_timestamp());
-        SimpleDateFormat time_format = new SimpleDateFormat(
-                "hh:mm a");
-
-        mRightImageTextTime.setText(time_format.format(date));
-
-        Constant.printMsg("MUC image : " + msg_list.get(k).getMedia_name());
-
-        File file = null;
         try {
-            file = new File(Constant.local_image_dir
-                    + msg_list.get(k).getMedia_name());
-        } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-
-        }
 
 
-        String values = msg_list.get(k).get_id() + "," + fromuser;
-        mRightImageChatUpload.setTag(values);
-        mRightImageChatCancel.setTag(values);
-        mRightImageChatUpload.setVisibility(View.GONE);
-        mRightImageChatCancel.setVisibility(View.GONE);
-        mRightImageProgress.setVisibility(View.GONE);
-
-        if (file != null) {
-
-            Bitmap unscaledBitmapRight =  new CompressImage().compressImage(Constant.local_image_dir
-                    + msg_list.get(k).getMedia_name(), "",1);
-
-            Log.d("Image Width",
-                    "Image Width::" + (int) width * 50 / 100 + " layout::"
-                            + (int) height * 30 / 100
-                            + " image view::"
-                            + msg_list.get(k).getStatus()
-                            + " image view height::"
-                            + msg_list.get(k).getNeeds_push()
-                            + "bitmap widh::"
-                            + unscaledBitmapRight.getWidth());
-
-            mRightImageChat.setImageBitmap(unscaledBitmapRight);
-            mRightImageChat.setTag(Constant.local_image_dir
-                    + msg_list.get(k).getMedia_name());
+            if (msg_list.get(k).getStatus() == 3) {
+                mRightImageTickMark.setImageResource(R.drawable.message_unsent);
+            } else if (msg_list.get(k).getStatus() == 2) {
+                mRightImageTickMark
+                        .setImageResource(R.drawable.receipt_from_server);
+            } else if (msg_list.get(k).getStatus() == 1 || msg_list.get(k).getStatus() == 0) {
+                mRightImageTickMark
+                        .setImageResource(R.drawable.receipt_from_target);
+            } else if (msg_list.get(k).getStatus() == -1) {
+                mRightImageTickMark
+                        .setImageResource(R.drawable.receipt_read);
+            }
 
 
+            String fromuser = msg_list.get(k).getKey_remote_jid();
+            // Set timestamp
+            Date date = new Date();
+            date.setTime(msg_list.get(k).getSend_timestamp());
+            SimpleDateFormat time_format = new SimpleDateFormat(
+                    "hh:mm a");
 
-            //----------------------------
-            boolean isConn = Connectivity.isOnline(mParentActivity);
+            mRightImageTextTime.setText(time_format.format(date));
 
-            if(!mAsyncUpload_Image.containsKey(String.valueOf(msg_list.get(k).get_id())))
-            mAsyncUpload_Image.put(String.valueOf(msg_list.get(k).get_id()), new AsyncHttpClient());
+            Constant.printMsg("MUC image : " + msg_list.get(k).getMedia_name());
+
+            File file = null;
+            try {
+                file = new File(Constant.local_image_dir
+                        + msg_list.get(k).getMedia_name());
+            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+
+            }
 
 
-            Constant.printMsg("......Chat Image 0000...." + msg_list.get(k).getStatus()+"  "+msg_list.get(k).getNeeds_push() +"  "+k
-            );
+            String values = msg_list.get(k).get_id() + "," + fromuser;
+            mRightImageChatUpload.setTag(values);
+            mRightImageChatCancel.setTag(values);
+            mRightImageChatUpload.setVisibility(View.GONE);
+            mRightImageChatCancel.setVisibility(View.GONE);
+            mRightImageProgress.setVisibility(View.GONE);
+
+            if (file != null) {
+
+                Bitmap unscaledBitmapRight = new CompressImage().compressImage(Constant.local_image_dir
+                        + msg_list.get(k).getMedia_name(), "", 1);
+
+                Log.d("Image Width",
+                        "Image Width::" + (int) width * 50 / 100 + " layout::"
+                                + (int) height * 30 / 100
+                                + " image view::"
+                                + msg_list.get(k).getStatus()
+                                + " image view height::"
+                                + msg_list.get(k).getNeeds_push()
+                                + "bitmap widh::"
+                                + unscaledBitmapRight.getWidth());
+                Constant.printMsg("Image row data not null333" + unscaledBitmapRight.getWidth() + "   " + unscaledBitmapRight.getHeight());
+//            mRightImageChat.setMaxWidth(width * 65 / 100);
+//            mRightImageChat.setMaxHeight(height * 40 / 100);
+//            mRightImageChat.setMaxHeight(height * 40 / 100);
+//            if(unscaledBitmapRight.getWidth()>=width * 65 / 100)
+
+                mRightImageChat.setImageBitmap(unscaledBitmapRight);
+//            else
+                mRightImageChat.setTag(Constant.local_image_dir
+                        + msg_list.get(k).getMedia_name());
 
 
-            if (msg_list.get(k).getNeeds_push() == 2
-                    && msg_list.get(k).getStatus() == 3) {
+                //----------------------------
+                boolean isConn = Connectivity.isOnline(mParentActivity);
 
-                if(!isFirstCall)
-                {
-                    if (isConn) {
-                        mRightImageChatUpload.setVisibility(View.GONE);
-                        mRightImageChatCancel.setVisibility(View.VISIBLE);
-                        mRightImageProgress
-                                .setVisibility(View.VISIBLE);
+                if (!mAsyncUpload_Image.containsKey(String.valueOf(msg_list.get(k).get_id())))
+                    mAsyncUpload_Image.put(String.valueOf(msg_list.get(k).get_id()), new AsyncHttpClient());
 
-                        Constant.printMsg("......Chat Image 3..22...." + msg_list.get(k).getStatus()+"  "+msg_list.get(k).getNeeds_push()+"  "+msg_list.get(k).get_id()
+
+                Constant.printMsg("......Chat Image 0000...." + msg_list.get(k).getStatus() + "  " + msg_list.get(k).getNeeds_push() + "  " + k
+                );
+
+
+                if (msg_list.get(k).getNeeds_push() == 2
+                        && msg_list.get(k).getStatus() == 3) {
+
+                    if (!isFirstCall) {
+                        if (isConn) {
+                            mRightImageChatUpload.setVisibility(View.GONE);
+                            mRightImageChatCancel.setVisibility(View.VISIBLE);
+                            mRightImageProgress
+                                    .setVisibility(View.VISIBLE);
+
+                            Constant.printMsg("......Chat Image 3..22...." + msg_list.get(k).getStatus() + "  " + msg_list.get(k).getNeeds_push() + "  " + msg_list.get(k).get_id()
+                            );
+
+//                            new uploa_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()),
+//                                    fromuser);
+
+                        } else {
+                            mRightImageChatUpload.setVisibility(View.VISIBLE);
+                            mRightImageChatCancel.setVisibility(View.GONE);
+                            mRightImageProgress
+                                    .setVisibility(View.GONE);
+                        }
+                    } else {
+
+
+                        Constant.printMsg("......Chat Image 3..33...." + msg_list.get(k).getStatus() + "  " + msg_list.get(k).getNeeds_push()
                         );
+                        mRightImageChatUpload.setVisibility(View.VISIBLE);
+                        mRightImageChatCancel.setVisibility(View.GONE);
+                        mRightImageProgress
+                                .setVisibility(View.GONE);
+                    }
 
-                        new uploa_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()),
-                                fromuser);
+                } else if (msg_list.get(k).getNeeds_push() == 1 && msg_list.get(k).getStatus() == 3) {
+                    if (!isFirstCall) {
+                        if (isConn) {
+                            mRightImageChatUpload.setVisibility(View.GONE);
+                            mRightImageChatCancel.setVisibility(View.VISIBLE);
+                            mRightImageProgress
+                                    .setVisibility(View.VISIBLE);
 
+                            Constant.printMsg("......Chat Image 3..1...." + msg_list.get(k).getStatus() + "  " + msg_list.get(k).getNeeds_push() + "  " + msg_list.get(k).get_id()
+                            );
+
+                            dbAdapter.setUpdateMessage_need_push(msg_list.get(k).getKey_id(), 2);
+
+                            new uploa_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()),
+                                    fromuser);
+                        } else {
+                            mRightImageChatUpload.setVisibility(View.VISIBLE);
+                            mRightImageChatCancel.setVisibility(View.GONE);
+                            mRightImageProgress
+                                    .setVisibility(View.GONE);
+                        }
                     } else {
                         mRightImageChatUpload.setVisibility(View.VISIBLE);
                         mRightImageChatCancel.setVisibility(View.GONE);
                         mRightImageProgress
                                 .setVisibility(View.GONE);
                     }
-                }else
-                {
-
-
-                    Constant.printMsg("......Chat Image 3..33...." + msg_list.get(k).getStatus()+"  "+msg_list.get(k).getNeeds_push()
-                    );
+                } else if (msg_list.get(k).getNeeds_push() == 3) {
                     mRightImageChatUpload.setVisibility(View.VISIBLE);
                     mRightImageChatCancel.setVisibility(View.GONE);
                     mRightImageProgress
                             .setVisibility(View.GONE);
-                }
-
-            }
-
-         else   if (msg_list.get(k).getStatus() == 3 && msg_list.get(k).getNeeds_push() == 1) {
-                if(!isFirstCall) {
-                    if (isConn) {
-                        mRightImageChatUpload.setVisibility(View.GONE);
-                        mRightImageChatCancel.setVisibility(View.VISIBLE);
-                        mRightImageProgress
-                                .setVisibility(View.VISIBLE);
-
-                        Constant.printMsg("......Chat Image 3..1...." + msg_list.get(k).getStatus() + "  " + msg_list.get(k).getNeeds_push() + "  " + msg_list.get(k).get_id()
-                        );
-
-                        dbAdapter.setUpdateMessage_need_push(msg_list.get(k).getKey_id(), 2);
-
-                        new uploa_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()),
-                                fromuser);
-                    } else {
-                        mRightImageChatUpload.setVisibility(View.VISIBLE);
-                        mRightImageChatCancel.setVisibility(View.GONE);
-                        mRightImageProgress
-                                .setVisibility(View.GONE);
-                    }
-                }else
-                {
-                    mRightImageChatUpload.setVisibility(View.VISIBLE);
+                } else if (msg_list.get(k).getStatus() == 2
+                        && msg_list.get(k).getMedia_url() != null) {
+                    mRightImageChatUpload.setVisibility(View.GONE);
                     mRightImageChatCancel.setVisibility(View.GONE);
-                    mRightImageProgress
-                            .setVisibility(View.GONE);
-                }
-            }else if(msg_list.get(k).getNeeds_push() == 3)
-            {
-                mRightImageChatUpload.setVisibility(View.VISIBLE);
-                mRightImageChatCancel.setVisibility(View.GONE);
-                mRightImageProgress
-                        .setVisibility(View.GONE);
-            }
+                    mRightImageProgress.setVisibility(View.GONE);
 
-            else if (msg_list.get(k).getStatus() == 2
-                    && msg_list.get(k).getMedia_url() != null) {
-                mRightImageChatUpload.setVisibility(View.GONE);
-                mRightImageChatCancel.setVisibility(View.GONE);
-                mRightImageProgress.setVisibility(View.GONE);
+                } else {
+                    mRightImageChatUpload.setVisibility(View.GONE);
+                    mRightImageChatCancel.setVisibility(View.GONE);
+                    mRightImageProgress.setVisibility(View.GONE);
+                }
+
 
             } else {
                 mRightImageChatUpload.setVisibility(View.GONE);
                 mRightImageChatCancel.setVisibility(View.GONE);
                 mRightImageProgress.setVisibility(View.GONE);
+                byte[] image_data = msg_list.get(k).getRow_data();
+                System.gc();
+                Bitmap bitmap = BitmapFactory.decodeByteArray(
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
+                mRightImageChat.setImageBitmap(bitmap);
+                mRightImageChat.setTag(null);
             }
 
+            mRightImageChat.setOnClickListener(new OnClickListener() {
 
-        } else {
-            mRightImageChatUpload.setVisibility(View.GONE);
-            mRightImageChatCancel.setVisibility(View.GONE);
-            mRightImageProgress.setVisibility(View.GONE);
-            byte[] image_data = msg_list.get(k).getRow_data();
-            System.gc();
-            Bitmap bitmap = BitmapFactory.decodeByteArray(
-                    image_data, 0, image_data.length, Util.getBitmapOptions());
-            mRightImageChat.setImageBitmap(bitmap);
-            mRightImageChat.setTag(null);
-        }
+                @Override
+                public void onClick(View v) {
+                    if (v.getTag() != null) {
+                        String path = v.getTag().toString();
+                        File f = new File(path);
+                        Uri uri = Uri.fromFile(f);
 
-        mRightImageChat.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View v) {
-                if (v.getTag() != null) {
-                    String path = v.getTag().toString();
-                    File f = new File(path);
-                    Uri uri = Uri.fromFile(f);
-
-                    Intent intent = new Intent(
-                            Intent.ACTION_VIEW);
-                    String mime = "*/*";
-                    MimeTypeMap mimeTypeMap = MimeTypeMap
-                            .getSingleton();
-                    if (mimeTypeMap.hasExtension(mimeTypeMap
-                            .getFileExtensionFromUrl(uri
-                                    .toString())))
-                        mime = mimeTypeMap
-                                .getMimeTypeFromExtension(mimeTypeMap
-                                        .getFileExtensionFromUrl(uri
-                                                .toString()));
-                    intent.setDataAndType(uri, mime);
-                    mParentActivity.startActivity(intent);
-
-                }
-
-            }
-        });
-
-        final ProgressBar progressBar = mRightImageProgress;
-        final ImageView imgView = mRightImageChatUpload;
-        final ImageView imgView_Cancel = mRightImageChatCancel;
-
-        mRightImageChatUpload
-                .setOnClickListener(new OnClickListener() {
-
-                    @Override
-                    public void onClick(View v) {
-                        String[] val = v.getTag().toString()
-                                .split(",");
-                        if (Connectivity.isOnline(mParentActivity)) {
-                            try {
-                              //  mAsyncUpload_Image.put(val[0], new uploa_image());
-                                new uploa_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, val[0],
-                                        val[1]);
-
-
-                                progressBar
-                                        .setVisibility(View.VISIBLE);
-                                imgView
-                                        .setVisibility(View.GONE);
-                                imgView_Cancel.setVisibility(View.VISIBLE);
-                            } catch (Exception e) {
-                                Constant.printMsg("......Chat Image CCCC..exp.."  +e.toString());
-                            }
-                        } else {
-                            Toast.makeText(mParentActivity, "No network connection", Toast.LENGTH_SHORT).show();
-                        }
-
+                        Intent intent = new Intent(
+                                Intent.ACTION_VIEW);
+                        String mime = "*/*";
+                        MimeTypeMap mimeTypeMap = MimeTypeMap
+                                .getSingleton();
+                        if (mimeTypeMap.hasExtension(mimeTypeMap
+                                .getFileExtensionFromUrl(uri
+                                        .toString())))
+                            mime = mimeTypeMap
+                                    .getMimeTypeFromExtension(mimeTypeMap
+                                            .getFileExtensionFromUrl(uri
+                                                    .toString()));
+                        intent.setDataAndType(uri, mime);
+                        mParentActivity.startActivity(intent);
 
                     }
-                });
+
+                }
+            });
+
+            final ProgressBar progressBar = mRightImageProgress;
+            final ImageView imgView = mRightImageChatUpload;
+            final ImageView imgView_Cancel = mRightImageChatCancel;
+
+            mRightImageChatUpload
+                    .setOnClickListener(new OnClickListener() {
+
+                        @Override
+                        public void onClick(View v) {
+                            String[] val = v.getTag().toString()
+                                    .split(",");
+                            if (Connectivity.isOnline(mParentActivity)) {
+                                try {
+                                    //  mAsyncUpload_Image.put(val[0], new uploa_image());
+                                    new uploa_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, val[0],
+                                            val[1]);
 
 
-           mRightImageChatCancel
-                .setOnClickListener(new OnClickListener() {
+                                    progressBar
+                                            .setVisibility(View.VISIBLE);
+                                    imgView
+                                            .setVisibility(View.GONE);
+                                    imgView_Cancel.setVisibility(View.VISIBLE);
+                                } catch (Exception e) {
+                                    Constant.printMsg("......Chat Image CCCC..exp.." + e.toString());
+                                }
+                            } else {
+                                Toast.makeText(mParentActivity, "No network connection", Toast.LENGTH_SHORT).show();
+                            }
 
-                    @Override
-                    public void onClick(View v) {
-                        String[] val = v.getTag().toString()
-                                .split(",");
-                    //    mRightImageChatCancel = (ImageView) findViewById(v.getId());
-                  //     mRightImageTickMark = (ImageView) findViewById(v.getId()+580000);
-                        int i =dbAdapter.getMessageStatusById(val[0]);
+
+                        }
+                    });
+
+
+            mRightImageChatCancel
+                    .setOnClickListener(new OnClickListener() {
+
+                        @Override
+                        public void onClick(View v) {
+                            String[] val = v.getTag().toString()
+                                    .split(",");
+                            //    mRightImageChatCancel = (ImageView) findViewById(v.getId());
+                            //     mRightImageTickMark = (ImageView) findViewById(v.getId()+580000);
+                            int i = dbAdapter.getMessageStatusById(val[0]);
 
                         /*mRightImageChatCancel = (ImageView) findViewById(v.getId());
                         mRightImageChatUpload = (ImageView) findViewById(v.getId()+680000 );
                         mRightImageProgress = (ProgressBar) findViewById(v.getId()+780000);*/
 
-                        Constant.printMsg("......Chat Image CCCC...."  + String.valueOf(val[0]));
-                        if( i!=2)
-                        {
-                            if (Connectivity.isOnline(mParentActivity)) {
-                                mAsyncUpload_Image.get(String.valueOf(val[0])).cancelAllRequests(true);
+                            Constant.printMsg("......Chat Image CCCC...." + String.valueOf(val[0]));
+                            if (i != 2) {
+                                if (Connectivity.isOnline(mParentActivity)) {
+                                    mAsyncUpload_Image.get(String.valueOf(val[0])).cancelAllRequests(true);
 
 
-                                    Constant.printMsg("......Chat Image CCCC..inside.."  + v.getId());
+                                    Constant.printMsg("......Chat Image CCCC..inside.." + v.getId());
                                     dbAdapter.setUpdateMessage_need_pushById(val[0], 3);
 
 
+                                } else {
+                                    Toast.makeText(mParentActivity, "No network connection", Toast.LENGTH_SHORT).show();
+                                }
 
                             } else {
-                                Toast.makeText(mParentActivity, "No network connection", Toast.LENGTH_SHORT).show();
+
+                                Constant.printMsg("......Chat Image CCCC..oo.." + v.getId());
+                                mRightImageProgress
+                                        .setVisibility(View.GONE);
+                                mRightImageChatUpload
+                                        .setVisibility(View.GONE);
+
+                                mRightImageChatCancel
+                                        .setVisibility(View.GONE);
                             }
 
-                    }else
-                        {
 
-                            Constant.printMsg("......Chat Image CCCC..oo.."  + v.getId());
-                            mRightImageProgress
-                                    .setVisibility(View.GONE);
-                            mRightImageChatUpload
-                                    .setVisibility(View.GONE);
-
-                            mRightImageChatCancel
-                                    .setVisibility(View.GONE);
                         }
+                    });
 
+        } catch (Exception e) {
 
-                    }
-                });
+            Constant.printMsg("......Chat Image eeee..oo.." + e.toString());
 
-        }catch (Exception e){
-
-           Constant.printMsg("......Chat Image eeee..oo.."  + e.toString());
-
-                    }
+        }
 
     }
 
@@ -12802,8 +14117,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     + msg_list.get(k).getMedia_name());
 
 
-            mRightVideoChat.getLayoutParams().width = (int) width * 59 / 100;
-            mRightVideoChat.getLayoutParams().height = (int) height * 30 / 100;
+//            mRightVideoChat.getLayoutParams().width = (int) width * 59 / 100;
+//            mRightVideoChat.getLayoutParams().height = (int) height * 30 / 100;
 
             String values = msg_list.get(k).get_id() + "," + fromuser;
             mRightVideoChatUpload.setTag(values);
@@ -12816,7 +14131,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 byte[] image_data = msg_list.get(k).getRow_data();
                 System.gc();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mRightVideoChat.setImageBitmap(bitmap);
                 mRightVideoChat.setTag(null);
             } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
@@ -12826,33 +14141,31 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             final boolean isConnected = Connectivity.isOnline(mParentActivity);
 
-            if(!mAsyncUpload_Video.containsKey(String.valueOf(msg_list.get(k).get_id())))
+            if (!mAsyncUpload_Video.containsKey(String.valueOf(msg_list.get(k).get_id())))
                 mAsyncUpload_Video.put(String.valueOf(msg_list.get(k).get_id()), new AsyncHttpClient());
 
             if (msg_list.get(k).getStatus() == 3 &&
-                    msg_list.get(k).getNeeds_push() ==1) {
+                    msg_list.get(k).getNeeds_push() == 1) {
 
                 Constant.printMsg("......Chat Video 3..1...." + isConnected
                 );
 
                 if (!isFirstCall) {
-                    if(isConnected) {
+                    if (isConnected) {
 
                         mRightVideoChatUpload.setVisibility(View.GONE);
                         mRightVideoChatCancel.setVisibility(View.VISIBLE);
                         mRightVideoProgress.setVisibility(View.VISIBLE);
                         mRightVideoButtonPlay.setVisibility(View.GONE);
                         new uploa_video().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
-                    } else
-                    {
+                    } else {
                         mRightVideoChatUpload.setVisibility(View.VISIBLE);
                         mRightVideoChatCancel.setVisibility(View.GONE);
                         mRightVideoProgress.setVisibility(View.GONE);
                         mRightVideoButtonPlay.setVisibility(View.GONE);
 
                     }
-                }else
-                {
+                } else {
                     mRightVideoChatUpload.setVisibility(View.VISIBLE);
                     mRightVideoChatCancel.setVisibility(View.GONE);
                     mRightVideoProgress.setVisibility(View.GONE);
@@ -12861,27 +14174,25 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 
             } else if (msg_list.get(k).getStatus() == 3
-                    && msg_list.get(k).getNeeds_push() == 2 ) {
+                    && msg_list.get(k).getNeeds_push() == 2) {
 
 
-                if(!isFirstCall)
-                {
-                    if(isConnected) {
+                if (!isFirstCall) {
+                    if (isConnected) {
 
                         mRightVideoChatUpload.setVisibility(View.GONE);
                         mRightVideoChatCancel.setVisibility(View.VISIBLE);
                         mRightVideoProgress.setVisibility(View.VISIBLE);
                         mRightVideoButtonPlay.setVisibility(View.GONE);
                         new uploa_video().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
-                    } else
-                    {
+                    } else {
                         mRightVideoChatUpload.setVisibility(View.VISIBLE);
                         mRightVideoChatCancel.setVisibility(View.GONE);
                         mRightVideoProgress.setVisibility(View.GONE);
                         mRightVideoButtonPlay.setVisibility(View.GONE);
 
                     }
-                }else {
+                } else {
                     mRightVideoChatUpload.setVisibility(View.GONE);
                     mRightVideoChatCancel.setVisibility(View.VISIBLE);
                     mRightVideoProgress.setVisibility(View.VISIBLE);
@@ -12968,8 +14279,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                 upl_img_cancel.setVisibility(View.VISIBLE);
                                 ply_vid.setVisibility(View.GONE);
 
-                            }else
-                            {
+                            } else {
                                 Toast.makeText(mParentActivity, "No Network Available", Toast.LENGTH_LONG).show();
                             }
                         }
@@ -12989,7 +14299,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             if (isConn) {
                                 String[] val = v.getTag().toString()
                                         .split(",");
-                              mAsyncUpload_Video.get(val[0]).cancelAllRequests(true);
+                                mAsyncUpload_Video.get(val[0]).cancelAllRequests(true);
 
                                 progressBar
                                         .setVisibility(View.GONE);
@@ -12997,9 +14307,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                         .setVisibility(View.VISIBLE);
                                 ply_vid.setVisibility(View.GONE);
                                 upl_img_cancel.setVisibility(View.GONE);
-                            }
-                            else
-                            {
+                            } else {
                                 Toast.makeText(mParentActivity, "No Network Available", Toast.LENGTH_LONG).show();
                             }
                         }
@@ -13072,7 +14380,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             mRightContactTextTime.setText(time_format.format(date));
 
-            Constant.printMsg("Diliiip "+ msg_list.get(k).getMedia_name());
+            Constant.printMsg("Diliiip " + msg_list.get(k).getMedia_name());
             String contactName = msg_list.get(k).getMedia_name().split(",")[0];
 
 
@@ -13084,7 +14392,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             try {
                 byte[] image_data = msg_list.get(k).getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mRightContactAvathor.setImageBitmap(bitmap);
             } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
                 // TODO: handle exception
@@ -13163,11 +14471,13 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             try {
                 byte[] image_data = msg_list.get(k).getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
+                mRightImageChat.setScaleType(ImageView.ScaleType.FIT_XY);
+                mRightImageChat.setImageBitmap(bitmap);
 //                Bitmap unscaledBitmap = ScalingUtilities
 //                        .decodeFile(Constant.local_image_dir
 //                                + msg_list.get(k).getMedia_name(), (int) width * 57 / 100, (int) height * 30 / 100);
-                mRightImageChat.setImageBitmap(bitmap);
+//                mRightImageChat.setImageBitmap(bitmap);
 
             } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
                 // TODO: handle exception
@@ -13255,7 +14565,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
     }
 
 
-
     protected void insertToLEDDB(ContentValues cv) {
         try {
             int a = (int) db.open().getDatabaseObj()
@@ -13322,74 +14631,76 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
      */
     public void setLeftDownloadImage() {
         synchronized (this) {
-        try {
-            mLeftImageChat.setVisibility(View.VISIBLE);
+            try {
+                mLeftImageChat.setVisibility(View.VISIBLE);
 
-            // Set timestamp
-            Date date = new Date();
-            date.setTime(msg_list.get(k).getReceived_timestamp());
-            SimpleDateFormat time_format = new SimpleDateFormat(
-                    "hh:mm a");
+                // Set timestamp
+                Date date = new Date();
+                date.setTime(msg_list.get(k).getReceived_timestamp());
+                SimpleDateFormat time_format = new SimpleDateFormat(
+                        "hh:mm a");
 
-            mLeftImageTextTime.setText(time_format.format(date));
+                mLeftImageTextTime.setText(time_format.format(date));
 
-            String fromuser = msg_list.get(k).getKey_remote_jid();
+                String fromuser = msg_list.get(k).getKey_remote_jid();
 
-            mLeftImageChat.getLayoutParams().width = (int) width * 59 / 100;
-            mLeftImageChat.getLayoutParams().height = (int) height * 30 / 100;
+//            mLeftImageChat.getLayoutParams().width = (int) width * 59 / 100;
+//            mLeftImageChat.getLayoutParams().height = (int) height * 30 / 100;
 
-            //      arg0.mLeftImageChat.setMaxHeight(i);
+                //      arg0.mLeftImageChat.setMaxHeight(i);
 
-            String values = msg_list.get(k).getKey_id() + "," + msg_list.get(k).getMedia_url()
-                    + "," + fromuser;
-            mLeftImageChatDownload.setVisibility(View.VISIBLE);
-            mLeftImageChatDownload.setTag(values);
+                String values = msg_list.get(k).getKey_id() + "," + msg_list.get(k).getMedia_url()
+                        + "," + fromuser;
+                mLeftImageChatDownload.setVisibility(View.VISIBLE);
+                mLeftImageChatDownload.setTag(values);
 
-            Constant.printMsg("cursor adapter image test >>>>>>>>>>>> " + msg_list.get(k).getMedia_url() + "    " + msg_list.get(k).get_id());
+                Constant.printMsg("cursor adapter image test >>>>>>>>>>>> " + msg_list.get(k).getMedia_url() + "    " + msg_list.get(k).get_id());
 
-            if (msg_list.get(k).getMedia_name() == null) {
+                if (msg_list.get(k).getMedia_name() == null) {
 
-                if(msg_list.get(k).getRow_data()
-                        !=null)
-                    Constant.printMsg("Image row data not null");
+                    if (msg_list.get(k).getRow_data()
+                            != null)
+                        Constant.printMsg("Image row data not null");
 
 
-                byte[] img_byte = msg_list.get(k).getRow_data();
-                if (img_byte != null) {
-                    Bitmap bmp = BitmapFactory.decodeByteArray(
-                            img_byte, 0, img_byte.length);
-                    mLeftImageChat.setImageBitmap(bmp);
-                    try {
-                        bites = (long) img_byte.length;
-                        //  updateMediaNetwork_Receive(bites);
-                    } catch (Exception e) {
+                    byte[] img_byte = msg_list.get(k).getRow_data();
+                    if (img_byte != null) {
+                        Bitmap bmp = BitmapFactory.decodeByteArray(
+                                img_byte, 0, img_byte.length);
+//                    if(bmp.getWidth()==bmp.getHeight())
+//                        mLeftImageChat.setImageBitmap(Bitmap.createScaledBitmap(bmp,width * 65 / 100, width * 65 / 100, false));
+//                    else
+                        mLeftImageChat.setImageBitmap(bmp);
+                        try {
+                            bites = (long) img_byte.length;
+                            //  updateMediaNetwork_Receive(bites);
+                        } catch (Exception e) {
 
+                        }
                     }
-                }
 
 
-                if (is_auto_dowload_image) {
-                    if(Connectivity.isOnline(mParentActivity)) {
-                        new download_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, msg_list.get(k).getKey_id(),
-                                msg_list.get(k).getMedia_url(), fromuser);
+                    if (is_auto_dowload_image) {
+                        if (Connectivity.isOnline(mParentActivity)) {
+                            new download_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, msg_list.get(k).getKey_id(),
+                                    msg_list.get(k).getMedia_url(), fromuser);
+                        }
+                    } else {
+                        mLeftImagetProgressBar
+                                .setVisibility(View.GONE);
+
                     }
                 } else {
-                    mLeftImagetProgressBar
-                            .setVisibility(View.GONE);
+                    mLeftImageChatDownload.setVisibility(View.GONE);
+                    mLeftImagetProgressBar.setVisibility(View.GONE);
 
-                }
-            } else {
-                mLeftImageChatDownload.setVisibility(View.GONE);
-                mLeftImagetProgressBar.setVisibility(View.GONE);
+                    File file = new File(Constant.local_image_dir
+                            + msg_list.get(k).getMedia_name());
+                    if (file.isFile()) {
 
-                File file = new File(Constant.local_image_dir
-                        + msg_list.get(k).getMedia_name());
-                if (file.isFile()) {
 
-                    Constant.printMsg("Image row data not null333");
-
-                    Bitmap unscaledBitmap = new CompressImage().compressImage(Constant.local_image_dir
-                            + msg_list.get(k).getMedia_name(), "",1);
+                        Bitmap unscaledBitmap = new CompressImage().compressImage(Constant.local_image_dir
+                                + msg_list.get(k).getMedia_name(), "", 1);
 
                               /*  Log.d("Image Width",
                                         "Image Width::" + i + " layout::"
@@ -13400,85 +14711,91 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                                 + image.getHeight()
                                                 + "bitmap widh::"
                                                 + unscaledBitmap.getWidth());*/
+                        Constant.printMsg("Image row data not null333" + unscaledBitmap.getWidth() + "   " + unscaledBitmap.getHeight());
+//                    if(unscaledBitmap.getWidth()==unscaledBitmap.getHeight())
+//                        mLeftImageChat.setImageBitmap(Bitmap.createScaledBitmap(unscaledBitmap,width * 65 / 100, width * 65 / 100, false));
+//                    else
+                        mLeftImageChat.setImageBitmap(unscaledBitmap);
 
-                    mLeftImageChat.setImageBitmap(unscaledBitmap);
+                        mLeftImageChat.setTag(Constant.local_image_dir
+                                + msg_list.get(k).getMedia_name());
 
-                    mLeftImageChat.setTag(Constant.local_image_dir
-                            + msg_list.get(k).getMedia_name());
+                    } else {
 
-                } else {
+                        byte[] image_data = msg_list.get(k).getRow_data();
+                        Bitmap bitmap = BitmapFactory.decodeByteArray(
+                                image_data, 0, image_data.length);
+                        Constant.printMsg("Image row data not null111" + bitmap.getWidth() + "  " + bitmap.getHeight());
 
-                    Constant.printMsg("Image row data not null111");
-                    byte[] image_data = msg_list.get(k).getRow_data();
-                    Bitmap bitmap = BitmapFactory.decodeByteArray(
-                            image_data, 0, image_data.length);
-                    mLeftImageChat.setImageBitmap(bitmap);
-                    mLeftImageChat.setScaleType(ImageView.ScaleType.FIT_XY);
-                    mLeftImageChat.setTag(null);
+//                    if(bitmap.getWidth()==bitmap.getHeight())
+//                        mLeftImageChat.setImageBitmap(Bitmap.createScaledBitmap(bitmap,width * 65 / 100, width * 65 / 100, false));
+//                    else
+                        mLeftImageChat.setImageBitmap(bitmap);
+                        mLeftImageChat.setScaleType(ImageView.ScaleType.CENTER);
+                        mLeftImageChat.setTag(null);
 
-                }
-
-            }
-
-            final ProgressBar progress_download_image = mLeftImagetProgressBar;
-            final ImageView btn_image_download = mLeftImageChatDownload;
-            mLeftImageChatDownload
-                    .setOnClickListener(new OnClickListener() {
-
-                        @Override
-                        public void onClick(View v) {
-
-                            if(Connectivity.isOnline(mParentActivity)) {
-
-                                String[] val = v.getTag().toString()
-                                        .split(",");
-                                new download_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, val[0],
-                                        val[1], val[2]);
-                                progress_download_image
-                                        .setVisibility(View.VISIBLE);
-                                progress_download_image.setIndeterminate(true);
-                                btn_image_download
-                                        .setVisibility(View.GONE);
-                            }else
-                            {
-                                Toast.makeText(mParentActivity,Constant.mToastMsgDownload,Toast.LENGTH_SHORT).show();
-                            }
-
-                        }
-                    });
-
-            mLeftImageChat.setOnClickListener(new OnClickListener() {
-
-                @Override
-                public void onClick(View v) {
-
-
-                    if (v.getTag() != null) {
-                        String path = v.getTag().toString();
-                        File f = new File(path);
-                        Uri uri = Uri.fromFile(f);
-                        Intent intent = new Intent(
-                                Intent.ACTION_VIEW);
-                        String mime = "*/*";
-                        MimeTypeMap mimeTypeMap = MimeTypeMap
-                                .getSingleton();
-                        if (mimeTypeMap.hasExtension(mimeTypeMap
-                                .getFileExtensionFromUrl(uri
-                                        .toString())))
-                            mime = mimeTypeMap
-                                    .getMimeTypeFromExtension(mimeTypeMap
-                                            .getFileExtensionFromUrl(uri
-                                                    .toString()));
-                        intent.setDataAndType(uri, mime);
-                        startActivity(intent);
                     }
 
                 }
-            });
-        } catch (Exception e) {
 
+                final ProgressBar progress_download_image = mLeftImagetProgressBar;
+                final ImageView btn_image_download = mLeftImageChatDownload;
+                mLeftImageChatDownload
+                        .setOnClickListener(new OnClickListener() {
+
+                            @Override
+                            public void onClick(View v) {
+
+                                if (Connectivity.isOnline(mParentActivity)) {
+
+                                    String[] val = v.getTag().toString()
+                                            .split(",");
+                                    new download_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, val[0],
+                                            val[1], val[2]);
+                                    progress_download_image
+                                            .setVisibility(View.VISIBLE);
+                                    progress_download_image.setIndeterminate(true);
+                                    btn_image_download
+                                            .setVisibility(View.GONE);
+                                } else {
+                                    Toast.makeText(mParentActivity, Constant.mToastMsgDownload, Toast.LENGTH_SHORT).show();
+                                }
+
+                            }
+                        });
+
+                mLeftImageChat.setOnClickListener(new OnClickListener() {
+
+                    @Override
+                    public void onClick(View v) {
+
+
+                        if (v.getTag() != null) {
+                            String path = v.getTag().toString();
+                            File f = new File(path);
+                            Uri uri = Uri.fromFile(f);
+                            Intent intent = new Intent(
+                                    Intent.ACTION_VIEW);
+                            String mime = "*/*";
+                            MimeTypeMap mimeTypeMap = MimeTypeMap
+                                    .getSingleton();
+                            if (mimeTypeMap.hasExtension(mimeTypeMap
+                                    .getFileExtensionFromUrl(uri
+                                            .toString())))
+                                mime = mimeTypeMap
+                                        .getMimeTypeFromExtension(mimeTypeMap
+                                                .getFileExtensionFromUrl(uri
+                                                        .toString()));
+                            intent.setDataAndType(uri, mime);
+                            startActivity(intent);
+                        }
+
+                    }
+                });
+            } catch (Exception e) {
+
+            }
         }
-    }
     }
 
     // Updating the Shared Preference with Media Receive Network Usage....
@@ -13521,7 +14838,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
         String fromuser = msg_list.get(k).getKey_remote_jid();
         mLeftVideoChat.setVisibility(View.VISIBLE);
-        mLeftVideoChat.setVisibility(View.VISIBLE);
+        mLeftVideoButtonPlay.setVisibility(View.GONE);
 
 
         mLeftVideoDuration.setTextSize(TypedValue.COMPLEX_UNIT_SP,
@@ -13547,14 +14864,14 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
         mLeftVideoChatDownload.setTag(values);
 
-        mLeftVideoChat.getLayoutParams().width = (int) width * 60 / 100;
-        mLeftVideoChat.getLayoutParams().height = (int) height * 30 / 100;
+//        mLeftVideoChat.getLayoutParams().width = (int) width * 60 / 100;
+//        mLeftVideoChat.getLayoutParams().height = (int) height * 30 / 100;
 
         if (msg_list.get(k).getMedia_name() == null) {
             byte[] img_byte = msg_list.get(k).getRow_data();
             if (img_byte != null) {
                 Bitmap bmp = BitmapFactory.decodeByteArray(
-                        img_byte, 0, img_byte.length,Util.getBitmapOptions());
+                        img_byte, 0, img_byte.length, Util.getBitmapOptions());
                 mLeftVideoChat.setImageBitmap(bmp);
                 mLeftVideoChat.setScaleType(ImageView.ScaleType.FIT_XY);
                 try {
@@ -13566,7 +14883,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 }
             }
             if (is_auto_dowload_video) {
-                if(Connectivity.isOnline(mParentActivity)) {
+                if (Connectivity.isOnline(mParentActivity)) {
                     new download_video().execute(msg_list.get(k).getKey_id(),
                             msg_list.get(k).getMedia_url(), fromuser);
 
@@ -13578,11 +14895,13 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 mLeftVideoProgress
                         .setVisibility(View.GONE);
                 mLeftVideoChatDownload.setVisibility(View.VISIBLE);
+                mLeftVideoButtonPlay.setVisibility(View.GONE);
             }
-            //mLeftVideoButtonPlay.setVisibility(View.GONE);
+
         } else {
             mLeftVideoChatDownload.setVisibility(View.GONE);
             mLeftVideoProgress.setVisibility(View.GONE);
+            mLeftVideoButtonPlay.setVisibility(View.VISIBLE);
 
             File file = new File(Constant.local_video_dir
                     + msg_list.get(k).getMedia_name());
@@ -13591,7 +14910,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             try {
                 byte[] image_data = msg_list.get(k).getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mLeftVideoChat.setImageBitmap(bitmap);
                 mLeftVideoChat.setScaleType(ImageView.ScaleType.FIT_XY);
                 mLeftVideoChat.setTag(null);
@@ -13625,7 +14944,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                     @Override
                     public void onClick(View v) {
-                        if(Connectivity.isOnline(mParentActivity)) {
+                        if (Connectivity.isOnline(mParentActivity)) {
                             String[] val = v.getTag().toString()
                                     .split(",");
                             new download_video().execute(val[0],
@@ -13634,9 +14953,9 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                     .setVisibility(View.VISIBLE);
                             mLeftVideoChatDownload
                                     .setVisibility(View.GONE);
-                        }else
-                        {
-                            Toast.makeText(mParentActivity,Constant.mToastMsgDownload,Toast.LENGTH_SHORT).show();
+                            mLeftVideoButtonPlay.setVisibility(View.GONE);
+                        } else {
+                            Toast.makeText(mParentActivity, Constant.mToastMsgDownload, Toast.LENGTH_SHORT).show();
                         }
 
                     }
@@ -13713,7 +15032,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             try {
                 byte[] image_data = msg_list.get(k).getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mLeftContactAvathor.setImageBitmap(bitmap);
             } catch (Exception e) {
                 // TODO: handle exception
@@ -13778,19 +15097,20 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 + msg_list.get(k).getLongitude();
         mLeftImageChat.setTag(lat_lon);
 
-        mLeftImageChat.getLayoutParams().width = (int) width * 59 / 100;
-        mLeftImageChat.getLayoutParams().height = (int) height * 30 / 100;
+//        mLeftImageChat.getLayoutParams().width = (int) width * 59 / 100;
+//        mLeftImageChat.getLayoutParams().height = (int) height * 30 / 100;
         mLeftImageChatDownload.setVisibility(View.GONE);
         mLeftImagetProgressBar.setVisibility(View.GONE);
-
 
         String values = msg_list.get(k).get_id() + "," + fromuser;
 
         try {
             byte[] image_data = msg_list.get(k).getRow_data();
             Bitmap bitmap = BitmapFactory.decodeByteArray(
-                    image_data, 0, image_data.length,Util.getBitmapOptions());
+                    image_data, 0, image_data.length, Util.getBitmapOptions());
+            mLeftImageChat.setScaleType(ImageView.ScaleType.FIT_XY);
             mLeftImageChat.setImageBitmap(bitmap);
+//            mLeftImageChat.setImageBitmap(bitmap);
         } catch (Exception e) {
             // ACRA.getErrorReporter().handleException(e);
             // TODO: handle exception
@@ -13850,7 +15170,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 
 //Right Audio play and cancel audio modification...
-
     public void setRightAudio_Old() {
         if (msg_list.get(k).getStatus() == 3) {
             mRightAudioTickMark.setImageResource(R.drawable.message_unsent);
@@ -13928,7 +15247,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         String[] val = v.getTag().toString()
                                 .split(",");
                         Constant.printMsg("Audio upload cancel 1 " + val[0]);
-                       mAsyncUpload_Audio.get(val[0]).cancelAllRequests(true);
+                        mAsyncUpload_Audio.get(val[0]).cancelAllRequests(true);
                         btn_upload.setVisibility(View.VISIBLE);
                         progress_audio.setVisibility(View.GONE);
                         btn_play.setVisibility(View.GONE);
@@ -14021,23 +15340,24 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         }
 
         MessageGetSet msg1 = dbAdapter.getMessages_by_msg_id(String.valueOf(msg_list.get(k).get_id()));
-
+        Constant.printMsg("......Chat Audio Startt...." + msg_list.get(k).getStatus() + msg_list.get(k).getNeeds_push()
+        );
 
         boolean isConnected = Connectivity.isOnline(mParentActivity);
 
-        if(!mAsyncUpload_Audio.containsKey(String.valueOf(msg_list.get(k).get_id())))
+        if (!mAsyncUpload_Audio.containsKey(String.valueOf(msg_list.get(k).get_id())))
             mAsyncUpload_Audio.put(String.valueOf(msg_list.get(k).get_id()), new AsyncHttpClient());
 
         //-----------------------------
 
         if (msg_list.get(k).getStatus() == 3 &&
-                msg_list.get(k).getNeeds_push() ==1) {
+                msg_list.get(k).getNeeds_push() == 1) {
 
-            Constant.printMsg("......Chat Video 3..1...." + isConnected
+            Constant.printMsg("......Chat Audio 3..1...." + isConnected
             );
 
             if (!isFirstCall) {
-                if(isConnected) {
+                if (isConnected) {
 
                     btn_upload.setVisibility(View.GONE);
                     progress_audio.setVisibility(View.VISIBLE);
@@ -14048,9 +15368,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                    /* long l = dbAdapter.setUpdateMessage_need_push(
                             msg.getKey_id(), 0);*/
-                    new uploa_audio().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf( msg_list.get(k).get_id()), fromuser);
-                } else
-                {
+                    new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
+                } else {
                     btn_upload.setVisibility(View.VISIBLE);
                     btn_play.setVisibility(View.GONE);
                     btn_cancel_upload.setVisibility(View.GONE);
@@ -14058,8 +15377,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     seek_audio.setVisibility(View.GONE);
 
                 }
-            }else
-            {
+            } else {
                 btn_upload.setVisibility(View.GONE);
                 btn_play.setVisibility(View.GONE);
                 btn_cancel_upload.setVisibility(View.VISIBLE);
@@ -14070,12 +15388,11 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 
         } else if (msg_list.get(k).getStatus() == 3
-                && msg_list.get(k).getNeeds_push() == 2 ) {
+                && msg_list.get(k).getNeeds_push() == 2) {
 
 
-            if(!isFirstCall)
-            {
-                if(isConnected) {
+            if (!isFirstCall) {
+                if (isConnected) {
 
                     btn_upload.setVisibility(View.GONE);
                     progress_audio.setVisibility(View.VISIBLE);
@@ -14086,9 +15403,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                     dbAdapter.setUpdateMessage_need_push(
                             msg_list.get(k).getKey_id(), 1);
-                    new uploa_audio().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
-                } else
-                {
+                    new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
+                } else {
                     btn_upload.setVisibility(View.VISIBLE);
                     btn_play.setVisibility(View.GONE);
                     btn_cancel_upload.setVisibility(View.GONE);
@@ -14096,8 +15412,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     seek_audio.setVisibility(View.GONE);
 
                 }
-            }
-            else {
+            } else {
 
                 btn_upload.setVisibility(View.GONE);
                 btn_play.setVisibility(View.GONE);
@@ -14111,7 +15426,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         } else if (msg_list.get(k).getStatus() == 2
                 && msg_list.get(k).getMedia_url() != null) {
 
-            Constant.printMsg("......Chat Video 2..not null url...."
+            Constant.printMsg("......Chat Audio 2..not null url...."
             );
 
             btn_upload.setVisibility(View.GONE);
@@ -14140,7 +15455,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 								/* new uploa_audio().execute(val[0],val[1]); */
 
-                new uploa_audio().execute(val[0], val[1]);
+                new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, val[0], val[1]);
 
                 btn_upload.setVisibility(View.GONE);
                 progress_audio.setVisibility(View.VISIBLE);
@@ -14447,14 +15762,13 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             @Override
             public void run() {
 
-                try{
+                try {
                     if (player.isPlaying()) {
 
-                        if(isPaused)
-                        {
+                        if (isPaused) {
                             player.stop();
                             player.release();
-                        }else {
+                        } else {
                             seek.setProgress(mp.getCurrentPosition());
                             mLeftAudioDuration.setText(new TimeUtils()
                                     .millisToShortDHMS(mp
@@ -14468,7 +15782,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         }
                     }
                     seekHandler.postDelayed(this, 1);
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
 
@@ -14509,12 +15823,11 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             @Override
             public void onClick(View v) {
 
-                mLeftAudioBtnDownload=(Button)findViewById(v.getId());
-                mLeftAudioBtnPlay=(Button)findViewById(v.getId()+100000);
-                mLeftAudioSeekBar=(SeekBar)findViewById(v.getId()+200000);
+                mLeftAudioBtnDownload = (Button) findViewById(v.getId());
+                mLeftAudioBtnPlay = (Button) findViewById(v.getId() + 100000);
+                mLeftAudioSeekBar = (SeekBar) findViewById(v.getId() + 200000);
 
-                if(Connectivity.isOnline(mParentActivity))
-                {
+                if (Connectivity.isOnline(mParentActivity)) {
 
                     String[] val = v.getTag().toString().split(",");
 
@@ -14530,9 +15843,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     // txt_audio_size.setVisibility(View.GONE);
                     mLeftAudioBtnCancel.setVisibility(View.VISIBLE);
                     mLeftAudioSeekBar.setVisibility(View.GONE);
-                }else
-                {
-                    Toast.makeText(mParentActivity,Constant.mToastMsgDownload,Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(mParentActivity, Constant.mToastMsgDownload, Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -14544,9 +15856,9 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             public void onClick(View v) {
                 // TODO Auto-generated method stub
 
-                mLeftAudioBtnDownload=(Button)findViewById(v.getId()-100000);
-                mLeftAudioBtnPlay=(Button)findViewById(v.getId());
-                mLeftAudioSeekBar=(SeekBar)findViewById(v.getId()+100000);
+                mLeftAudioBtnDownload = (Button) findViewById(v.getId() - 100000);
+                mLeftAudioBtnPlay = (Button) findViewById(v.getId());
+                mLeftAudioSeekBar = (SeekBar) findViewById(v.getId() + 100000);
 
                 if (mPressed == 0) {
                     TempBtn = new ArrayList();
@@ -14714,7 +16026,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     Constant.printMsg("Fetch Chat onPreExecute4" + isFirstCall);
 
                     if (cursor.moveToFirst()) {
-                        do{
+                        do {
                             MessageGetSet msg = new MessageGetSet();
                             msg.set_id(cursor.getInt(0));
                             msg.setData(cursor.getString(6));
@@ -14748,10 +16060,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             mPositionKey.add(msg.getKey_id());
 
 
-                           if (isFirstCall  || isDeletEl )
+                            if (isFirstCall || isDeletEl)
                                 checkDestMsg(msg);
 
-                        }while (cursor.moveToNext());
+                        } while (cursor.moveToNext());
                     }
 
 
@@ -14775,10 +16087,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                 isDeletEl = false;
 
-                if(msg_list.size()>0)
-                {
-                    if(msg_list.get(0).getMedia_wa_type().equalsIgnoreCase("40"))
-                    {
+                if (msg_list.size() > 0) {
+                    if (msg_list.get(0).getMedia_wa_type().equalsIgnoreCase("40")) {
                         msg_list.remove(0);
                         mPositionKey.remove(0);
                     }
@@ -14878,22 +16188,17 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             //Location
                             leftImageChat();
                             setLeftLocation();
-
                         }
-
                     }
-
                 }
                 try {
 
                     mRightTipLayout.requestFocus();
                     edt_msg.requestFocus();
 
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
-
-
             }
 
 //            mRightTipLayout.requestFocus();
@@ -14907,13 +16212,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 //                    //mScrollView.requestFocus();
 //                }
 //            });
-            isFirstCall= false;
+            isFirstCall = false;
             isFetchChatReady = false;
             super.onPostExecute(result);
-
-
         }
-
     }
 
     class MyAsync extends AsyncTask<String, String, ContactsGetSet> {
@@ -15060,16 +16362,14 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             if (!ChatTest.isSavedContact) {
                 mContactLayout.setVisibility(View.VISIBLE);
-                Constant.printMsg("asasfdhasdfhj"+ KachingMeApplication.getBlocked_user()+"   "+jid);
-                if (KachingMeApplication.getBlocked_user().contains(jid))
-                {
-                    UserBlocked  = true;
+                Constant.printMsg("asasfdhasdfhj" + KachingMeApplication.getBlocked_user() + "   " + jid);
+                if (KachingMeApplication.getBlocked_user().contains(jid)) {
+                    UserBlocked = true;
                     mBlockContact.setText(getResources().getString(R.string.unblock));
                     txt_sub_title.setVisibility(View.GONE);
-                }else
-                {
+                } else {
 
-                    UserBlocked  = false;
+                    UserBlocked = false;
                     mBlockContact.setText(getResources().getString(R.string.block));
                     txt_sub_title.setVisibility(View.VISIBLE);
                 }
@@ -15077,16 +16377,14 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             } else {
                 mContactLayout.setVisibility(View.GONE);
-                Constant.printMsg("asasfdhasdfhj"+ KachingMeApplication.getBlocked_user()+"   "+jid);
-                if (KachingMeApplication.getBlocked_user().contains(jid))
-                {
-                    UserBlocked  = true;
+                Constant.printMsg("asasfdhasdfhj" + KachingMeApplication.getBlocked_user() + "   " + jid);
+                if (KachingMeApplication.getBlocked_user().contains(jid)) {
+                    UserBlocked = true;
                     mBlockContact.setText(getResources().getString(R.string.unblock));
                     txt_sub_title.setVisibility(View.GONE);
-                }else
-                {
+                } else {
 
-                    UserBlocked  = false;
+                    UserBlocked = false;
                     mBlockContact.setText(getResources().getString(R.string.block));
                     txt_sub_title.setVisibility(View.VISIBLE);
                 }
@@ -15103,10 +16401,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         @Override
         protected void onPreExecute() {
 
-            try{
+            try {
                 pDialog.show();
 
-            }catch (Exception e){
+            } catch (Exception e) {
 
             }
 
@@ -15139,15 +16437,32 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     global_block_list.add(user);
 
                     if (is_list_exist == true) {
-                        privacyManager.updatePrivacyList(listName,
-                                privacyItem_list);
+                        try {
+                            privacyManager.updatePrivacyList(listName,
+                                    privacyItem_list);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     } else {
-                        privacyManager.createPrivacyList(listName,
-                                privacyItem_list);
-                        privacyManager.setActiveListName(listName);
+                        try {
+                            privacyManager.createPrivacyList(listName,
+                                    privacyItem_list);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            privacyManager.setActiveListName(listName);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
 
-                    List<PrivacyList> lists = privacyManager.getPrivacyLists();
+                    List<PrivacyList> lists = null;
+                    try {
+                        lists = privacyManager.getPrivacyLists();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     Log.d("Chat", "Privacy List Lengh::" + lists.size());
                     int i = 0;
 
@@ -15172,23 +16487,37 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                     }
 
-                    String mFinalBlockedUser=" ";
-                    mFinalBlockedUser = sp.getString(Constant.BLOCKED_USERS,"");
+                    String mFinalBlockedUser = " ";
+                    mFinalBlockedUser = sp.getString(Constant.BLOCKED_USERS, "");
                     String[] parts = mFinalBlockedUser.split("-");
 
-                    ArrayList mBlockedList=new ArrayList();
-                    for(int j=0;j<parts.length;j++){
+                    ArrayList mBlockedList = new ArrayList();
+                    for (int j = 0; j < parts.length; j++) {
                         mBlockedList.add(parts[j].trim());
-                   }
+                    }
                     mBlockedList.add(jid);
 
-                    mFinalBlockedUser=mFinalBlockedUser+"-"+jid;
+                    mFinalBlockedUser = mFinalBlockedUser + "-" + jid;
                     KachingMeApplication.setBlocked_user(mBlockedList);
-                    Constant.printMsg("gsdkga"+mBlockedList+"    "+ KachingMeApplication.getBlocked_user());
+                    Constant.printMsg("gsdkga" + mBlockedList + "    " + KachingMeApplication.getBlocked_user());
 
                     ed.putString(Constant.BLOCKED_USERS, mFinalBlockedUser);
                     ed.commit();
-
+                    if (TempConnectionService.connection != null) {
+                        try {
+                            if (TempConnectionService.connection.isAuthenticated()) {
+                                Presence presencePacket = new Presence(Presence.Type.unsubscribe);
+                                presencePacket.setTo(JidCreate.from(jid));
+                                try {
+                                    TempConnectionService.connection.sendStanza(presencePacket);
+                                } catch (NotConnectedException e1) {
+                                    e1.printStackTrace();
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
 
 
 //                    KachingMeApplication.setBlocked_user(global_block_list);
@@ -15222,8 +16551,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     if (mChatOptionMenuBlockTxt != null) {
                         mChatOptionMenuBlockTxt.setText(getResources().getString(R.string.unblock));
                     }
-                }
-                else {
+                } else {
                     mBlockContact.setText(getResources().getString(R.string.block));
                     txt_sub_title.setVisibility(View.VISIBLE);
                     if (mChatOptionMenuBlockTxt != null) {
@@ -15300,11 +16628,11 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             if (is_copy) {
-               MenuItem  itemCopy = menu.findItem(R.id.menu_copy);
+                MenuItem itemCopy = menu.findItem(R.id.menu_copy);
                 itemCopy.setVisible(true);
                 return true;
             } else {
-                MenuItem  itemCopy = menu.findItem(R.id.menu_copy);
+                MenuItem itemCopy = menu.findItem(R.id.menu_copy);
                 itemCopy.setVisible(false);
                 return true;
             }
@@ -15593,7 +16921,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         + "contact.getPhoto_ts().length" + contact
                         + "contact.getPhoto_ts()::" + contact.getPhoto_ts());
                 bmp = BitmapFactory.decodeByteArray(contact.getPhoto_ts(), 0,
-                        contact.getPhoto_ts().length,Util.getBitmapOptions());
+                        contact.getPhoto_ts().length, Util.getBitmapOptions());
                 Constant.printMsg("jid::::contact bmp"
                         + contact.getPhoto_ts().length
                         + "contact.getPhoto_ts().length" + contact
@@ -15836,7 +17164,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             super.onCancelled(s);
 
             Constant.printMsg("......Chat Image Async canceled.1.."
-                   );
+            );
         }
 
         @Override
@@ -15844,7 +17172,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
             Log.d("Message key id", "Message key id::" + params[0]);
             Constant.printMsg("......Chat Image 0000.11..."
-            + "  " + params[0]);
+                    + "  " + params[0]);
             msg_id = params[0];
             message = dbAdapter.getMessages_by_msg_id(params[0]);
             dbAdapter.setUpdateMessage_need_push(message.getKey_id(), 2);
@@ -15859,7 +17187,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                 ChatManager chatManager = ChatManager
                         .getInstanceFor(TempConnectionService.connection);
-                final org.jivesoftware.smack.chat.Chat chat = TempConnectionService.chatmanager.createChat(params[1],
+                chat = TempConnectionService.chatmanager.createChat(JidCreate.entityBareFrom(jid),
                         TempConnectionService.mChatCreatedListener.getMessageListener());
 
                 final Message msg = new Message();
@@ -15893,10 +17221,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 
                 request_params.put("primaryNo", "" + KachingMeApplication.getUserID().split("@")[0]);
-                request_params.put("fileType",  "1");
-                request_params.put("fileName",  "null");
-                request_params.put("latitude",  "null");
-                request_params.put("longitude", "null");
+                request_params.put("fileType", "1");
+                request_params.put("fileName", "null");
+                request_params.put("latitude", "0");
+                request_params.put("longitude", "0");
                 request_params.put("reciverId", "1");
                 request_params.put("groupId", "null");
                 request_params.put("msgId", "" + message.getKey_id());
@@ -15904,18 +17232,17 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         Constant.local_image_dir + message.getMedia_name()), "image/jpeg");
 
 
-
-                AsyncHttpClient client =  mAsyncUpload_Image.get(params[0]);
+                AsyncHttpClient client = mAsyncUpload_Image.get(params[0]);
                 client.setTimeout(60000);
 
 
-                Constant.printMsg("GGGGGGGGGGGGGGGGGGPath" + Constant.local_image_dir + message.getMedia_name()+"    "+msg_id);
+                Constant.printMsg("GGGGGGGGGGGGGGGGGGPath" + Constant.local_image_dir + message.getMedia_name() + "    " + msg_id);
 
                 if (message.getMedia_url() == null) {
                     client.post(mParentActivity,
                             MEDIA_UPLOAD_URL,
                             null,
-                            request_params,"multipart/form-data",
+                            request_params, "multipart/form-data",
                             new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
 
@@ -15930,12 +17257,12 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                             message.getKey_id(), 3);
                                     dbAdapter.setUpdateMessage_need_push(message.getKey_id(), 1);
 
-                                    for(int j=0;j<msg_list.size();j++){
+                                    for (int j = 0; j < msg_list.size(); j++) {
 
-                                        if(msg_list.get(j).getKey_id().equalsIgnoreCase(message.getKey_id())){
+                                        if (msg_list.get(j).getKey_id().equalsIgnoreCase(message.getKey_id())) {
 
                                             Constant.printMsg("hjjjjjafasb");
-                                            mRightImageTickMark=(ImageView) findViewById(j+600000);
+                                            mRightImageTickMark = (ImageView) findViewById(j + 600000);
 //                                            mRightImageChatUpload=(ImageView) findViewById(j+800000);
 //                                            mRightImageProgress=(ProgressBar) findViewById(j+900000);
 //                                            mRightImageChatUpload.setVisibility(View.GONE);
@@ -15954,7 +17281,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                                 @Override
                                 public void onCancel() {
-                                    int j =   mPositionKey.indexOf(message.getKey_id());
+                                    int j = mPositionKey.indexOf(message.getKey_id());
                                     Intent login_broadcast = new Intent("update_image_cancel");
                                     login_broadcast.putExtra("key", j);
                                     mParentActivity.getApplicationContext().sendBroadcast(login_broadcast);
@@ -15966,7 +17293,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                                       byte[] arg2) {
                                     String content = new String(arg2);
 
-                                    String  url = null;
+                                    String url = null;
 
 
                                     try {
@@ -15976,22 +17303,21 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 //
                                         url = jsonObject_Image.getString("url");
                                         String msg_idddd = jsonObject_Image.getString("msgId");
-                                        Constant.printMsg("hjjjjjafasb 111" +content + "  " +msg_idddd );
+                                        Constant.printMsg("hjjjjjafasb 111" + content + "  " + msg_idddd);
 
-                                        Constant.printMsg("hjjjjjafasb " +mPositionKey.get(0) + " --" + msg_idddd );
+                                        Constant.printMsg("hjjjjjafasb " + mPositionKey.get(0) + " --" + msg_idddd);
 
-                                        int j =   mPositionKey.indexOf(message.getKey_id());
+                                        int j = mPositionKey.indexOf(message.getKey_id());
 
                                         Constant.printMsg("hjjjjjafasb " + j);
 
 
+                                        msg_list.get(j).setStatus(2);
 
-                                      msg_list.get(j).setStatus(2);
 
-
-                                    Intent login_broadcast = new Intent("image_upload");
-                                    login_broadcast.putExtra("key", j);
-                                    mParentActivity.getApplicationContext().sendBroadcast(login_broadcast);
+                                        Intent login_broadcast = new Intent("image_upload");
+                                        login_broadcast.putExtra("key", j);
+                                        mParentActivity.getApplicationContext().sendBroadcast(login_broadcast);
 
 //                                        mRightImageChatUpload=(ImageView) mParentActivity.findViewById(j+800000);
 //                                        mRightImageChatCancel=(ImageView) mParentActivity.findViewById(j+120000);
@@ -16008,10 +17334,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                                 message.getKey_id(), 2);
 
 
-
                                         Constant.printMsg("......Chat Image 0000.22.........."
-                                                +"     " + message.getKey_id() +"    "+ msg_id);
-
+                                                + "     " + message.getKey_id() + "    " + msg_id);
 
 
                                     } catch (JSONException e1) {
@@ -16132,7 +17456,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             try {
                 ChatManager chatManager = ChatManager
                         .getInstanceFor(TempConnectionService.connection);
-                final org.jivesoftware.smack.chat.Chat chat = TempConnectionService.chatmanager.createChat(params[1],
+                chat = TempConnectionService.chatmanager.createChat(JidCreate.entityBareFrom(jid),
                         TempConnectionService.mChatCreatedListener.getMessageListener());
                 final Message msg = new Message();
                 // JivePropertiesManager.addProperty(msg,"msg_type", 2);
@@ -16172,10 +17496,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 
                 request_params.put("primaryNo", "" + KachingMeApplication.getUserID().split("@")[0]);
-                request_params.put("fileType",  "3");
-                request_params.put("fileName",  "null");
-                request_params.put("latitude",  "null");
-                request_params.put("longitude", "null");
+                request_params.put("fileType", "3");
+                request_params.put("fileName", "null");
+                request_params.put("latitude", "0");
+                request_params.put("longitude", "0");
                 request_params.put("reciverId", "1");
                 request_params.put("groupId", "null");
                 request_params.put("msgId", "" + message.getKey_id());
@@ -16188,7 +17512,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     client.post(mParentActivity,
                             MEDIA_UPLOAD_URL,
                             null,
-                            request_params,"multipart/form-data",
+                            request_params, "multipart/form-data",
                             new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
                                 @Override
@@ -16476,7 +17800,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                 Log.w("directory not created", "directory not created");
             }
 
-            Constant.printMsg("UUUUURLLLL"+msg_url);
+            Constant.printMsg("UUUUURLLLL" + msg_url);
 
             AsyncHttpClient client = new AsyncHttpClient();
             client.setTimeout(60000);
@@ -16488,9 +17812,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                         @Override
                         public void onFailure(int statusCode, Header[] headers,
                                               byte[] binaryData, Throwable error) {
-                            // TODO Auto-generated method stub
-                            Intent login_broadcast = new Intent("chat");
-                            login_broadcast.putExtra("jid", from);
+                            Intent login_broadcast = new Intent("download_set_image");
+                            login_broadcast.putExtra("result", "fail");
                             getApplicationContext().sendBroadcast(
                                     login_broadcast);
                         }
@@ -16500,14 +17823,12 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                               byte[] fileData) {
                             bites = (long) fileData.length;
 
-                            long imMb = bites/(1024 * 1024);
+                            long imMb = bites / (1024 * 1024);
 
                             Constant.printMsg("Download image " + imMb + "   " + Utils.getExternalFreeSpace(mParentActivity));
 
-                            if(Utils.getExternalFreeSpace(mParentActivity)>200)
-                            {
-                                if((Utils.getExternalFreeSpace(mParentActivity)-imMb)>200)
-                                {
+                            if (Utils.getExternalFreeSpace(mParentActivity) > 200) {
+                                if ((Utils.getExternalFreeSpace(mParentActivity) - imMb) > 200) {
                                     data1 = String.valueOf(String.format(
                                             Constant.local_image_dir + "%d.jpg", time));
 
@@ -16529,20 +17850,22 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                         dbAdapter.setUpdateMessage_MediaName(msg_id,
                                                 file_name + ".jpg");
 
+                                        int j = mPositionKey.indexOf(msg_id);
+
 
                                         Constant.printMsg("Media Rec" + bites);
                                         updateMediaNetwork_Receive(bites);
 
-                                        Intent login_broadcast = new Intent("chat");
-                                        login_broadcast.putExtra("jid", from);
+                                        Intent login_broadcast = new Intent("download_set_image");
+                                        login_broadcast.putExtra("key", j);
+                                        login_broadcast.putExtra("result", "success");
+                                        login_broadcast.putExtra("media_name", file_name + ".jpg");
                                         getApplicationContext().sendBroadcast(
                                                 login_broadcast);
 
                                     } catch (Exception e) {
                                         // ACRA.getErrorReporter().handleException(e);
                                         // TODO: handle exception
-
-
 
 
                                     }
@@ -16613,12 +17936,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             // new AlertManager().showAlertDialog(context,
                             // "Sorry, Image downloading fail. Please Try again.",
                             // true);
-                            Intent login_broadcast = new Intent("chat");
-                            login_broadcast.putExtra("jid", from);
+                            Intent login_broadcast = new Intent("download_set_video");
+                            login_broadcast.putExtra("result", "fail");
                             getApplicationContext().sendBroadcast(
                                     login_broadcast);
-                            // super.onFailure(statusCode, headers, binaryData,
-                            // error);
                         }
 
 
@@ -16627,11 +17948,11 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                               byte[] fileData) {
 
                             bites = (long) fileData.length;
-                            long imMb = bites/(1024 * 1024);
+                            long imMb = bites / (1024 * 1024);
 
                             Constant.printMsg("Download image " + imMb + "   " + Utils.getExternalFreeSpace(mParentActivity));
 
-                            if(Utils.getExternalFreeSpace(mParentActivity)>200) {
+                            if (Utils.getExternalFreeSpace(mParentActivity) > 200) {
                                 if ((Utils.getExternalFreeSpace(mParentActivity) - imMb) > 200) {
                                     data1 = String.valueOf(String.format(
                                             Constant.local_video_dir + "%d.mp4", time));
@@ -16672,11 +17993,18 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                                         }
 
+                                        int j = mPositionKey.indexOf(msg_id);
+
+
+                                        Constant.printMsg("video jjj" + j);
+
                                         dbAdapter.setUpdateMessage_MediaName(msg_id,
                                                 file_name + ".mp4");
 
-                                        Intent login_broadcast = new Intent("chat");
-                                        login_broadcast.putExtra("jid", from);
+                                        Intent login_broadcast = new Intent("download_set_video");
+                                        login_broadcast.putExtra("key", j);
+                                        login_broadcast.putExtra("result", "success");
+                                        login_broadcast.putExtra("media_name", file_name + ".mp4");
                                         getApplicationContext().sendBroadcast(
                                                 login_broadcast);
 
@@ -16740,7 +18068,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
             try {
                 ChatManager chatManager = ChatManager
                         .getInstanceFor(TempConnectionService.connection);
-                final org.jivesoftware.smack.chat.Chat chat = TempConnectionService.chatmanager.createChat(params[1],
+                chat = TempConnectionService.chatmanager.createChat(JidCreate.entityBareFrom(jid),
                         TempConnectionService.mChatCreatedListener.getMessageListener());
                 final Message msg = new Message();
                 /* JivePropertiesManager.addProperty(msg,"msg_type", 3); */
@@ -16780,10 +18108,10 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 
                 request_params.put("primaryNo", "" + KachingMeApplication.getUserID().split("@")[0]);
-                request_params.put("fileType",  "2");
-                request_params.put("fileName",  "null");
-                request_params.put("latitude",  "null");
-                request_params.put("longitude", "null");
+                request_params.put("fileType", "2");
+                request_params.put("fileName", "null");
+                request_params.put("latitude", "0");
+                request_params.put("longitude", "0");
                 request_params.put("reciverId", "1");
                 request_params.put("groupId", "null");
                 request_params.put("msgId", "" + message.getKey_id());
@@ -16796,7 +18124,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                     client.post(mParentActivity,
                             MEDIA_UPLOAD_URL,
                             null,
-                            request_params,"multipart/form-data",
+                            request_params, "multipart/form-data",
                             new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
                                 @Override
@@ -16804,6 +18132,8 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                                       byte[] arg2, Throwable arg3) {
                                     dbAdapter.setUpdateMessage_status(
                                             message.getKey_id(), 3);
+
+                                    Constant.printMsg("Audio upload fail");
                                     // super.onFailure(arg3);
                                     file_upload_res = null;
 
@@ -16838,7 +18168,7 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                                         JSONObject jsonObject_Image = new JSONObject(content);
 //
                                         url = jsonObject_Image.getString("url");
-                                        msg_id = jsonObject_Image.getString("msgId");
+//                                        msg_id = jsonObject_Image.getString("msgId");
 
 
                                     } catch (JSONException e1) {
@@ -16962,14 +18292,13 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
                             // new AlertManager().showAlertDialog(context,
                             // "Sorry, Audio downloading fail. Please Try again.",
                             // true);
-                            Intent login_broadcast = new Intent("chat");
-                            login_broadcast.putExtra("jid", from);
+                            Intent login_broadcast = new Intent("download_set_audio");
+                            login_broadcast.putExtra("result", "fail");
                             getApplicationContext().sendBroadcast(
                                     login_broadcast);
                             // super.onFailure(statusCode, headers, binaryData,
                             // error);
                         }
-
 
 
                         @Override
@@ -16978,11 +18307,11 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
 
                             bites = (long) fileData.length;
-                            long imMb = bites/(1024 * 1024);
+                            long imMb = bites / (1024 * 1024);
 
                             Constant.printMsg("Download image " + imMb + "   " + Utils.getExternalFreeSpace(mParentActivity));
 
-                            if(Utils.getExternalFreeSpace(mParentActivity)>200) {
+                            if (Utils.getExternalFreeSpace(mParentActivity) > 200) {
                                 if ((Utils.getExternalFreeSpace(mParentActivity) - imMb) > 200) {
 
 
@@ -17025,11 +18354,15 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
 
                                         }
 
+                                        int j = mPositionKey.indexOf(msg_id);
+
                                         dbAdapter.setUpdateMessage_MediaName(msg_id,
                                                 file_name + ".amr");
 
-                                        Intent login_broadcast = new Intent("chat");
-                                        login_broadcast.putExtra("jid", from);
+                                        Intent login_broadcast = new Intent("download_set_audio");
+                                        login_broadcast.putExtra("key", j);
+                                        login_broadcast.putExtra("result", "success");
+                                        login_broadcast.putExtra("media_name", file_name + ".amr");
                                         getApplicationContext().sendBroadcast(
                                                 login_broadcast);
 
@@ -17067,8 +18400,6 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         }
     }
 
-
-
     private void callBlockedUserAlert() {
 
 
@@ -17096,296 +18427,294 @@ Constant.printMsg("DDDDDDSJSJJSJS"+msg_list.size());
         }
     }
 
-public void mAttachKachingFeature(){
+    public void mAttachKachingFeature() {
 
-    try{
+        try {
 
+            if (Constant.attachNym == true) {
 
+                Constant.printMsg("GGGGGGGG1111  " + Constant.attchnymstring);
 
-    if (Constant.attachNym == true) {
+                Constant.attachNym = false;
+                Constant.bux = sharedPrefs.getLong("buxvalue", 0);
 
-        Constant.printMsg("GGGGGGGG1111  " + Constant.attchnymstring);
+                Long buxval1 = Constant.bux + Constant.nynMpoint;
+                Constant.bux = buxval1;
 
-        Constant.attachNym = false;
-        Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+                Editor edit = sharedPrefs.edit();
+                edit.putLong("buxvalue", buxval1);
+                edit.commit();
 
-        Long buxval1 = Constant.bux + Constant.nynMpoint;
-        Constant.bux = buxval1;
+                int point1 = sharedPrefs.getInt("nympoint", 0);
 
-        Editor edit = sharedPrefs.edit();
-        edit.putLong("buxvalue", buxval1);
-        edit.commit();
+                Constant.totalchat = point1;
 
-        int point1 = sharedPrefs.getInt("nympoint", 0);
+                Constant.totalchat = Count + Constant.totalchat;
 
-        Constant.totalchat = point1;
+                Editor e11 = sharedPrefs.edit();
+                e11.putInt("nympoint", Constant.totalchat);
+                e11.commit();
+                sendMessage("<-" + Constant.attchnymstring);
+            }
 
-        Constant.totalchat = Count + Constant.totalchat;
 
-        Editor e11 = sharedPrefs.edit();
-        e11.putInt("nympoint", Constant.totalchat);
-        e11.commit();
-        sendMessage("<-" + Constant.attchnymstring);
-    }
+            if (Constant.mKons == true) {
+                for (int i = 0; i < Constant.konsSelectedList.size(); i++) {
 
+                    Constant.mKonsText = Constant.konsSelectedList.get(i)
+                            .toString();
+                    Constant.mKonsBackground = Constant.konsBackgroundList.get(i).toString();
+                    Constant.mKonsColor = Constant.konsColorList.get(i).toString();
+                    int point = sharedPrefs.getInt("konpoint", 0);
 
-    if (Constant.mKons == true) {
-        for (int i = 0; i < Constant.konsSelectedList.size(); i++) {
+                    Constant.totalkon = point;
 
-            Constant.mKonsText = Constant.konsSelectedList.get(i)
-                    .toString();
-            Constant.mKonsBackground = Constant.konsBackgroundList.get(i).toString();
-            Constant.mKonsColor = Constant.konsColorList.get(i).toString();
-            int point = sharedPrefs.getInt("konpoint", 0);
+                    Constant.totalkon = Count + Constant.totalkon;
 
-            Constant.totalkon = point;
+                    Editor e2 = sharedPrefs.edit();
+                    e2.putInt("konpoint", Constant.totalkon);
+                    e2.commit();
 
-            Constant.totalkon = Count + Constant.totalkon;
+                    Constant.bux = sharedPrefs.getLong("buxvalue", 0);
 
-            Editor e2 = sharedPrefs.edit();
-            e2.putInt("konpoint", Constant.totalkon);
-            e2.commit();
+                    Long buxval1 = Constant.bux + Constant.konspoint;
+                    Constant.bux = buxval1;
 
-            Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+                    Editor e3 = sharedPrefs.edit();
+                    e3.putLong("buxvalue", buxval1);
+                    e3.commit();
 
-            Long buxval1 = Constant.bux + Constant.konspoint;
-            Constant.bux = buxval1;
+                    Constant.mKons = false;
+                    Constant.printMsg("tedddddddddd  " + Constant.mKonsBackground + Constant.mKonsColor + Constant.mKonsText);
+                    sendMessage("<k>" + Constant.mKonsBackground + "-" + Constant.mKonsColor + "-" + Constant.mKonsText);
+                }
 
-            Editor e3 = sharedPrefs.edit();
-            e3.putLong("buxvalue", buxval1);
-            e3.commit();
+            }
 
-            Constant.mKons = false;
-            Constant.printMsg("tedddddddddd  " + Constant.mKonsBackground + Constant.mKonsColor + Constant.mKonsText);
-            sendMessage("<k>" + Constant.mKonsBackground + "-" + Constant.mKonsColor + "-" + Constant.mKonsText);
-        }
+            if (Constant.mBazzle == true) {
 
-    }
+                Constant.mBazzle = false;
+                menuclick = false;
 
-    if (Constant.mBazzle == true) {
+                int point = sharedPrefs.getInt("zzlepoint", 0);
 
-        Constant.mBazzle = false;
-        menuclick = false;
+                Constant.totalzzle = point;
 
-        int point = sharedPrefs.getInt("zzlepoint", 0);
+                Constant.totalzzle = Count + Constant.totalzzle;
 
-        Constant.totalzzle = point;
+                Editor e1 = sharedPrefs.edit();
+                e1.putInt("zzlepoint", Constant.totalzzle);
+                e1.commit();
 
-        Constant.totalzzle = Count + Constant.totalzzle;
+                menuclick = true;
+                Constant.bux = sharedPrefs.getLong("buxvalue", 0);
 
-        Editor e1 = sharedPrefs.edit();
-        e1.putInt("zzlepoint", Constant.totalzzle);
-        e1.commit();
+                Long buxval = Constant.bux + Constant.zzlepoints;
+                Constant.bux = buxval;
 
-        menuclick = true;
-        Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+                Editor e = sharedPrefs.edit();
+                e.putLong("buxvalue", buxval);
+                e.commit();
 
-        Long buxval = Constant.bux + Constant.zzlepoints;
-        Constant.bux = buxval;
+                Calendar c = Calendar.getInstance();
+                c.add(Calendar.DAY_OF_MONTH, +5);
+                Constant.printMsg("dfreebie date ::::::" + c.getTime());
+                SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                Constant.printMsg("last date of freebie::::::::>>>>>>>"
+                        + df1.format(c.getTime()));
+                String last = df1.format(c.getTime());
 
-        Editor e = sharedPrefs.edit();
-        e.putLong("buxvalue", buxval);
-        e.commit();
+                sendMessage("<z>" + mLedText + "-" + Constant.mTimeZzle
+                        + "-" + Constant.mPreviewSpeed + "-"
+                        + Constant.mPreviewTextsize + "-" + Constant.shapeselected);
 
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.DAY_OF_MONTH, +5);
-        Constant.printMsg("dfreebie date ::::::" + c.getTime());
-        SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Constant.printMsg("last date of freebie::::::::>>>>>>>"
-                + df1.format(c.getTime()));
-        String last = df1.format(c.getTime());
+            }
+            if (Constant.mBuxAccept == true) {
+                Constant.mBuxAccept = false;
+                contact = dbAdapter.getContact(jid);
+                Constant.printMsg("conteac ::::: :::: " + contact);
+                name = contact.getDisplay_name();
+                String from_no = KachingMeApplication.getjid().split("@")[0];
 
-        sendMessage("<z>" + mLedText + "-" + Constant.mTimeZzle
-                + "-" + Constant.mPreviewSpeed + "-"
-                + Constant.mPreviewTextsize + "-" + Constant.shapeselected);
+                mFromNum = KachingMeApplication.getjid().split("@")[0];
+                mToNUm = contact.getJid().split("@")[0];
 
-    }
-    if (Constant.mBuxAccept == true) {
-        Constant.mBuxAccept = false;
-        contact = dbAdapter.getContact(jid);
-        Constant.printMsg("conteac ::::: :::: " + contact);
-        name = contact.getDisplay_name();
-        String from_no = KachingMeApplication.getjid().split("@")[0];
+                MBuxs = Constant.donatepoint;
+                Constant.printMsg("bux ::::: " + name + " " + mFromNum + "  "
+                        + mToNUm);
 
-        mFromNum = KachingMeApplication.getjid().split("@")[0];
-        mToNUm = contact.getJid().split("@")[0];
 
-        MBuxs = Constant.donatepoint;
-        Constant.printMsg("bux ::::: " + name + " " + mFromNum + "  "
-                + mToNUm);
+                sendMessage("<a>" + Constant.mAcceptedBuxS);
+                // new getDonation().execute();
 
-
-        sendMessage("<a>" + Constant.mAcceptedBuxS);
-        // new getDonation().execute();
-
-    }
-        if (Constant.mBuxReject)
-        {
-            Constant.mBuxReject = false;
-
-            contact = dbAdapter.getContact(jid);
-            Constant.printMsg("conteac rejected ::::: :::: " + contact);
-            name = contact.getDisplay_name();
-            String from_no = KachingMeApplication.getjid().split("@")[0];
-
-            mFromNum = KachingMeApplication.getjid().split("@")[0];
-            mToNUm = contact.getJid().split("@")[0];
-
-            MBuxs = Constant.donatepoint;
-            Constant.printMsg("bux ::::: " + name + " " + mFromNum + "  "
-                    + mToNUm);
-
-            sendMessage("<r>" + Constant.mRejectedBuxS);
-
-        }
-    if (Constant.mDonateBux == true) {
-        Constant.mDonateBux = false;
-
-        Calendar c = Calendar.getInstance();
-        c.add(Calendar.DAY_OF_MONTH, +5);
-        Constant.printMsg("dfreebie date ::::::" + c.getTime());
-        SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-        Constant.printMsg("last date of freebie::::::::>>>>>>>"
-                + df1.format(c.getTime()));
-        String last = df1.format(c.getTime());
-
-        int l = dbAdapter.getLastMsgid_chat(jid, sec);
-        Constant.printMsg("Donate buxs msg_id sending method   " + l);
-        sendMessage("<d>" + Constant.donatepoint + "-" + last);
-    }
-    if (Constant.mself_destruct_time == true) {
-        Constant.mself_destruct_time = false;
-        Constant.printMsg("called self destruct send condition");
-        if (Constant.mself_destruct_msg.toString().length() != 0) {
-
-            dest_msg_list.add(Constant.mselected_self_destruct_time);
-            int point = sharedPrefs.getInt("destpoint", 0);
-
-            Constant.totaldest = point;
-
-            Constant.totaldest = Count + Constant.totaldest;
-
-            Editor e2 = sharedPrefs.edit();
-            e2.putInt("destpoint", Constant.totaldest);
-            e2.commit();
-
-            Constant.bux = sharedPrefs.getLong("buxvalue", 0);
-
-            Long buxval1 = Constant.bux + Constant.desTpoint;
-            Constant.bux = buxval1;
-            Constant.printMsg("dest buxxxx:::::" + buxval1 + "   " + Constant.totaldest + "   " + Constant.bux);
-
-            Editor e3 = sharedPrefs.edit();
-            e3.putLong("buxvalue", buxval1);
-            e3.commit();
-            mDest = true;
-
-            sendMessage("<s>" + Constant.mselected_self_destruct_time + "-"
-                    + Constant.mself_destruct_msg);
-        }
-    }
-    if (Constant.mZzle == true) {
-        Constant.mZzle = false;
-        if (Constant.mZzleText.length() != 0) {
-
-            Constant.printMsg("syst" + Constant.mPreviewBackground
-                    + Constant.mPreviewSpeed + Constant.mPreviewTextColor
-                    + Constant.mPreviewTextsize + Constant.mZzleText);
-
-            int point = sharedPrefs.getInt("zzlepoint", 0);
-
-            Constant.totalzzle = point;
-
-            Constant.totalzzle = Count + Constant.totalzzle;
-
-            Editor e1 = sharedPrefs.edit();
-            e1.putInt("zzlepoint", Constant.totalzzle);
-            e1.commit();
-
-            menuclick = true;
-            Constant.bux = sharedPrefs.getLong("buxvalue", 0);
-
-            Long buxval = Constant.bux + Constant.zzlepoints;
-            Constant.bux = buxval;
-
-            Editor e = sharedPrefs.edit();
-            e.putLong("buxvalue", buxval);
-            e.commit();
-
-            Calendar c = Calendar.getInstance();
-            c.add(Calendar.DAY_OF_MONTH, +5);
-            Constant.printMsg("dfreebie date ::::::" + c.getTime());
-            SimpleDateFormat df1 = new SimpleDateFormat(
-                    "yyyy/MM/dd HH:mm:ss");
-            Constant.printMsg("last date of freebie::::::::>>>>>>>"
-                    + df1.format(c.getTime()));
-            String last = df1.format(c.getTime());
-            Constant.printMsg("slider test "
-                    + Constant.mPreviewBackground + "  "
-                    + Constant.mPreviewSpeed + "  "
-                    + Constant.mPreviewTextColor + "  "
-                    + Constant.mPreviewTextsize + " " + Constant.mZzleText);
-            sendMessage("<x>" + Constant.mPreviewBackground + "-"
-                    + Constant.mPreviewSpeed + "-"
-                    + Constant.mPreviewTextColor + "-"
-                    + Constant.mPreviewTextsize + "-" + Constant.mZzleText
-                    + "-" + last);
-        }
-    }
-
-
-    if (Constant.karaoke == true) {
-
-        Constant.printMsg("constant::" + Constant.file);
-        upload_audio_File(Constant.file);
-        Constant.karaoke = false;
-    }
+            }
+            if (Constant.mBuxReject) {
+                Constant.mBuxReject = false;
+
+                contact = dbAdapter.getContact(jid);
+                Constant.printMsg("conteac rejected ::::: :::: " + contact);
+                name = contact.getDisplay_name();
+                String from_no = KachingMeApplication.getjid().split("@")[0];
+
+                mFromNum = KachingMeApplication.getjid().split("@")[0];
+                mToNUm = contact.getJid().split("@")[0];
+
+                MBuxs = Constant.donatepoint;
+                Constant.printMsg("bux ::::: " + name + " " + mFromNum + "  "
+                        + mToNUm);
+
+                sendMessage("<r>" + Constant.mRejectedBuxS);
+
+            }
+            if (Constant.mDonateBux == true) {
+                Constant.mDonateBux = false;
+
+                Calendar c = Calendar.getInstance();
+                c.add(Calendar.DAY_OF_MONTH, +5);
+                Constant.printMsg("dfreebie date ::::::" + c.getTime());
+                SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                Constant.printMsg("last date of freebie::::::::>>>>>>>"
+                        + df1.format(c.getTime()));
+                String last = df1.format(c.getTime());
+
+                int l = dbAdapter.getLastMsgid_chat(jid, sec);
+                Constant.printMsg("Donate buxs msg_id sending method   " + l);
+                sendMessage("<d>" + Constant.donatepoint + "-" + last);
+            }
+            if (Constant.mself_destruct_time == true) {
+                Constant.mself_destruct_time = false;
+                Constant.printMsg("called self destruct send condition");
+                if (Constant.mself_destruct_msg.toString().length() != 0) {
+
+                    dest_msg_list.add(Constant.mselected_self_destruct_time);
+                    int point = sharedPrefs.getInt("destpoint", 0);
+
+                    Constant.totaldest = point;
+
+                    Constant.totaldest = Count + Constant.totaldest;
+
+                    Editor e2 = sharedPrefs.edit();
+                    e2.putInt("destpoint", Constant.totaldest);
+                    e2.commit();
+
+                    Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+
+                    Long buxval1 = Constant.bux + Constant.desTpoint;
+                    Constant.bux = buxval1;
+                    Constant.printMsg("dest buxxxx:::::" + buxval1 + "   " + Constant.totaldest + "   " + Constant.bux);
+
+                    Editor e3 = sharedPrefs.edit();
+                    e3.putLong("buxvalue", buxval1);
+                    e3.commit();
+                    mDest = true;
+
+                    sendMessage("<s>" + Constant.mselected_self_destruct_time + "-"
+                            + Constant.mself_destruct_msg);
+                }
+            }
+            if (Constant.mZzle == true) {
+                Constant.mZzle = false;
+                if (Constant.mZzleText.length() != 0) {
+
+                    Constant.printMsg("syst" + Constant.mPreviewBackground
+                            + Constant.mPreviewSpeed + Constant.mPreviewTextColor
+                            + Constant.mPreviewTextsize + Constant.mZzleText);
+
+                    int point = sharedPrefs.getInt("zzlepoint", 0);
+
+                    Constant.totalzzle = point;
+
+                    Constant.totalzzle = Count + Constant.totalzzle;
+
+                    Editor e1 = sharedPrefs.edit();
+                    e1.putInt("zzlepoint", Constant.totalzzle);
+                    e1.commit();
+
+                    menuclick = true;
+                    Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+
+                    Long buxval = Constant.bux + Constant.zzlepoints;
+                    Constant.bux = buxval;
+
+                    Editor e = sharedPrefs.edit();
+                    e.putLong("buxvalue", buxval);
+                    e.commit();
+
+                    Calendar c = Calendar.getInstance();
+                    c.add(Calendar.DAY_OF_MONTH, +5);
+                    Constant.printMsg("dfreebie date ::::::" + c.getTime());
+                    SimpleDateFormat df1 = new SimpleDateFormat(
+                            "yyyy/MM/dd HH:mm:ss");
+                    Constant.printMsg("last date of freebie::::::::>>>>>>>"
+                            + df1.format(c.getTime()));
+                    String last = df1.format(c.getTime());
+                    Constant.printMsg("slider test "
+                            + Constant.mPreviewBackground + "  "
+                            + Constant.mPreviewSpeed + "  "
+                            + Constant.mPreviewTextColor + "  "
+                            + Constant.mPreviewTextsize + " " + Constant.mZzleText);
+                    sendMessage("<x>" + Constant.mPreviewBackground + "-"
+                            + Constant.mPreviewSpeed + "-"
+                            + Constant.mPreviewTextColor + "-"
+                            + Constant.mPreviewTextsize + "-" + Constant.mZzleText
+                            + "-" + last);
+                }
+            }
+
+            if (Constant.karaoke == true) {
+
+                isFirstCall = false;
+                Constant.printMsg("constant::" + Constant.file);
+                upload_audio_File(Constant.file);
+                Constant.karaoke = false;
+            }
 
 //    if (Constant.logo == true) {
 //        Constant.printMsg("logog::" + Constant.logobit);
 //        uploadLogo(Constant.logobit, true);
 //        Constant.logo = false;
 //    }
-    Constant.printMsg("songListValue entered::");
-    songListValue = Constant.songlist;
-    if (songListValue) {
-        Constant.printMsg("Constant.song_list.size()      "
-                + Constant.song_list.size());
-        for (int i = 0; i < Constant.song_list.size(); i++) {
-            Constant.songPath = Constant.song_list.get(i).toString();
+            Constant.printMsg("songListValue entered::");
+            songListValue = Constant.songlist;
+            if (songListValue) {
+                isFirstCall = false;
+                Constant.printMsg("Constant.song_list.size()      "
+                        + Constant.song_list.size());
+                for (int i = 0; i < Constant.song_list.size(); i++) {
+                    Constant.songPath = Constant.song_list.get(i).toString();
 
-            Constant.printMsg("songListValue in chat::if"
-                    + songListValue);
-            songValue = Constant.songPath;
+                    Constant.printMsg("songListValue in chat::if"
+                            + songListValue);
+                    songValue = Constant.songPath;
 
-            outputFile = Constant.local_audio_dir
-                    + System.currentTimeMillis() + ".amr";
+                    outputFile = Constant.local_audio_dir
+                            + System.currentTimeMillis() + ".amr";
 
-            Constant.printMsg("audio file path::" + songValue);
+                    Constant.printMsg("audio file path::" + songValue);
 
-            File f1 = new File(songValue);
-            File f2 = new File(outputFile);
+                    File f1 = new File(songValue);
+                    File f2 = new File(outputFile);
 
-            try {
+                    try {
 
-                copyDirectoryOneLocationToAnotherLocation(f1, f2);
+                        copyDirectoryOneLocationToAnotherLocation(f1, f2);
 
-            } catch (IOException e) {
+                    } catch (IOException e) {
 
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+
+                }
+                Constant.songlist = false;
+
+            } else {
+                Constant.printMsg("songListValue in chat::else" + songListValue);
             }
+        } catch (Exception e) {
 
         }
-        Constant.songlist = false;
-
-    } else {
-        Constant.printMsg("songListValue in chat::else" + songListValue);
     }
-    }catch (Exception e){
-
-    }
-}
 
     private void callstatusDB(String query1) {
         // TODO Auto-generated method stub
@@ -17409,58 +18738,75 @@ public void mAttachKachingFeature(){
         }
     }
 
-    public int getTimeTxtSize()
-    {
-        return (valueText()/2);
+    public int getTimeTxtSize() {
+        return (valueText() / 2);
     }
 
-
-
-
-
-    public boolean containsCaseInsensitive(String s, List<String> l){
-        for (String string : l){
-            if (string.equalsIgnoreCase(s)){
+    public boolean containsCaseInsensitive(String s, List<String> l) {
+        for (String string : l) {
+            if (string.equalsIgnoreCase(s)) {
                 return true;
             }
         }
         return false;
     }
 
-
-    public boolean getCopyPastMediaType(String mediaType)
-    {
+    public boolean getCopyPastMediaType(String mediaType) {
         boolean isMedia = true;
 
-        if(!mediaType.trim().equalsIgnoreCase("0"))
+        if (!mediaType.trim().equalsIgnoreCase("0"))
             isMedia = false;
 
-        Constant.printMsg("Dilip copy " + mediaType +" " + mediaType.trim().equalsIgnoreCase("4")+ " " + isMedia);
+        Constant.printMsg("Dilip copy " + mediaType + " " + mediaType.trim().equalsIgnoreCase("4") + " " + isMedia);
 
         return isMedia;
     }
 
-    public boolean chekNynmDazzKon(String text)
-    {
+    public boolean chekNynmDazzKon(String text) {
         boolean isSpl = false;
 
-        if(text!=null)
-        {
-            if(text.length()>0) {
-                if (text.charAt(0) == '<')
+        Constant.printMsg("Gksjdfs" + text);
+
+        if (text.length() > 3) {
+
+            char s = text.charAt(0);
+            char s1 = text.charAt(1);
+            char s2 = text.charAt(2);
+
+            if ((s == '<' && s1 == '-') || (s1 == 'b' && s2 == '>') || (s1 == 'z' && s2 == '>') || (s1 == 'l' && s2 == '>') || (s1 == 'x' && s2 == '>') || (s1 == 'o' && s2 == '>') || (s1 == 'k' && s2 == '>')) {
+                isSpl = true;
+            } else if (s == '<') {
+                if (s1 == 's' && s2 == '>') {
                     isSpl = true;
+                }
             }
         }
 
+        Constant.printMsg("Gksjdfs11" + isSpl);
 
         return isSpl;
     }
 
+    public boolean chekDonate(String text) {
+        boolean isSpl = false;
 
-    public void updateForHomeScreenList()
-    {
+        if (text.length() > 3) {
+
+            char s = text.charAt(0);
+            char s1 = text.charAt(1);
+            char s2 = text.charAt(2);
+
+            if ((s1 == 'r' && s2 == '>') || (s1 == 'a' && s2 == '>') || (s1 == 'd' && s2 == '>')) {
+                isSpl = true;
+            }
+
+        }
+
+        return isSpl;
+    }
+
+    public void updateForHomeScreenList() {
         MessageGetSet msggetset1 = new MessageGetSet();
-
 
         msggetset1.setData("");
         msggetset1.setKey_from_me(0);
@@ -17475,10 +18821,9 @@ public void mAttachKachingFeature(){
         msggetset1.setSelf_des_time(selected_self_desc_time);
         msggetset1.setIs_owner(IS_OWNER);
 
-        Constant.printMsg("id::lll CCC:::::" + IS_OWNER + selected_self_desc_time+ " "+sec);
+        Constant.printMsg("id::lll CCC:::::" + IS_OWNER + selected_self_desc_time + " " + sec);
 
         dbAdapter.setInsertMessages(msggetset1);
-
 
         int msg_id = dbAdapter.getLastMsgid_chat(jid, sec);
 
@@ -17489,10 +18834,7 @@ public void mAttachKachingFeature(){
         }
     }
 
-
-
-    public void getJidOnlineStatus(String jid)
-    {
+    public void getJidOnlineStatus(String jid) {
         try {
             Intent msgIntent = new Intent(ChatTest.this, GetJidPresenceIntentService.class);
 
@@ -17501,6 +18843,379 @@ public void mAttachKachingFeature(){
         } catch (Exception e) {
 
         }
+    }
 
+    public void set_Download_Image(int j, String media_name) {
+
+        try {
+            mLeftImageChat = (ImageView) findViewById(j + 150000);
+            mLeftImageChatDownload = (ImageView) findViewById(j + 160000);
+            mLeftImagetProgressBar = (ProgressBar) findViewById(j + 170000);
+
+            mLeftImageChatDownload.setVisibility(View.GONE);
+            mLeftImagetProgressBar.setVisibility(View.GONE);
+
+            File file = new File(Constant.local_image_dir + media_name);
+            if (file.isFile()) {
+                Constant.printMsg("Image row data not null333");
+
+                Bitmap unscaledBitmap = new CompressImage().compressImage(Constant.local_image_dir
+                        + media_name, "", 1);
+
+//                if(unscaledBitmap.getWidth()==unscaledBitmap.getHeight())
+//                mLeftImageChat.setImageBitmap(Bitmap.createScaledBitmap(unscaledBitmap,width * 65 / 100, width * 65 / 100, false));
+//                else
+                mLeftImageChat.setImageBitmap(unscaledBitmap);
+
+                mLeftImageChat.setTag(Constant.local_image_dir
+                        + media_name);
+            }
+        } catch (Exception e) {
+            Constant.printMsg("Image row data not null333  " + e.toString());
+        }
+    }
+
+    public void set_video_download(int k, String media_name) {
+        try {
+            mLeftVideoChat = (ImageView) findViewById(k + 180000);
+            mLeftVideoChatDownload = (ImageView) findViewById(k + 190000);
+            mLeftVideoButtonPlay = (ImageView) findViewById(k + 210000);
+
+            mLeftVideoProgress = (ProgressBar) findViewById(k + 220000);
+
+
+            mLeftVideoChatDownload.setVisibility(View.GONE);
+            mLeftVideoProgress.setVisibility(View.GONE);
+            mLeftVideoButtonPlay.setVisibility(View.VISIBLE);
+
+            File file = new File(Constant.local_video_dir
+                    + media_name);
+            mLeftVideoButtonPlay.setTag(Constant.local_video_dir
+                    + media_name);
+            try {
+                byte[] image_data = msg_list.get(k).getRow_data();
+                Bitmap bitmap = BitmapFactory.decodeByteArray(
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
+                mLeftVideoChat.setImageBitmap(bitmap);
+                mLeftVideoChat.setScaleType(ImageView.ScaleType.FIT_XY);
+                mLeftVideoChat.setTag(null);
+            } catch (Exception e) {
+
+            }
+        } catch (Exception e) {
+
+        }
+    }
+
+    public void set_audio_download(int k, String media_name) {
+        try {
+
+            mLeftAudioBtnPlay = (Button) findViewById(k + 400000);
+            mLeftAudioBtnCancel = (Button) findViewById(k + 410000);
+            mLeftAudioBtnDownload = (Button) findViewById(k + 300000);
+            mLeftAudioDownloadProgress = (ProgressBar) findViewById(k + 420000);
+            mLeftAudioSeekBar = (SeekBar) findViewById(k + 500000);
+
+
+            mLeftAudioBtnDownload.setVisibility(View.GONE);
+            mLeftAudioBtnCancel.setVisibility(View.GONE);
+            mLeftAudioDownloadProgress.setVisibility(View.GONE);
+            mLeftAudioBtnPlay.setVisibility(View.VISIBLE);
+            // txt_audio_size.setVisibility(View.GONE);
+            mLeftAudioSeekBar.setVisibility(View.VISIBLE);
+
+            mLeftAudioBtnPlay.setTag(Constant.local_audio_dir
+                    + media_name);
+        } catch (Exception e) {
+            Constant.printMsg("Download audio setttt");
+        }
+    }
+
+    void handleSendImage(Uri imageUriSingle) {
+        Uri imageUri = imageUriSingle;
+        if (imageUri != null) {
+            // Update UI to reflect image being shared
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getContentResolver().query(imageUri, filePathColumn, null, null, null);
+            cursor.moveToFirst();
+
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            final String filePath = cursor.getString(columnIndex);
+
+            isFirstCall = false;
+
+            cursor.close();
+            File file = new File(filePath);
+            long length = file.length();
+            length = length / 1024;
+
+            if (length > 16384) {
+                new AlertManager().showAlertDialog(this, getResources().getString(R.string.imagesize_must_be_smaller), true);
+            } else {
+                new Thread(new Runnable() {
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            public synchronized void run() {
+                                try {
+                                    synchronized (this) {
+                                        Constant.printMsg(" ::: " + filePath);
+
+                                        uploadFile(filePath, true);
+
+                                        Constant.singleImagUri = null;
+                                    }
+                                } catch (Exception e) {
+                                    Constant.printMsg(e.toString());
+                                }
+                            }
+                        });
+                    }
+                }).start();
+            }
+        }
+    }
+
+    void handleSendSingleVideo(Uri singleVideoUri) {
+        Uri selectedImage1 = singleVideoUri;
+        String[] filePathColumn1 = {MediaStore.Images.Media.DATA};
+        Cursor cursor1 = getContentResolver().query(selectedImage1, filePathColumn1, null, null, null);
+        cursor1.moveToFirst();
+
+        int columnIndex1 = cursor1.getColumnIndex(filePathColumn1[0]);
+        final String filePath1 = cursor1.getString(columnIndex1);
+
+        cursor1.close();
+        File file = new File(filePath1);
+        long length = file.length();
+
+        length = length / 1024;
+
+        if (length > 16384) {
+            new AlertManager().showAlertDialog(this, getResources().getString(R.string.videosize_must_be_smaller), true);
+        } else {
+            new Thread(new Runnable() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            try {
+                                Constant.printMsg("video file path::" + filePath1);
+
+                                uploadFile(filePath1, false);
+
+                                Constant.singleVideoUri = null;
+                            } catch (Exception e) {
+                                Constant.printMsg("Single Video Share ::: " + e.toString());
+                            }
+                        }
+                    });
+                }
+            }).start();
+        }
+    }
+
+    void handleSendSingleAudio(Uri singleAudioUri) {
+        Uri audioUri = singleAudioUri;
+        String[] filePathColumn1 = {MediaStore.Images.Media.DATA};
+        Cursor cursor1 = getContentResolver().query(audioUri, filePathColumn1, null, null, null);
+        cursor1.moveToFirst();
+
+        int columnIndex1 = cursor1.getColumnIndex(filePathColumn1[0]);
+        final String filePath1 = cursor1.getString(columnIndex1);
+        cursor1.close();
+
+        outputFile = Constant.local_audio_dir + System.currentTimeMillis() + ".amr";
+        Constant.printMsg("audio file path::" + filePath1);
+
+        File f1 = new File(filePath1);
+        File f2 = new File(outputFile);
+
+        try {
+            copyDirectoryOneLocationToAnotherLocation(f1, f2);
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            Constant.printMsg("Single Audio Share ::: " + e.toString());
+        }
+    }
+
+    void handleSendMultipleImages() {
+        Constant.mSelectedImage = new ArrayList();
+
+        String selectImages = "";
+
+        for (int i = 0, l = Constant.multipleImageUri.size(); i < l; i++) {
+            selectImages = getRealPathFromURI(getApplicationContext(), Constant.multipleImageUri.get(i));
+
+            Constant.mSelectedImage.add(selectImages + "|");
+
+            Constant.printMsg("Selected Images ::: " + selectImages);
+        }
+        Constant.mImagepath = selectImages;
+
+        Constant.printMsg("Selected Images Path ::: " + selectImages);
+
+        imagesPathList = new ArrayList<>();
+
+        isFirstCall = false;
+
+        String[] imagesPath = Constant.mImagepath.split("\\|");
+
+        System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath);
+
+        for (int i = 0; i < imagesPath.length; i++) {
+            System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath[i]);
+
+            imagesPathList.add(imagesPath[i]);
+
+            File file = new File(imagesPath[i]);
+
+            long length = file.length();
+
+            length = length / 1024;
+
+            if (length > 16384) {
+                new AlertManager().showAlertDialog(this, getResources().getString(R.string.imagesize_must_be_smaller), true);
+            } else {
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public synchronized void run() {
+                        try {
+                            for (int i = 0; i < Constant.mSelectedImage.size(); i++) {
+                                Constant.printMsg("Image Path ::::::::::::: " + Constant.mSelectedImage.get(i) + "   " + i);
+
+                                synchronized (this) {
+                                    uploadFile(String.valueOf(Constant.mSelectedImage.get(i)), true);
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+
+                            Constant.printMsg("Multiple Image 1 ::: " + e.toString());
+                        }
+                    }
+                });
+                t.start();
+
+                i = imagesPath.length;
+            }
+        }
+    }
+
+    public String getRealPathFromURI(Context context, Uri contentUri) {
+        Cursor cursor = null;
+
+        try {
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    void acceptBux() {
+        if (Constant.mBuxAccept == true) {
+            Constant.mBuxAccept = false;
+            contact = dbAdapter.getContact(jid);
+            Constant.printMsg("conteac ::::: :::: " + contact);
+            name = contact.getDisplay_name();
+            String from_no = KachingMeApplication.getjid().split("@")[0];
+
+            mFromNum = KachingMeApplication.getjid().split("@")[0];
+            mToNUm = contact.getJid().split("@")[0];
+
+            MBuxs = Constant.donatepoint;
+            Constant.printMsg("bux ::::: " + name + " " + mFromNum + "  "
+                    + mToNUm);
+
+
+            sendMessage("<a>" + Constant.mAcceptedBuxS);
+            // new getDonation().execute();
+
+        }
+    }
+
+    void rejectBux() {
+        if (Constant.mBuxReject) {
+            Constant.mBuxReject = false;
+
+            contact = dbAdapter.getContact(jid);
+            Constant.printMsg("conteac rejected ::::: :::: " + contact);
+            name = contact.getDisplay_name();
+            String from_no = KachingMeApplication.getjid().split("@")[0];
+
+            mFromNum = KachingMeApplication.getjid().split("@")[0];
+            mToNUm = contact.getJid().split("@")[0];
+
+            MBuxs = Constant.donatepoint;
+            Constant.printMsg("bux ::::: " + name + " " + mFromNum + "  "
+                    + mToNUm);
+
+            sendMessage("<r>" + Constant.mRejectedBuxS);
+
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1001:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1002:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1003:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1004:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1005:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1006:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
     }
 }

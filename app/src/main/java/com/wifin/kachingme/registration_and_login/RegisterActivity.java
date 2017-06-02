@@ -1,5 +1,6 @@
 package com.wifin.kachingme.registration_and_login;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.DatePickerDialog;
@@ -11,6 +12,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -22,10 +24,13 @@ import android.media.ExifInterface;
 import android.media.ThumbnailUtils;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.text.InputFilter;
@@ -61,6 +66,7 @@ import com.wifin.kachingme.util.AvatarManager;
 import com.wifin.kachingme.util.CommonMethods;
 import com.wifin.kachingme.util.Connectivity;
 import com.wifin.kachingme.util.Constant;
+import com.wifin.kachingme.util.KachingMeConfig;
 import com.wifin.kachingme.util.RounderImageView;
 import com.wifin.kachingme.util.Utils;
 import com.wifin.kachingme.util.Validation;
@@ -73,23 +79,24 @@ import org.w3c.dom.NodeList;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author siva
- *         Created by Wifintech on 12-Sep-16.
+ *  Created by Wifintech on 12-Sep-16.
  */
 public class RegisterActivity extends Slideshow {
 
     public static final int REQUEST_CODE_CROP_IMAGE = 12;
-    public static final String REG_ID = "regId";
     static final int DATE_DIALOG_FROMID = 1,
             CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE = 99;
-    private static final String APP_VERSION = "appVersion";
     LinearLayout mEmailLayout, mProfileImageMainLayout, mPersonDetailMainLayout, mPassswordMainLayout,
             mcheckLayout1, mcheckLayout2, mGenderLayout;
     FrameLayout mProfileImageLayout;
@@ -123,6 +130,9 @@ public class RegisterActivity extends Slideshow {
         }
 
     };
+    String[] PERMISSIONS = {Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS
+            , Manifest.permission.PROCESS_OUTGOING_CALLS, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_FINE_LOCATION};
     private Uri fileUri;
     private int year, month, day;
     private DatePickerDialog.OnDateSetListener datePickerListener = new DatePickerDialog.OnDateSetListener() {
@@ -141,32 +151,6 @@ public class RegisterActivity extends Slideshow {
 
         }
     };
-
-    private static int getAppVersion(Context context) {
-        try {
-            PackageInfo packageInfo = context.getPackageManager()
-                    .getPackageInfo(context.getPackageName(), 0);
-            return packageInfo.versionCode;
-        } catch (NameNotFoundException e) {
-            Log.d("RegisterActivity",
-                    "I never expected this! Going down, going down!" + e);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static Bitmap decodeSampledBitmapFromResource(String filepath,
-                                                         int reqWidth, int reqHeight) {
-        // First decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(filepath, options);
-        // Calculate inSampleSize
-        options.inSampleSize = calculateInSampleSize(options, reqWidth,
-                reqHeight);
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-        return BitmapFactory.decodeFile(filepath, options);
-    }
 
     public static int calculateInSampleSize(
 
@@ -219,6 +203,17 @@ public class RegisterActivity extends Slideshow {
         return Bitmap.createBitmap(bitmap, 0, 0, w, h, mtx, true);
     }
 
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -253,6 +248,10 @@ public class RegisterActivity extends Slideshow {
                     }
                 }
         });
+
+        if (!hasPermissions(this, PERMISSIONS)) {
+            ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
+        }
     }
 
     private void intializeRegistration() {
@@ -329,12 +328,49 @@ public class RegisterActivity extends Slideshow {
                 break;
             case R.id.camera_image:
                 //popupChooseImage();
-                chooseImage();
+                if (hasPermissions(this, PERMISSIONS)) {
+                    chooseImage();
+                } else {
+                    showDialogOK("Access Media Permission required for this app",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    switch (which) {
+                                        case DialogInterface.BUTTON_POSITIVE:
+                                            if (!hasPermissions(RegisterActivity.this, PERMISSIONS)) {
+                                                ActivityCompat.requestPermissions(RegisterActivity.this, PERMISSIONS, 1);
+                                            }
+                                            break;
+                                        case DialogInterface.BUTTON_NEGATIVE:
+                                            // proceed with logic by disabling the related features or quit the app.
+                                            break;
+                                    }
+                                }
+                            });
+                }
                 break;
             case R.id.register_nextToPersonDetails:
-                mProfileImageMainLayout.setVisibility(View.GONE);
-                mPersonDetailMainLayout.setVisibility(View.VISIBLE);
-                mPassswordMainLayout.setVisibility(View.GONE);
+                if (hasPermissions(this, PERMISSIONS)) {
+                    mProfileImageMainLayout.setVisibility(View.GONE);
+                    mPersonDetailMainLayout.setVisibility(View.VISIBLE);
+                    mPassswordMainLayout.setVisibility(View.GONE);
+                } else {
+                    showDialogOK("Contatcs Permission required for this app",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    switch (which) {
+                                        case DialogInterface.BUTTON_POSITIVE:
+                                            if (!hasPermissions(RegisterActivity.this, PERMISSIONS)) {
+                                                ActivityCompat.requestPermissions(RegisterActivity.this, PERMISSIONS, 1);
+                                            }
+                                            break;
+                                        case DialogInterface.BUTTON_NEGATIVE:
+                                            break;
+                                    }
+                                }
+                            });
+                }
                 break;
             case R.id.register_dateOfBirth:
                 showDialog(DATE_DIALOG_FROMID);
@@ -379,11 +415,79 @@ public class RegisterActivity extends Slideshow {
                 }
                 break;
             case R.id.register_next:
-                nextSubmitProcess();
+                if (hasPermissions(this, PERMISSIONS))
+                    nextSubmitProcess();
+                else
+                    Toast.makeText(this, "Go to settings and enable permissions", Toast.LENGTH_LONG).show();
                 break;
             default:
                 break;
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Constant.printMsg("Registration Activity Permission status......" + requestCode + "...." + permissions + "....." + grantResults);
+        switch (requestCode) {
+            case 1: {
+                Constant.printMsg("Registration Activity Permission status...switch case 1...");
+                Map<String, Integer> perms = new HashMap<>();
+//                perms.put(Manifest.permission.SEND_SMS, PackageManager.PERMISSION_GRANTED);
+//                perms.put(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                if (grantResults.length > 0) {
+                    for (int i = 0; i < permissions.length; i++)
+                        perms.put(permissions[i], grantResults[i]);
+                    Constant.printMsg("Registration Activity Check for both permission status....."
+                            + perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) + "....." + PackageManager.PERMISSION_GRANTED
+                            + perms.get(Manifest.permission.READ_CONTACTS) + "....." + perms.get(Manifest.permission.PROCESS_OUTGOING_CALLS));
+                    if (perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.PROCESS_OUTGOING_CALLS) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        Constant.printMsg("Registration Activity Permission status permission granted");
+                    } else {
+                        Constant.printMsg("Registration Activity Some permissions are not granted ask again ");
+                        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+                                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS) ||
+                                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.PROCESS_OUTGOING_CALLS)||
+                                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION) ) {
+                            showDialogOK("Contatcs Permission required for this app",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            switch (which) {
+                                                case DialogInterface.BUTTON_POSITIVE:
+                                                    if (!hasPermissions(RegisterActivity.this, PERMISSIONS)) {
+                                                        ActivityCompat.requestPermissions(RegisterActivity.this, PERMISSIONS, 1);
+                                                    }
+                                                    Constant.printMsg("Registration Activity Permission status.....BUTTON_POSITIVE......");
+                                                    break;
+                                                case DialogInterface.BUTTON_NEGATIVE:
+                                                    // proceed with logic by disabling the related features or quit the app.
+                                                    Constant.printMsg("Registration Activity Permission status.....BUTTON_NEGATIVE......");
+                                                    break;
+                                            }
+                                        }
+                                    });
+                        } else {
+                            Toast.makeText(this, "Go to settings and enable permissions", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } else {
+                    Constant.printMsg("Registration Activity code empty......");
+                }
+            }
+        }
+    }
+
+    private void showDialogOK(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", okListener)
+                .create()
+                .show();
     }
 
     private void setFbGplusData() {
@@ -392,6 +496,7 @@ public class RegisterActivity extends Slideshow {
             Bitmap bitmp = stringToBitMap(test);
             if (bitmp != null) {
                 mProfileImage.setImageBitmap(bitmp);
+                Constant.mProfileImage=bitmp;
             }
         }
         mFirstName.setText(Constant.mFirstName);
@@ -466,31 +571,18 @@ public class RegisterActivity extends Slideshow {
             getRegistrationData();
         preference = getSharedPreferences(
                 KachingMeApplication.getPereference_label(), Activity.MODE_PRIVATE);
-//		options = new DisplayImageOptions.Builder()
-//				.showImageOnLoading(R.drawable.ic_empty)
-//				.showImageForEmptyUri(R.drawable.ic_empty)
-//				.showImageOnFail(R.drawable.ic_launcher).cacheInMemory(true)
-//				.cacheOnDisk(true).considerExifParams(true).build();
         ImageLoader.getInstance()
                 .init(ImageLoaderConfiguration
                         .createDefault(getApplicationContext()));
         Constant.printMsg("profile img     " + Constant.profileimg);
         if (Constant.profileimg != null) {
-//			 ImageLoader.getInstance().displayImage(
-//					 String.valueOf(Constant.profileimg).replaceAll(" ", "%20"),
-//					 mProfileImage, options, animateFirstListener);
             new LoadProfileImage(mProfileImage).execute(Constant.profileimg);
 
         }
-//        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-//            spannedResult = Html.fromHtml("I agree to the "
-//                    + "<font color=#ff0000><a href='http://www.google.com'>Terms of Service and Privacy Policy</a></font>",Html.FROM_HTML_MODE_LEGACY);
-//        } else {
         spannedResult = Html.fromHtml("I agree to the "
-                + "<font color=#ff0000><a href='http://www.google.com'>Terms of Service</a></font>" + " and "
-                + "<font color=#ff0000><a href='http://www.wifintech.com/'>Privacy Policy</a></font>");
-        //siva
-//        }
+                + "<font color=#ff0000><a href='"+ KachingMeConfig.TERMS_OF_SERVICE+"'>Terms of Service</a></font>" + " and "
+                + "<font color=#ff0000><a href='"+ KachingMeConfig.PRIVACY_POLICY+"'>Privacy Policy</a></font>");
+
         tabletSize = getResources().getBoolean(R.bool.isTablet);
         mCheckCondition1.setText(spannedResult);
         mCheckCondition1.setClickable(true);
@@ -509,7 +601,6 @@ public class RegisterActivity extends Slideshow {
         // maxYear = year - 1000;
         pref = PreferenceManager.getDefaultSharedPreferences(this);
         regId = getIntent().getStringExtra("regId");
-        Constant.Imei_no = getIMEINo();
 
         if (Constant.mFromVerfication == true) {
             Constant.mFromVerfication = false;
@@ -528,20 +619,7 @@ public class RegisterActivity extends Slideshow {
                 mProfileImage.setImageBitmap(Constant.mProfileImage);
             }
         }
-        if (Connectivity.isConnected(RegisterActivity.this)) {
-            if (TextUtils.isEmpty(regId)) {
-                regId = registerGCM();
-                Constant.device_id = regId;
-                Log.d("RegisterActivity", "GCM RegId: " + regId + " res"
-                        + Constant.device_id);
-            } else {
-                Constant.printMsg("Already Registered with GCM Server!");
-            }
-        } else {
-            Toast.makeText(RegisterActivity.this,
-                    "Please check your network connection", Toast.LENGTH_SHORT)
-                    .show();
-        }
+
         if (Constant.manualmail == null) {
             Constant.printMsg("name ::::::>>>>>>>=== " + Constant.profilemail);
             if (Constant.profilemail != null) {
@@ -550,20 +628,11 @@ public class RegisterActivity extends Slideshow {
         } else {
             mEmailIdText.setText(Constant.manualmail);
         }
-
-//		TelephonyManager telephonyManager = (TelephonyManager) this
-//				.getSystemService(Context.TELEPHONY_SERVICE);
-//		strMobileNumber = telephonyManager.getLine1Number();
-//
-//		phoneUtil = PhoneNumberUtil.getInstance();
-//		formatter = phoneUtil.getAsYouTypeFormatter(Locale.getDefault()
-//				.getCountry());
-//
     }
 
     private void nextToPersonalDetails() {
-        if (mFirstName.getText().toString().length() > 0) {
-            if (mLastName.getText().toString().length() > 0) {
+        if (mFirstName.getText().toString().trim().length() > 0) {
+            if (mLastName.getText().toString().trim().length() > 0) {
                 if (mDateOfBirth.getText().toString().length() > 0) {
                     mProfileImageMainLayout.setVisibility(View.GONE);
                     mPersonDetailMainLayout.setVisibility(View.GONE);
@@ -673,6 +742,7 @@ public class RegisterActivity extends Slideshow {
         // Clearing saved register_activity details
         // in shared preference
         prefOtp.clearRegistrationDetails();
+        Constant.addverification=false;
         Intent intent = new Intent(RegisterActivity.this,
                 VerificationActivity.class);
         intent.putExtra("sexId", mGenderRadioGroup.getCheckedRadioButtonId());
@@ -856,128 +926,6 @@ public class RegisterActivity extends Slideshow {
         return null;
     }
 
-    private String getIMEINo() {
-        String tempString = "";
-        try {
-            TelephonyManager telemgr = (TelephonyManager) getApplicationContext()
-                    .getSystemService(Context.TELEPHONY_SERVICE);
-            tempString = telemgr.getDeviceId();
-            // .trim() == null ? "" : telemgr.getDeviceId().trim();
-        } catch (Exception e) {
-            // tempString = "EX2";
-        }
-        Constant.printMsg("Imei number is :::::::" + tempString);
-        Constant.Imei_no = tempString;
-        return tempString;
-
-    }
-
-    /*
-     * To Register with google cloud added on 10-09-2014 by prabhakaran
-     */
-    public String registerGCM() {
-        // preloaderStart();
-        // progressDialog.show();
-        gcm = GoogleCloudMessaging.getInstance(this);
-        regId = getRegistrationId();
-        if (TextUtils.isEmpty(regId)) {
-            registerInBackground();
-            Log.d("RegisterActivity",
-                    "registerGCM - successfully registered with GCM server - regId: "
-                            + regId);
-
-        } else {
-            // preloaderStop();
-
-        }
-        return regId;
-    }
-
-    private String getRegistrationId() {
-        final SharedPreferences prefs = getSharedPreferences(
-                RegisterActivity.class.getSimpleName(), Context.MODE_PRIVATE);
-        String registrationId = prefs.getString(REG_ID, "");
-        if (registrationId.isEmpty()) {
-            Log.i("ECPL", "Registration not found.");
-            return "";
-        }
-        int registeredVersion = prefs.getInt(APP_VERSION, Integer.MIN_VALUE);
-        int currentVersion = getAppVersion(this);
-        if (registeredVersion != currentVersion) {
-            Log.i("ECPL", "App version changed.");
-            return "";
-        }
-        return registrationId;
-    }
-
-    private void registerInBackground() {
-        new AsyncTask<Void, Void, String>() {
-
-            @Override
-            protected String doInBackground(Void... params) {
-                String msg = "";
-                try {
-                    if (gcm == null) {
-                        gcm = GoogleCloudMessaging.getInstance(getApplicationContext());
-                    }
-                    regId = gcm.register(Constant.GOOGLE_PROJECT_ID);
-                    Log.d("RegisterActivity", "registerInBackground - regId: "
-                            + regId);
-                    msg = "Device registered, register_activity ID = " + regId;
-
-                    Constant.printMsg("inside posting" + msg);
-
-                    Constant.device_id = regId;
-                    // stored the register_activity ID in shared preferences
-                    storeRegistrationId(getApplicationContext(), regId);
-                } catch (IOException ex) {
-                    msg = "Error :" + ex.getMessage();
-                    Log.d("RegisterActivity", "Error: " + msg);
-                }
-                Log.d("RegisterActivity", "AsyncTask completed: " + msg);
-
-                return msg;
-            }
-
-            @Override
-            protected void onPostExecute(String msg) {
-
-                google_reg(msg);
-                // progressDialog.dismiss();
-            }
-
-            @Override
-            protected void onPreExecute() {
-                // TODO Auto-generated method stub
-                super.onPreExecute();
-            }
-
-        }.execute(null, null, null);
-    }
-
-    public void google_reg(String msg) {
-        Constant.printMsg("GCM Register id is ::::::::::" + msg);
-
-        if (msg.contains("SERVICE_NOT_AVAILABLE")) {
-            Constant.device_id = "";
-            registerGCM();
-        } else {
-            Constant.printMsg("GCM Registration Success ::::::::");
-        }
-    }
-
-    private void storeRegistrationId(Context context, String regId) {
-        final SharedPreferences prefs = getSharedPreferences(
-                RegisterActivity.class.getSimpleName(), Context.MODE_PRIVATE);
-        int appVersion = getAppVersion(context);
-        Log.i("ECPL", "Saving regId on app version " + appVersion);
-        Editor editor = prefs.edit();
-        editor.putString(REG_ID, regId);
-        editor.putInt(APP_VERSION, appVersion);
-        editor.commit();
-
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode,
                                     Intent imageReturnedIntent) {
@@ -991,12 +939,10 @@ public class RegisterActivity extends Slideshow {
                     Cursor cursor = getContentResolver().query(selectedImage,
                             filePathColumn, null, null, null);
                     cursor.moveToFirst();
-
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                     String filePath = cursor.getString(columnIndex);
                     // Constant.printMsg("filepath is : "+filePath);
                     cursor.close();
-
                     Intent intent = new Intent(this, CropImage.class);
                     intent.setType("image/*");
                     intent.putExtra(CropImage.IMAGE_PATH, filePath);
@@ -1011,47 +957,27 @@ public class RegisterActivity extends Slideshow {
                 break;
             case REQUEST_CODE_CROP_IMAGE:
                 if (resultCode == RESULT_OK) {
-
-                    final Bundle extras = imageReturnedIntent.getExtras();
-
-                    if (CropImage.croppedImage!= null) {
+                    if (CropImage.croppedImage != null) {
                         try {
-                            Bitmap unscaledBitmap = CropImage.croppedImage ;
-
+                            Bitmap unscaledBitmap = CropImage.croppedImage;
                             ByteArrayOutputStream out = new ByteArrayOutputStream();
-                            unscaledBitmap.compress(CompressFormat.JPEG, 100,
-                                    out);
-
-                            Log.d(TAG, "Unscalled Bitmap::" + (out.size() / 1024));
-                    /*
-                     * if (!(unscaledBitmap.getWidth() <= 480 &&
-					 * unscaledBitmap.getHeight() <= 800)) { // Part 2: Scale
-					 * image Bitmap scaledBitmap =
-					 * ScalingUtilities.createScaledBitmap(unscaledBitmap, 480,
-					 * 800); scaledBitmap.compress(Bitmap.CompressFormat.JPEG,
-					 * 50,out); scaledBitmap.recycle(); }
-					 */
+                            unscaledBitmap.compress(CompressFormat.JPEG, 100, out);
                             int quality = 100;
                             while ((out.size() / 1024) > 25) {
                                 out = new ByteArrayOutputStream();
-                                unscaledBitmap.compress(CompressFormat.JPEG, quality,
-                                        out);
+                                unscaledBitmap.compress(CompressFormat.JPEG, quality,out);
                                 quality = quality - 5;
-                                Log.d(TAG, "Profile picture Image Size::"
-                                        + (out.size()) / 1024);
+                                Log.d(TAG, "Profile picture Image Size::" + (out.size()) / 1024);
                             }
-
                             Log.d(TAG, "Scalled Bitmap::" + (out.size() / 1024));
                             img_byte = out.toByteArray();
                             Constant.byteimage = img_byte;
                             mProfileImage.setImageBitmap(unscaledBitmap);
                             Constant.mProfileImage = unscaledBitmap;
-
                             CropImage.croppedImage = null;
                         } catch (Exception e) {
-
+                            e.printStackTrace();
                         }
-                        // new MyAsync_save().execute();
                     }
                 }
                 break;
@@ -1060,16 +986,11 @@ public class RegisterActivity extends Slideshow {
                 Constant.printMsg("calledd shot::::::::>>>>>>>>>");
                 if (resultCode == RESULT_OK) {
                     // Image captured and saved to fileUri specified in the Intent
-                /*
-                 * Toast.makeText(this, "Image saved to:\n" + fileUri.getPath(),
-				 * Toast.LENGTH_LONG).show();
-				 */
                     Constant.printMsg("calledd shot::::::::>>>>>>>>>111");
                     File file = new File(fileUri.getPath());
                     if (file.length() > 26214400) {
                         commonMethods.showAlertDialog(this, getResources()
-                                        .getString(R.string.imagesize_must_be_smaller),
-                                true);
+                                        .getString(R.string.imagesize_must_be_smaller), true);
                     } else {
                         Intent intent = new Intent(this, CropImage.class);
                         intent.setType("image/*");
@@ -1230,6 +1151,44 @@ public class RegisterActivity extends Slideshow {
         }
     }
 
+    /**
+     * Background Async task to load user profile picture from url
+     */
+    private class LoadProfileImage extends AsyncTask<String, Void, Bitmap> {
+        ImageView bmImage;
+
+        public LoadProfileImage(ImageView bmImage) {
+            this.bmImage = bmImage;
+        }
+
+        protected Bitmap doInBackground(String... urls) {
+            String urldisplay = urls[0];
+            Bitmap mIcon11 = null;
+            try {
+                InputStream in = new java.net.URL(urldisplay).openStream();
+                mIcon11 = BitmapFactory.decodeStream(in);
+            } catch (Exception e) {
+                Log.e("Error", e.getMessage());
+                e.printStackTrace();
+            }
+            return mIcon11;
+        }
+
+        protected void onPostExecute(Bitmap result) {
+            bmImage.setBackgroundResource(0);
+            bmImage.setImageBitmap(result);
+
+            bmImage.setDrawingCacheEnabled(true);
+            Bitmap scaledBitmap = bmImage.getDrawingCache();
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            scaledBitmap.compress(CompressFormat.JPEG, 75, stream);
+            byte[] byteArray = stream.toByteArray();
+
+            Constant.byteimage = byteArray;
+            Constant.bitmapImage = result;
+        }
+    }
+
     private void hideSoftKeyBoardOnTabClicked(View v) {
         if (v != null && getApplicationContext() != null) {
             InputMethodManager imm = (InputMethodManager) getApplicationContext()
@@ -1363,14 +1322,6 @@ public class RegisterActivity extends Slideshow {
         mMaleImage.setPadding(width * 5 / 2 / 100, width * 5 / 2 / 100, width * 5 / 2 / 100, width * 5 / 2 / 100);
         mFemaleImage.setPadding(width * 5 / 2 / 100, width * 5 / 2 / 100, width * 5 / 2 / 100, width * 5 / 2 / 100);
 
-//		LinearLayout.LayoutParams femaleImageParama = new LinearLayout.LayoutParams(
-//				LinearLayout.LayoutParams.WRAP_CONTENT,
-//				LinearLayout.LayoutParams.WRAP_CONTENT);
-//		femaleImageParama.width = height * 11/2 / 100;
-//		femaleImageParama.height = height * 11/2 / 100;
-//		femaleImageParama.gravity = Gravity.LEFT|Gravity.CENTER;
-//		femaleImageParama.leftMargin=width*1/100;
-
         LinearLayout.LayoutParams maleTextParama = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -1383,29 +1334,6 @@ public class RegisterActivity extends Slideshow {
         mFemaleText.setLayoutParams(maleTextParama);
         mMaleText.setGravity(Gravity.LEFT | Gravity.CENTER);
         mFemaleText.setGravity(Gravity.LEFT | Gravity.CENTER);
-
-//		LinearLayout.LayoutParams maleRadioButtonarama = new LinearLayout.LayoutParams(
-//				LinearLayout.LayoutParams.WRAP_CONTENT,
-//				LinearLayout.LayoutParams.WRAP_CONTENT);
-//		maleRadioButtonarama.width = width * 89/2 / 100;
-//		maleRadioButtonarama.height = height * 7 / 100;
-//		maleRadioButtonarama.gravity = Gravity.LEFT;
-//		mMale.setLayoutParams(maleRadioButtonarama);
-//		mMale.setGravity(Gravity.LEFT | Gravity.CENTER);
-//		mMale.setScaleX((int)(0.5));
-//		mMale.setScaleY((int)(0.5));
-//
-//		LinearLayout.LayoutParams femaleRadioButtonarama = new LinearLayout.LayoutParams(
-//				LinearLayout.LayoutParams.WRAP_CONTENT,
-//				LinearLayout.LayoutParams.WRAP_CONTENT);
-//		femaleRadioButtonarama.width = width * 89/2 / 100;
-//		femaleRadioButtonarama.height = height * 7 / 100;
-//		femaleRadioButtonarama.gravity = Gravity.LEFT;
-//		femaleRadioButtonarama.leftMargin=width*8/100;
-//		mFemale.setLayoutParams(femaleRadioButtonarama);
-//		mFemale.setGravity(Gravity.LEFT | Gravity.CENTER);
-//		mFemale.setPadding(width * 2 / 100, 0, 0, 0);
-//
 
         LinearLayout.LayoutParams dobParama = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -1433,6 +1361,7 @@ public class RegisterActivity extends Slideshow {
         mPassword.setLayoutParams(passwordParama);
         mPassword.setGravity(Gravity.LEFT | Gravity.CENTER);
         mPassword.setPadding(width * 2 / 100, 0, 0, 0);
+        mPassword.setLongClickable(false);
 
         LinearLayout.LayoutParams reEnterPasswordParama = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -1444,6 +1373,7 @@ public class RegisterActivity extends Slideshow {
         mReEnterPassword.setLayoutParams(reEnterPasswordParama);
         mReEnterPassword.setGravity(Gravity.LEFT | Gravity.CENTER);
         mReEnterPassword.setPadding(width * 2 / 100, 0, 0, 0);
+        mReEnterPassword.setLongClickable(false);
 
         LinearLayout.LayoutParams chekboxLayoutParama = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -1561,44 +1491,6 @@ public class RegisterActivity extends Slideshow {
             mCheckCondition1.setTextSize(10);
             mCheckCondition2.setTextSize(10);
             mDateOfBirth.setTextSize(15);
-        }
-    }
-
-    /**
-     * Background Async task to load user profile picture from url
-     */
-    private class LoadProfileImage extends AsyncTask<String, Void, Bitmap> {
-        ImageView bmImage;
-
-        public LoadProfileImage(ImageView bmImage) {
-            this.bmImage = bmImage;
-        }
-
-        protected Bitmap doInBackground(String... urls) {
-            String urldisplay = urls[0];
-            Bitmap mIcon11 = null;
-            try {
-                InputStream in = new java.net.URL(urldisplay).openStream();
-                mIcon11 = BitmapFactory.decodeStream(in);
-            } catch (Exception e) {
-                Log.e("Error", e.getMessage());
-                e.printStackTrace();
-            }
-            return mIcon11;
-        }
-
-        protected void onPostExecute(Bitmap result) {
-            bmImage.setBackgroundResource(0);
-            bmImage.setImageBitmap(result);
-
-            bmImage.setDrawingCacheEnabled(true);
-            Bitmap scaledBitmap = bmImage.getDrawingCache();
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            scaledBitmap.compress(CompressFormat.JPEG, 75, stream);
-            byte[] byteArray = stream.toByteArray();
-
-            Constant.byteimage = byteArray;
-            Constant.bitmapImage = result;
         }
     }
 }

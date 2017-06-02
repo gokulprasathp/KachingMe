@@ -13,6 +13,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 
+import com.wifin.kachingme.adaptors.UsageAdapters;
 import com.wifin.kachingme.registration_and_login.OtpVerification;
 import com.wifin.kachingme.services.TempConnectionService;
 import com.wifin.kachingme.settings.SettingsActivity;
@@ -86,6 +87,14 @@ public class GlobalBroadcast extends BroadcastReceiver {
                     OtpVerification.otpConfirmation("broadcast");
                     Constant.isOtpVerification = false;
                 }
+            }else{
+                if (Constant.secondaryOtp != null && !Constant.secondaryOtp.equalsIgnoreCase("null")
+                        && !Constant.secondaryOtp.isEmpty()) {
+                    if (Constant.isOtpVerification) {
+                        UsageAdapters.otpConfirmation("broadcast");
+                        Constant.isOtpVerification = false;
+                    }
+                }
             }
         }
         Constant.printMsg("GGGGGGGGGG act" + intent.getAction().toString());
@@ -95,10 +104,8 @@ public class GlobalBroadcast extends BroadcastReceiver {
             Constant.printMsg("Settings Activity");
         }
         if (Connectivity.isOnline(context) == true) {
-            Constant.printMsg("GGGGGGGGGG network there : service status :" + isServiceRunning(
-                    TempConnectionService.class.getCanonicalName(), context));
-            if (!isServiceRunning(
-                    TempConnectionService.class.getCanonicalName(), context)) {
+            Constant.printMsg("GGGGGGGGGG network there : service status :");
+            if (!Connectivity.isTempConnection()) {
                 context.startService(new Intent(
                         context.getApplicationContext(),
                         TempConnectionService.class));
@@ -106,7 +113,6 @@ public class GlobalBroadcast extends BroadcastReceiver {
         } else {
             stopService(context);
         }
-
 
     }
 

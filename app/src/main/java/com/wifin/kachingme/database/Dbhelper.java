@@ -9,7 +9,7 @@ public class Dbhelper {
 
     public static final String DB_NAME = "KaChing.me";
 
-    public static final int DB_VERSION = 3;
+    public static final int DB_VERSION = 4;
 
     public static final String TABLE_CART = "deels";
     public static final String CREATE_TABLE_CART = "CREATE TABLE IF NOT EXISTS "
@@ -136,6 +136,7 @@ public class Dbhelper {
             + " (id integer primary key autoincrement,"
             + "activity_bux text , "
             + "activity text , "
+            + "bux_master_id text , "
             + "earned_bux text"
             + ");";
     public static final String TABLE_NUMBERS = "sp_numbers";

@@ -2,9 +2,10 @@ package com.wifin.kachingme.pojo;
 
 public class BuxsEarnedDto {
 
-	String name;
-	String acheive;
-	String buxs;
+	private String name;
+	private String acheive;
+	private String buxs;
+	private String bux_id;
 
 	public String getName() {
 		return name;
@@ -30,4 +31,11 @@ public class BuxsEarnedDto {
 		this.buxs = buxs;
 	}
 
+	public String getBux_id() {
+		return bux_id;
+	}
+
+	public void setBux_id(String bux_id) {
+		this.bux_id = bux_id;
+	}
 }

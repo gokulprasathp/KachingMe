@@ -1,8 +1,11 @@
 package com.wifin.kachingme.registration_and_login;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -17,8 +20,11 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.util.Base64;
 import android.util.DisplayMetrics;
@@ -39,37 +45,31 @@ import com.viewpagerindicator.CirclePageIndicator;
 import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.adaptors.SlideShowAdapter;
 import com.wifin.kachingme.applications.KachingMeApplication;
+import com.wifin.kachingme.bradcast_recivers.GlobalBroadcast;
 import com.wifin.kachingme.database.Dbhelper;
 import com.wifin.kachingme.pojo.NymsPojo;
 import com.wifin.kachingme.services.TempConnectionService;
-import com.wifin.kachingme.util.AlertUtils;
 import com.wifin.kachingme.util.Connectivity;
 import com.wifin.kachingme.util.Constant;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 
 /**
  * Created by Wifintech on 12-Sep-16.
  */
 public class Slideshow extends AppCompatActivity implements OnClickListener {
 
-    public static final String REG_ID = "regId";
-    //	Button signout, next;
-//	EditText mail;
-//	View mView;
     private static final String TAG = "RegistrationMainActivity";
     private static final int PROFILE_PIC_SIZE = 400;
     private static final String APP_VERSION = "appVersion";
     public static ImageView sLogoImage, sLoginImage, sLogoTitleImage;
-    boolean fbcheck = false;
     SharedPreferences sharedPreferences;
     Editor editor;
-    //    private static final int RC_SIGN_IN = 9001;
-    String user_id, username, provider, useremail, image;
-    String regId;
-    //	Context context;
+    String regId,imeiNo;
     Dbhelper dbhelper;
     SharedPreferences pref;
     String db_data;
@@ -79,26 +79,26 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
     TextView sLogoTitle;
     View sBottomView;
     LinearLayout sMainLayout, sPagerMainLayout;
-    private boolean mSignInClicked;
-    private boolean mIntentInProgress;
+    String[] PERMISSIONS = {Manifest.permission.READ_CONTACTS, Manifest.permission.WRITE_CONTACTS
+            , Manifest.permission.PROCESS_OUTGOING_CALLS, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_FINE_LOCATION};
 
-    private static int getAppVersion(Context context) {
-        try {
-            PackageInfo packageInfo = context.getPackageManager()
-                    .getPackageInfo(context.getPackageName(), 0);
-            return packageInfo.versionCode;
-        } catch (NameNotFoundException e) {
-            Log.d("RegisterActivity",
-                    "I never expected this! Going down, going down!" + e);
-            throw new RuntimeException(e);
+
+    public static boolean hasPermissions(Context context, String... permissions) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && context != null && permissions != null) {
+            for (String permission : permissions) {
+                if (ActivityCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
+                    return false;
+                }
+            }
         }
+        return true;
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 //        FacebookSdk.sdkInitialize(getApplicationContext());
-        //siva
 //		ViewGroup vg = (ViewGroup) findViewById(R.id.Ka_datalayout);
 //		View.inflate(this, R.layout.slideshow, vg);
         setContentView(R.layout.slideshow);
@@ -137,8 +137,6 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
         sharedPreferences = getSharedPreferences(KachingMeApplication.getPereference_label(),
                 Activity.MODE_PRIVATE);
         editor = sharedPreferences.edit();
-//		context = getApplicationContext();
-
         pref = PreferenceManager.getDefaultSharedPreferences(this);
         db_data = pref.getString("db_data", "");
         received_msg_count = pref.getInt("received_msg_count", 0);
@@ -177,14 +175,7 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
-
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-
-//		uiHelper = new UiLifecycleHelper(this, callback);
-//		uiHelper.onCreate(savedInstanceState);
-
-//		mail.setVisibility(View.VISIBLE);
-
         Constant.printMsg("ssss " + Constant.isRegisteredBackPress + "--"
                 + Constant.profilemail + " --"
                 + new OtpSharedPreference(this).isRegistered() + "---"
@@ -194,10 +185,8 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
             new OtpSharedPreference(this).clearRegistrationDetails();
             sharedPreferences.edit().remove("facebookProfilePicture").commit();
             Constant.byteimage = null;
-            Constant.bitmapImage=null;
+            Constant.bitmapImage = null;
             Constant.isRegisteredBackPress = false;
-//			if (Constant.profilemail != null)
-//				mail.setText(Constant.profilemail);
         } else {
             if (new OtpSharedPreference(this).isRegistered()
                     && Constant.profilemail != null) {
@@ -209,101 +198,25 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
             }
         }
 
-        // Button click listeners
-        //	btnSignIn.setOnClickListener(this);
-//		btnFbLogin.setOnClickListener(this);
-
-        // Initializing google plus api client
-//		mGoogleApiClient = new GoogleApiClient.Builder(this)
-//				.addConnectionCallbacks(this)
-//				.addOnConnectionFailedListener(this)
-//				.addApi(Plus.API, Plus.PlusOptions.builder().build())
-//				.addScope(Plus.SCOPE_PLUS_LOGIN).build();
-
         SlideShowAdapter mAdapter = new SlideShowAdapter(
                 getSupportFragmentManager());
         sPager.setAdapter(mAdapter);
         Constant.printMsg("[pager:" + sPager.getCurrentItem());
 
         sIndicator.setViewPager(sPager);
-        startService(new Intent(Slideshow.this, TempConnectionService.class));
-        // mPager.setOnPageChangeListener(new OnPageChangeListener() {
-        // public void onPageScrollStateChanged(int state) {
-        //
-        //
-        // public void onPageScrolled(int position, float positionOffset,
-        // int positionOffsetPixels) {
-        // Constant.printMsg("[pager:onPageScrolled");
-        // }
-        //
-        // public void onPageSelected(int position) {
-        // Constant.printMsg("[pager:onPageSelected");
-        // // Check if this is the page you want.
-        // }
-        // });
-
-//        if (Connectivity.isConnected(Slideshow.this)) {
-//            if (TextUtils.isEmpty(regId)) {
-//                regId = registerGCM();
-//                Constant.device_id = regId;
-//                Constant.printMsg("RegisterActivit GCM RegId: " + regId + " res"
-//                        + Constant.device_id);
-//            } else {
-//                Constant.printMsg("Already Registered with GCM Server!");
-//            }
-//        } else {
-//            Toast.makeText(Slideshow.this,
-//                    "Please check your network connection", Toast.LENGTH_SHORT)
-//                    .show();
-//        }
-//		sIndicator.setOnPageChangeListener(new OnPageChangeListener() {
-//
-//			@Override
-//			public void onPageSelected(int arg0) {
-//				// TODO Auto-generated method stub
-//				if (arg0 == 0) {
-////					img.setImageDrawable(getResources().getDrawable(
-////							R.drawable.ic_launcher));
-//				} else if (arg0 == 1) {
-////					img.setImageDrawable(getResources().getDrawable(
-////							R.drawable.ic_launcher));
-//				} else if (arg0 == 2) {
-////					img.setImageDrawable(getResources().getDrawable(
-////							R.drawable.ic_launcher));
-//				} else if (arg0 == 3) {
-////					img.setImageDrawable(getResources().getDrawable(
-////							R.drawable.ic_launcher));
-//				} else if (arg0 == 4) {
-////					img.setImageDrawable(getResources().getDrawable(
-////							R.drawable.ic_launcher));
-//				} else if (arg0 == 5) {
-////					img.setImageDrawable(getResources().getDrawable(
-////							R.drawable.ic_launcher));
-//				}
-//				Constant.printMsg("[pager:onpage scroll state cange"
-//						 +sPager.getCurrentItem());
-//			}
-//
-//			@Override
-//			public void onPageScrolled(int arg0, float arg1, int arg2) {
-//				// TODO Auto-generated method stub
-//
-//			}
-//
-//			@Override
-//			public void onPageScrollStateChanged(int arg0) {
-//				// TODO Auto-generated method stub
-//
-//			}
-//		});
-
-
+        imeiNo=sharedPreferences.getString("ImeiNo","");
+        Constant.printMsg("Registration IMEI NUMBER............"+imeiNo);
+        if (imeiNo==null || imeiNo.equalsIgnoreCase("")) {
+            Editor e=sharedPreferences.edit();
+            e.putString("ImeiNo",getIMEINo());
+            e.commit();
+        }
+        if (!GlobalBroadcast.isServiceRunning(TempConnectionService.class.getCanonicalName(), this))
+            startService(new Intent(Slideshow.this, TempConnectionService.class));
     }
 
     private void intializeSlideShow() {
         sLogoImage = (ImageView) findViewById(R.id.slide_logoimage);
-//		signout = (Button) findViewById(R.id.signout);
-//		next = (Button) findViewById(R.id.btn_start_messanging);
         sIndicator = (CirclePageIndicator) findViewById(R.id.indicator);
         sBottomView = (View) findViewById(R.id.slide_bottomView);
         sPager = (ViewPager) findViewById(R.id.pager);
@@ -312,8 +225,6 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
         sMainLayout = (LinearLayout) findViewById(R.id.register_mainLayout);
         sPagerMainLayout = (LinearLayout) findViewById(R.id.register_mainPagerLayout);
         sLogoTitleImage = (ImageView) findViewById(R.id.slide_logTitleImage);
-//		signout.setOnClickListener(this);
-//		cartno.setOnClickListener(this);
         sLoginImage.setOnClickListener(this);
         Constant.typeFaceBold(this, sLogoTitle);
 
@@ -322,109 +233,124 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
     @Override
     public void onClick(View v) {
         // TODO Auto-generated method stub
-
         switch (v.getId()) {
             case R.id.slide_loginImage:
-                if (Connectivity.isConnected(this)){
-                    if (SliderFragment.gplusCheck) {
-                        Constant.printMsg("Logged slide show gplus");
-                        SliderFragment.signOut();
-                    } else {
-                        if (SliderFragment.fbGpluscheck) {
-                            SliderFragment.logoutFromFacebook();
-                            Constant.printMsg("Logged slide show fb");
+                if (Connectivity.isConnected(this)) {
+                    if (hasPermissions(this, PERMISSIONS)) {
+                        if (SliderFragment.gplusCheck) {
+                            Constant.printMsg("Logged slide show gplus");
+                            SliderFragment.signOut();
                         } else {
-                            Constant.printMsg("Logged slide show nothing");
-                        }
-                    }
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!TempConnectionService.connection.isConnected()) {
-                                try {
-                                    TempConnectionService.connection.connect();
-                                    Constant.printMsg("login initial  show. TempConnectionService....");
-                                } catch (Exception e) {
-                                    e.printStackTrace();
-                                    Constant.printMsg("login initial  show. TempConnectionService Exception...." + e);
-                                }
+                            if (SliderFragment.fbGpluscheck) {
+                                SliderFragment.logoutFromFacebook();
+                                Constant.printMsg("Logged slide show fb");
+                            } else {
+                                Constant.printMsg("Logged slide show nothing");
                             }
                         }
-                    }).start();
-                    startActivity(new Intent(Slideshow.this, Signin.class));
-                    finish();
-                    Constant.login = true;
-                    Constant.printMsg("succeeeeeeeeeeeeee slide show" + Constant.login);
-                }else {
-                    Toast.makeText(this,"Please Check Your Network Connection.!!",Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.button_cart:
-//				Constant.login = true;
-//				startActivity(new Intent(Slideshow.this, Signin.class));
-//				finish();
-                break;
-//            case R.id.btn_start_messanging:
-//
-//				new OtpSharedPreference(Slideshow.this)
-//						.clearRegistrationDetails();
-//				int vis = mail.getVisibility();
-//				Constant.printMsg("visiv::" + vis);
-//				if (mail.getText().toString().length() > 0) {
-//
-//					if (CheckValidation()) {
-//						DbDelete();
-//						Constant.manualmail = mail.getText().toString();
-//						new mailValidation().execute();
-//					}
-//				} else {
-//					fetchFrom();
-//					startActivity(new Intent(Slideshow.this, RegisterActivity.class));
-//					finish();
-//
-//				}
-//				siva
-//                break;
-//		case R.id.signin:
-//			// Signin button clicked
-//			if (KachingMeApplication.getIsNetAvailable()) {
-////			signInWithGplus();
-//			} else {
-//				new CommonMethods().Toast_call(
-//						this,
-//						getResources().getString(
-//								R.string.no_internet_connection));
-//			}
-//			break;
-//
-//		case R.id.signout:
-//			// Signout button clicked
-//
-//			String out = signout.getText().toString();
-//			String tx = "Logout From Google";
-//
-//			if (out.equals(tx)) {
-//
-////				signOutFromGplus();
-//			}
-//			break;
-//siva
-            case R.id.authButton:
-                // Signout button clicked
-                if (Connectivity.isConnected(this)){
-                    if (fbcheck == false) {
-//					SocialActivity.openActiveSession(this, true, callback);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (!TempConnectionService.connection.isConnected()) {
+                                    try {
+                                        TempConnectionService.connection.connect();
+                                        Constant.printMsg("login initial  show. TempConnectionService....");
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        Constant.printMsg("login initial  show. TempConnectionService Exception...." + e);
+                                    }
+                                }
+                            }
+                        }).start();
+                        Constant.loginOtp = null;
+                        Constant.Otp = null;
+                        startActivity(new Intent(Slideshow.this, Signin.class));
+                        finish();
+                        Constant.login = true;
+                        Constant.printMsg("succeeeeeeeeeeeeee slide show" + Constant.login);
+                    } else {
+                        ActivityCompat.requestPermissions(this, PERMISSIONS, 1);
                     }
                 } else {
-                    new AlertUtils().Toast_call(
-                            this,
-                            getResources().getString(
-                                    R.string.no_internet_connection));
+                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
                 }
                 break;
-
         }
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Constant.printMsg("Registration Activity Permission status......" + requestCode + "...." + permissions + "....." + grantResults);
+        switch (requestCode) {
+            case 1: {
+                Constant.printMsg("Registration Activity Permission status...switch case 1...");
+                Map<String, Integer> perms = new HashMap<>();
+//                perms.put(Manifest.permission.SEND_SMS, PackageManager.PERMISSION_GRANTED);
+//                perms.put(Manifest.permission.ACCESS_FINE_LOCATION, PackageManager.PERMISSION_GRANTED);
+                if (grantResults.length > 0) {
+                    for (int i = 0; i < permissions.length; i++)
+                        perms.put(permissions[i], grantResults[i]);
+                    Constant.printMsg("Registration Activity Check for both permission status....."
+                            + perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) + "....." + PackageManager.PERMISSION_GRANTED
+                            + perms.get(Manifest.permission.READ_CONTACTS) + "....." + perms.get(Manifest.permission.PROCESS_OUTGOING_CALLS));
+                    if (perms.get(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.PROCESS_OUTGOING_CALLS) == PackageManager.PERMISSION_GRANTED
+                            && perms.get(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        Constant.printMsg("Registration Activity Permission status permission granted");
+                    } else {
+                        Constant.printMsg("Registration Activity Some permissions are not granted ask again ");
+                        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
+                                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.READ_CONTACTS) ||
+                                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.PROCESS_OUTGOING_CALLS)||
+                                ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_FINE_LOCATION)) {
+                            showDialogOK("Contatcs Permission required for this app",
+                                    new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            switch (which) {
+                                                case DialogInterface.BUTTON_POSITIVE:
+                                                    if (!hasPermissions(Slideshow.this, PERMISSIONS)) {
+                                                        ActivityCompat.requestPermissions(Slideshow.this, PERMISSIONS, 1);
+                                                    }
+                                                    Constant.printMsg("Registration Activity Permission status.....BUTTON_POSITIVE......");
+                                                    break;
+                                                case DialogInterface.BUTTON_NEGATIVE:
+                                                    // proceed with logic by disabling the related features or quit the app.
+                                                    Constant.printMsg("Registration Activity Permission status.....BUTTON_NEGATIVE......");
+                                                    break;
+                                            }
+                                        }
+                                    });
+                        } else {
+                            Toast.makeText(this, "Go to settings and enable permissions", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                } else {
+                    Constant.printMsg("Registration Activity code empty......");
+                }
+            }
+        }
+    }
+    private String getIMEINo() {
+        String tempString = "";
+        try {
+            TelephonyManager telemgr = (TelephonyManager) getApplicationContext()
+                    .getSystemService(Context.TELEPHONY_SERVICE);
+            tempString = telemgr.getDeviceId();
+        } catch (Exception e) {
+        }
+        Constant.printMsg("Imei number is :::::::" + tempString);
+        return tempString;
+    }
+    private void showDialogOK(String message, DialogInterface.OnClickListener okListener) {
+        new AlertDialog.Builder(this)
+                .setMessage(message)
+                .setPositiveButton("OK", okListener)
+                .setNegativeButton("Cancel", okListener)
+                .create()
+                .show();
     }
 
     @Override
@@ -708,18 +634,18 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
 //            Constant.printMsg("GCM Registration Success ::::::::");
 //        }
 //    }
-
-    private void storeRegistrationId(Context context, String regId) {
-        final SharedPreferences prefs = getSharedPreferences(
-                Slideshow.class.getSimpleName(), Context.MODE_PRIVATE);
-        int appVersion = getAppVersion(context);
-        Log.i("ECPL", "Saving regId on app version " + appVersion);
-        Editor editor = prefs.edit();
-        editor.putString(REG_ID, regId);
-        editor.putInt(APP_VERSION, appVersion);
-        editor.commit();
-
-    }
+//
+//    private void storeRegistrationId(Context context, String regId) {
+//        final SharedPreferences prefs = getSharedPreferences(
+//                Slideshow.class.getSimpleName(), Context.MODE_PRIVATE);
+//        int appVersion = getAppVersion(context);
+//        Log.i("ECPL", "Saving regId on app version " + appVersion);
+//        Editor editor = prefs.edit();
+//        editor.putString(REG_ID, regId);
+//        editor.putInt(APP_VERSION, appVersion);
+//        editor.commit();
+//
+//    }
 
     // private void insertDBDatas() {
     // // TODO Auto-generated method stub
@@ -1097,21 +1023,6 @@ public class Slideshow extends AppCompatActivity implements OnClickListener {
         }
 
     }
-
-    // public void insertStatusDB(ContentValues v) {
-    // Dbhelper db = new Dbhelper(getApplicationContext());
-    // try {
-    // int a = (int) db.open().getDatabaseObj()
-    // .insert(Dbhelper.TABLE_UPDATE_STATUS, null, v);
-    // Constant
-    // .prtMsg("No of rows inserted into TABLE_UPDATE_STATUS  is ::::"
-    // + a);
-    // } catch (SQLException e) {
-    //
-    // } finally {
-    // db.close();
-    // }
-    // }
 
     public void screenArrangeSlideShow() {
         // TODO Auto-generated method stub

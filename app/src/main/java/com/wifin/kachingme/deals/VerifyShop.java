@@ -1,10 +1,12 @@
 package com.wifin.kachingme.deals;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
@@ -188,7 +190,15 @@ public class VerifyShop extends HeaderActivity implements View.OnClickListener {
 //             //       .show();
 //            mGPSService.showSettingsAlert();
 //        }
-        AlertToCustomer();
+
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION))
+        {
+            AlertToCustomer();
+        }
+        else
+        {
+            Constant.permissionRequest(this, Manifest.permission.ACCESS_FINE_LOCATION, Constant.PERMISSION_CODE_STORAGE);
+        }
 
         if (Connectivity.isConnected(VerifyShop.this)) {
             ShopDetailsDto sd = new ShopDetailsDto();
@@ -458,7 +468,7 @@ public class VerifyShop extends HeaderActivity implements View.OnClickListener {
         mFreebieText.setText(Constant.mFreebieName);
         mShopNameEdit.setText(Constant.mFreebieShopName);
         Constant.printMsg("Merchant website........." + Constant.mFreebieShopWebsite);
-        Spanned spannedResult = Html.fromHtml("<font color=#232323><a href='"
+        Spanned spannedResult = Html.fromHtml("<font color=#ff0000><a href='"
                 + Constant.mFreebieShopWebsite + "'>" + Constant.mFreebieShopWebsite + "</a></font>");
         mMerchantWebsiteTxt.setText(spannedResult);
         mMerchantWebsiteTxt.setClickable(true);
@@ -1509,6 +1519,25 @@ public class VerifyShop extends HeaderActivity implements View.OnClickListener {
                 screenArrange();
             }
 
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case 1004:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
         }
     }
 }

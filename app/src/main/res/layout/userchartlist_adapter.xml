@@ -22,17 +22,17 @@
         android:background="@drawable/background_chat_selector"
         android:orientation="horizontal">
 
-      <!--  <de.hdodenhof.circleimageview.CircleImageView
-            android:id="@+id/imgChatUserProfile"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/avatar_image" />-->
+        <!--  <de.hdodenhof.circleimageview.CircleImageView
+              android:id="@+id/imgChatUserProfile"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:src="@drawable/avatar_image" />-->
 
         <ImageView
             android:id="@+id/imgChatUserProfile"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/contact_profile" />
+            android:src="@drawable/avtar" />
 
         <LinearLayout
             android:id="@+id/linearChatDetails"
@@ -54,6 +54,8 @@
                 android:id="@+id/linearChatMsg"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
                 <ImageView
@@ -77,14 +79,34 @@
 
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvChatTimeStamp"
+        <LinearLayout
+            android:id="@+id/tymestampLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:maxLines="1"
-            android:text="00:00 pm"
-            android:textColor="@android:color/darker_gray" />
+            android:layout_gravity="center_vertical"
+            android:gravity="center_vertical"
+            android:orientation="vertical">
 
+            <TextView
+                android:id="@+id/tvChatTimeStamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:text="00:00 pm"
+                android:textColor="@android:color/darker_gray" />
+
+            <TextView
+                android:id="@+id/tvUnReadMsgCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:maxLines="1"
+                android:text="21"
+                android:background="@drawable/circle_border_red_clr"
+                android:textColor="@android:color/white" />
+
+        </LinearLayout>
     </LinearLayout>
 
 </android.support.v7.widget.CardView>

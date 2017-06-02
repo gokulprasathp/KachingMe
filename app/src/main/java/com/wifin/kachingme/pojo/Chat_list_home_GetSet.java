@@ -16,7 +16,18 @@ public class Chat_list_home_GetSet {
     private int int13;
     private int int12;
     private int int11;
+    private int int_;
     private int image_url;
+    public int getUnseen_msg_count_grp() {
+        return unseen_msg_count_grp;
+    }
+
+    public void setUnseen_msg_count_grp(int unseen_msg_count_grp) {
+        this.unseen_msg_count_grp = unseen_msg_count_grp;
+    }
+
+
+    private int unseen_msg_count_grp;
 
     public int getImage_url() {
         return image_url;

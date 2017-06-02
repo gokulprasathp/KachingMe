@@ -400,123 +400,123 @@ public class DestructService extends Service {
 
     }
 
-    public void mAnimation(final int pos) {
-
-
-        mAnimThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                Intent login_broadcast;
-
-                try {
-
-                    switch ((Integer) ChatTest.dest_list_anim.get(pos)) {
-
-
-                        case 0:
-
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b1);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 1:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b2);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 2:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b3);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 3:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b4);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 4:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b5);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 5:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b6);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 6:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b7);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 7:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b8);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 8:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b9);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 9:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b10);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 10:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b11);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        case 11:
-                            ChatTest.dest_list_bombids.set(pos, R.drawable.b12);
-                            login_broadcast = new Intent("chat");
-                            sendBroadcast(login_broadcast);
-
-                            break;
-                        default:
-                            break;
-
-                    }
-
-                    int var = (Integer) ChatTest.dest_list_anim.get(pos);
-                    var++;
-
-                    ChatTest.dest_list_anim.set(pos, var);
-                    if (var > 11) {
-
-                        handler.removeCallbacks(mAnimThread);
-
-                    } else {
-                        handler.postDelayed(mAnimThread, 82);
-
-                    }
-                } catch (IndexOutOfBoundsException e1) {
-
-                } catch (Exception
-                        e) {
-
-                }
-
-            }
-        });
-
-        handler.postDelayed(mAnimThread, 0);
-
-    }
+//    public void mAnimation(final int pos) {
+//
+//
+//        mAnimThread = new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//
+//                Intent login_broadcast;
+//
+//                try {
+//
+//                    switch ((Integer) ChatTest.dest_list_anim.get(pos)) {
+//
+//
+//                        case 0:
+//
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b1);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 1:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b2);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 2:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b3);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 3:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b4);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 4:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b5);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 5:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b6);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 6:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b7);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 7:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b8);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 8:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b9);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 9:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b10);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 10:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b11);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        case 11:
+//                            ChatTest.dest_list_bombids.set(pos, R.drawable.b12);
+//                            login_broadcast = new Intent("chat");
+//                            sendBroadcast(login_broadcast);
+//
+//                            break;
+//                        default:
+//                            break;
+//
+//                    }
+//
+//                    int var = (Integer) ChatTest.dest_list_anim.get(pos);
+//                    var++;
+//
+//                    ChatTest.dest_list_anim.set(pos, var);
+//                    if (var > 11) {
+//
+//                        handler.removeCallbacks(mAnimThread);
+//
+//                    } else {
+//                        handler.postDelayed(mAnimThread, 82);
+//
+//                    }
+//                } catch (IndexOutOfBoundsException e1) {
+//
+//                } catch (Exception
+//                        e) {
+//
+//                }
+//
+//            }
+//        });
+//
+//        handler.postDelayed(mAnimThread, 0);
+//
+//    }
 
 
     public void updateForHomeScreenList(String jid) {

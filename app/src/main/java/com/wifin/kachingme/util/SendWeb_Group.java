@@ -14,6 +14,7 @@ import com.loopj.android.http.*;
 
 public class SendWeb_Group {
 
+/*
 	public static void Add_Message_on_web(Context context, MessageGetSet message) {
 
 		final String TAG = SendWeb_Group.class.getSimpleName();
@@ -88,8 +89,9 @@ public class SendWeb_Group {
 				});
 
 	}
+*/
 
-	public static void Update_Message_on_web(Context context, String mid,
+/*	public static void Update_Message_on_web(Context context, String mid,
 			int status, String rtime) {
 
 		final String TAG = SendWeb.class.getSimpleName();
@@ -140,9 +142,9 @@ public class SendWeb_Group {
 					}
 				});
 
-	}
+	}*/
 
-	public static void Update_Message_on_web_async(Context context, String mid,
+	/*public static void Update_Message_on_web_async(Context context, String mid,
 			int status, String rtime) {
 
 		final String TAG = SendWeb.class.getSimpleName();
@@ -245,9 +247,9 @@ public class SendWeb_Group {
 					}
 				});
 
-	}
+	}*/
 
-	public static void Update_Memberlist_on_web_async(Context context,
+	/*public static void Update_Memberlist_on_web_async(Context context,
 			String gjid, String memberlist) {
 
 		final String TAG = SendWeb.class.getSimpleName();
@@ -401,9 +403,9 @@ public class SendWeb_Group {
 					}
 				});
 
-	}
+	}*/
 
-	public static void Update_Admin_on_web_async(Context context, String gjid,
+	/*public static void Update_Admin_on_web_async(Context context, String gjid,
 			String adminjid) {
 
 		final String TAG = SendWeb.class.getSimpleName();
@@ -453,9 +455,9 @@ public class SendWeb_Group {
 					}
 				});
 
-	}
+	}*/
 
-	public static void Add_Group_on_web(Context context, String gjid,
+/*	public static void Add_Group_on_web(Context context, String gjid,
 			String subject, String adminjid, String memberlist, String ctime,
 			String gicon) {
 
@@ -513,5 +515,5 @@ public class SendWeb_Group {
 					}
 				});
 
-	}
+	}*/
 }

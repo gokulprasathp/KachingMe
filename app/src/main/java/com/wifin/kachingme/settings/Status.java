@@ -19,6 +19,7 @@ import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
@@ -58,6 +59,7 @@ import com.wifin.kachingme.chat_home.SliderTesting;
 import com.wifin.kachingme.services.TempConnectionService;
 import com.wifin.kachingme.util.AlertUtils;
 import com.wifin.kaching.me.ui.R;
+import com.wifin.kachingme.util.CommonMethods;
 import com.wifin.kachingme.util.Connectivity;
 import com.wifin.kachingme.util.Constant;
 import com.wifin.kachingme.util.HttpConfig;
@@ -67,7 +69,6 @@ public class Status extends SherlockBaseActivity {
     ProgressDialog progressdialog;
     TextView txt_status, tvStatusYourTitle, tvStatusNewSelect;
     ImageButton btn_edit;
-    String number, country_code;
     String status;
     DatabaseHelper dbadapter;
     ListView listview;
@@ -87,7 +88,7 @@ public class Status extends SherlockBaseActivity {
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
-    SharedPreferences preference;
+    SharedPreferences preference,sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,8 +106,8 @@ public class Status extends SherlockBaseActivity {
         dbadapter = KachingMeApplication.getDatabaseAdapter();
         list = new ArrayList<String>();
         preference = PreferenceManager.getDefaultSharedPreferences(this);
-        number = preference.getString("number", "");
-        country_code = preference.getString("countrycode", "");
+        sharedPreferences = getSharedPreferences(KachingMeApplication.getPereference_label(),
+                Activity.MODE_PRIVATE);
         for (int i = 0; i < values.length; ++i) {
             list.add(values[i]);
         }
@@ -355,42 +356,13 @@ public class Status extends SherlockBaseActivity {
         @Override
         protected String doInBackground(String... params) {
             dbadapter.setUpdateUserStatus(KachingMeApplication.getUserID(), status);
-            try {
-                vc = VCardManager.getInstanceFor(
-                        TempConnectionService.connection).loadVCard();
-                vc.setField("SORT-STRING", status);
-                VCardManager.getInstanceFor(TempConnectionService.connection)
-                        .saveVCard(vc);
-            } catch (Exception e) {
-                // ACRA.getErrorReporter().handleException(e);
-                // ACRA.getErrorReporter().handleException(e);
-                e.printStackTrace();
-            }
-
-            try {
-                Roster roster_c = Roster
-                        .getInstanceFor(TempConnectionService.connection);
-                Collection<RosterEntry> entries = roster_c.getEntries();
-
-                // msg.setType(org.jivesoftware.smack.packet.Message.Type.);
-                roster = new String[entries.size()];
-                int i = 0;
-                for (RosterEntry rosterEntry : entries) {
-                    roster[i] = rosterEntry.getUser();
-                    i++;
-                }
-            } catch (Exception e) {
-                // ACRA.getErrorReporter().handleException(e);
-                e.printStackTrace();
-                // TODO: handle exception
-            }
             String result=null;
             try {
                 String encodeStatus = URLEncoder.encode(status, "utf-8");
                 HttpConfig ht=new HttpConfig();
-                result= ht.httpget(KachingMeConfig.UPDATE_STATUS+"phoneNumber="+country_code+number
+                result= ht.httpget(KachingMeConfig.UPDATE_STATUS+"phoneNumber="+sharedPreferences.getString("MyPrimaryNumber", "")
                         +"&status="+encodeStatus);
-                Constant.printMsg("Profile update....service....."+ KachingMeConfig.UPDATE_STATUS+"phoneNumber="+country_code+number
+                Constant.printMsg("Profile update....service....."+ KachingMeConfig.UPDATE_STATUS+"phoneNumber="+sharedPreferences.getString("MyPrimaryNumber", "")
                         +"&status="+encodeStatus);
                 Constant.printMsg("Profile update....result fi....."+result);
 
@@ -404,21 +376,6 @@ public class Status extends SherlockBaseActivity {
         @Override
         protected void onPostExecute(String result) {
             try {
-                try {
-                    for (int i = 0; i < roster.length; i++) {
-                        Message msg = new Message();
-                        msg.setStanzaId("vcardedit");
-                        msg.setType(Message.Type.chat);
-                        msg.setTo(roster[i]);
-                        TempConnectionService.connection.sendStanza(msg);
-                    }
-                } catch (Exception e) {
-                    // ACRA.getErrorReporter().handleException(e);
-                    // TODO: handle exception
-                    e.printStackTrace();
-                }
-
-//                if (vc.getJabberId() != null) {
                 if (result != null && !result.isEmpty() &&
                         result.contains("Profile status updated successfully")) {
                     txt_status.setText(status);
@@ -482,12 +439,11 @@ public class Status extends SherlockBaseActivity {
                     dbAdapter.setUpdateLogin_status(KachingMeApplication
                             .getUserID(), txt_status.getText().toString());
                     KachingMeApplication.setStatus(txt_status.getText().toString());
-
-//                    Intent intent_name = new Intent();
-//                    intent_name.setClass(getApplicationContext(),
-//                            StatusUpdate.class);
-//                    startActivity(intent_name);
-//                    finish();
+                    CommonMethods commonMethods= new CommonMethods(com.wifin.kachingme.settings.Status.this);
+//                    new updateStatusPhp().execute();
+//                    commonMethods.stopAsyncTask(new updateStatusPhp(), null,Constant.asynTaskSixtySeconds);
+                    new updateStatusVcard().execute();
+                    commonMethods.stopAsyncTask(new updateStatusVcard(), null,Constant.asynTaskSixtySeconds);
                 } else {
                     new AlertUtils().Toast_call(context, getResources()
                             .getString(R.string.please_try_again));
@@ -497,38 +453,64 @@ public class Status extends SherlockBaseActivity {
                 // TODO: handle exception
                 e.printStackTrace();
             }
-            new updateStatusPhp().execute();
             progressdialog.cancel();
             super.onPostExecute(result);
         }
     }
 
-    public class updateStatusPhp extends AsyncTask<String, String, String> {
+    public class updateStatusVcard extends AsyncTask<String, String, String> {
 
         @Override
         protected String doInBackground(String... args) {
             // TODO Auto-generated method stub
-            String result = null;
-            String url = KachingMeConfig.USER_UPDATE_PHP;
-            String jidValuue = KachingMeApplication.getUserID() + KachingMeApplication.getHost();
-            ArrayList<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-            nameValuePairs.add(new BasicNameValuePair("Waction", "update"));
-            nameValuePairs.add(new BasicNameValuePair("Wtable", "tbl_user"));
-            nameValuePairs.add(new BasicNameValuePair("Wcolumn", "jid"));
-            nameValuePairs.add(new BasicNameValuePair("Wvalue", jidValuue));
-            nameValuePairs.add(new BasicNameValuePair("status", status));
+            try {
+                vc = VCardManager.getInstanceFor(
+                        TempConnectionService.connection).loadVCard();
+                vc.setField("SORT-STRING", status);
+                VCardManager.getInstanceFor(TempConnectionService.connection)
+                        .saveVCard(vc);
+            } catch (Exception e) {
+                // ACRA.getErrorReporter().handleException(e);
+                e.printStackTrace();
+            }
 
-            HttpConfig ht = new HttpConfig();
-			result = ht.doPostNameValue(url,nameValuePairs);
-			Constant.printMsg("siva Final Result status post......"+url+"............" +result);
-            return result;
+            try {
+                Roster roster_c = Roster
+                        .getInstanceFor(TempConnectionService.connection);
+                Collection<RosterEntry> entries = roster_c.getEntries();
+
+                // msg.setType(org.jivesoftware.smack.packet.Message.Type.);
+                roster = new String[entries.size()];
+                int i = 0;
+                for (RosterEntry rosterEntry : entries) {
+                    roster[i] = rosterEntry.getUser();
+                    i++;
+                }
+            } catch (Exception e) {
+                // ACRA.getErrorReporter().handleException(e);
+                e.printStackTrace();
+            }
+            Constant.printMsg("siva Final Result status post......");
+            return "";
         }
 
         @Override
         protected void onPostExecute(String result) {
             // TODO Auto-generated method stub
             super.onPostExecute(result);
-            Constant.printMsg("siva Final Result..........." + result);
+            try {
+                for (int i = 0; i < roster.length; i++) {
+                    Message msg = new Message();
+                    msg.setStanzaId("vcardedit");
+                    msg.setType(Message.Type.chat);
+                    msg.setTo(roster[i]);
+                    TempConnectionService.connection.sendStanza(msg);
+                }
+            } catch (Exception e) {
+                // ACRA.getErrorReporter().handleException(e);
+                // TODO: handle exception
+                e.printStackTrace();
+            }
         }
 
         @Override
@@ -538,6 +520,42 @@ public class Status extends SherlockBaseActivity {
         }
 
     }
+
+//    public class updateStatusPhp extends AsyncTask<String, String, String> {
+//
+//        @Override
+//        protected String doInBackground(String... args) {
+//            // TODO Auto-generated method stub
+//            String result = null;
+//            String url = KachingMeConfig.USER_UPDATE_PHP;
+//            String jidValuue = KachingMeApplication.getUserID() + KachingMeApplication.getHost();
+//            ArrayList<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
+//            nameValuePairs.add(new BasicNameValuePair("Waction", "update"));
+//            nameValuePairs.add(new BasicNameValuePair("Wtable", "tbl_user"));
+//            nameValuePairs.add(new BasicNameValuePair("Wcolumn", "jid"));
+//            nameValuePairs.add(new BasicNameValuePair("Wvalue", jidValuue));
+//            nameValuePairs.add(new BasicNameValuePair("status", status));
+//
+//            HttpConfig ht = new HttpConfig();
+//			result = ht.doPostNameValue(url,nameValuePairs);
+//			Constant.printMsg("siva Final Result status post......"+url+"............" +result);
+//            return result;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String result) {
+//            // TODO Auto-generated method stub
+//            super.onPostExecute(result);
+//            Constant.printMsg("siva Final Result..........." + result);
+//        }
+//
+//        @Override
+//        protected void onPreExecute() {
+//            // TODO Auto-generated method stub
+//            super.onPreExecute();
+//        }
+//
+//    }
 
     public void insertStatusDB(ContentValues v) {
         Dbhelper db = new Dbhelper(getApplicationContext());

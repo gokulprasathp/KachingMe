@@ -3,13 +3,13 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical" >
-	  
+
 	<LinearLayout
 	    android:layout_width="match_parent"
 	    android:layout_height="wrap_content"
 	    android:orientation="vertical"
 	     >
-	     
+
 	      <TextView
         android:id="@+id/txt_notice"
         android:layout_width="wrap_content"
@@ -24,7 +24,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginBottom="5dp"
         android:textAppearance="?android:attr/textAppearanceSmall" />
-	      
+
    <TextView
         android:id="@+id/txt_date"
         android:layout_width="wrap_content"
@@ -38,13 +38,13 @@
         android:background="@color/app_color_gray"
         android:textColor="@color/app_color_blue"
         android:textAppearance="?android:attr/textAppearanceSmall" />
- 
+
     <LinearLayout
-        android:layout_width="fill_parent" 
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
      android:orientation="vertical"
      android:paddingRight="3dp"
-      android:id="@+id/ll_main"  
+      android:id="@+id/ll_main"
         >
         <FrameLayout
             android:layout_width="match_parent"
@@ -56,7 +56,7 @@
              <LinearLayout
                     android:background="@drawable/msg_bg"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" 
+                    android:layout_height="wrap_content"
                     android:layout_marginRight="12dp"
                     android:paddingRight="10dp"
                     android:id="@+id/ll_txt_msg"
@@ -75,15 +75,15 @@
              <TextView
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
-                 
+
                  android:layout_gravity="center_vertical"
-                 
-              
+
+
                  android:text="hi hellooo "
                  android:gravity="center_vertical"
                  android:textSize="18sp"
-                
-                 
+
+
                  android:textColor="@color/white"
                  android:id="@+id/txt_msg"
               android:layout_margin="5dp"
@@ -91,7 +91,7 @@
              </LinearLayout>
             <ImageView
                 android:layout_width="28dp"
-                android:layout_height="28dp" 
+                android:layout_height="28dp"
                 android:src="@drawable/ic_launcher"
                android:layout_gravity="right|bottom"
                android:layout_marginBottom="5dp"
@@ -105,8 +105,8 @@
             android:paddingRight="20dp"
             android:id="@+id/ll_status"
              >
-            
-            
+
+
             <TextView
                  android:layout_width="wrap_content"
                  android:layout_height="wrap_content"
@@ -120,14 +120,14 @@
             <ImageView
                 android:layout_width="18dp"
                 android:layout_height="18dp"
-                android:src="@drawable/receipt_from_target" 
+                android:src="@drawable/receipt_from_target"
                  android:id="@+id/img_status"
-                 
+
                 />
         </LinearLayout>
-    </LinearLayout>	    
+    </LinearLayout>
   </LinearLayout>
-    
+
 </LinearLayout>
  -->
 

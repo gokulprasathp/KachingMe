@@ -1,6 +1,9 @@
 package com.wifin.kachingme.listeners;
 
 import org.jivesoftware.smackx.muc.ParticipantStatusListener;
+import org.jxmpp.jid.EntityFullJid;
+import org.jxmpp.jid.Jid;
+import org.jxmpp.jid.parts.Resourcepart;
 
 import com.wifin.kachingme.util.Log;
 
@@ -11,97 +14,79 @@ public class MUC_ParticipantStatusListener implements ParticipantStatusListener 
 
 	}
 
-	@Override
-	public void adminGranted(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Admin Granted.." + arg0);
-	}
 
 	@Override
-	public void adminRevoked(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Admin Revoked.." + arg0);
-	}
-
-	@Override
-	public void banned(String arg0, String arg1, String arg2) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Banned.." + arg0);
-	}
-
-	@Override
-	public void joined(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Joined.." + arg0);
-	}
-
-	@Override
-	public void kicked(String arg0, String arg1, String arg2) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Kicked .." + arg0);
-	}
-
-	@Override
-	public void left(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Left.." + arg0);
-	}
-
-	@Override
-	public void membershipGranted(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Membership Granted.." + arg0);
-	}
-
-	@Override
-	public void membershipRevoked(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Membership Revoked.." + arg0);
-	}
-
-	@Override
-	public void moderatorGranted(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Moderator Granted.." + arg0);
-	}
-
-	@Override
-	public void moderatorRevoked(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Moderator Revoked.." + arg0);
-	}
-
-	@Override
-	public void nicknameChanged(String arg0, String arg1) {
-		// TODO Auto-generated method stub
+	public void joined(EntityFullJid participant) {
 
 	}
 
 	@Override
-	public void ownershipGranted(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Ownweship Granted.." + arg0);
+	public void left(EntityFullJid participant) {
 
 	}
 
 	@Override
-	public void ownershipRevoked(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Ownweship Revoked.." + arg0);
-	}
-
-	@Override
-	public void voiceGranted(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Voice Granted.." + arg0);
+	public void kicked(EntityFullJid participant, Jid actor, String reason) {
 
 	}
 
 	@Override
-	public void voiceRevoked(String arg0) {
-		// TODO Auto-generated method stub
-		Log.d("Participant Listener", "Voice Revoked.." + arg0);
+	public void voiceGranted(EntityFullJid participant) {
 
 	}
 
+	@Override
+	public void voiceRevoked(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void banned(EntityFullJid participant, Jid actor, String reason) {
+
+	}
+
+	@Override
+	public void membershipGranted(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void membershipRevoked(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void moderatorGranted(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void moderatorRevoked(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void ownershipGranted(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void ownershipRevoked(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void adminGranted(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void adminRevoked(EntityFullJid participant) {
+
+	}
+
+	@Override
+	public void nicknameChanged(EntityFullJid participant, Resourcepart newNickname) {
+
+	}
 }

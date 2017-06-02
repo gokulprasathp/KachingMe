@@ -3,6 +3,7 @@ package com.wifin.kachingme.listeners;
 import java.util.Collection;
 
 import org.jivesoftware.smack.packet.Presence;
+import org.jxmpp.jid.Jid;
 
 import android.app.Activity;
 import android.content.Context;
@@ -32,20 +33,17 @@ public class RosterListener implements
     }
 
     @Override
-    public void entriesAdded(Collection<String> arg0) {
-        // TODO Auto-generated method stub
+    public void entriesAdded(Collection<Jid> addresses) {
 
     }
 
     @Override
-    public void entriesDeleted(Collection<String> arg0) {
-        // TODO Auto-generated method stub
+    public void entriesUpdated(Collection<Jid> addresses) {
 
     }
 
     @Override
-    public void entriesUpdated(Collection<String> arg0) {
-        // TODO Auto-generated method stub
+    public void entriesDeleted(Collection<Jid> addresses) {
 
     }
 
@@ -60,10 +58,10 @@ public class RosterListener implements
         // "Presence is cahnged::" + presence.getFrom() + " : type::"
         // + presence.getType() + " Status::"
         // + presence.getStatus(), Toast.LENGTH_LONG).show();
-        String fromUser = presence.getFrom().split("/")[0];
+        String fromUser = presence.getFrom().toString().split("/")[0];
 
 		/*
-		 * Presence response = new Presence(Presence.Type.unsubscribed);
+         * Presence response = new Presence(Presence.Type.unsubscribed);
 		 * response.setTo(presence.getFrom()); try {
 		 * TempConnectionService.connection.sendStanza(response); } catch
 		 * (NotConnectedException e) { // TODO Auto-generated catch block

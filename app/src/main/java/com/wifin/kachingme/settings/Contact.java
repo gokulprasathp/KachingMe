@@ -1,6 +1,7 @@
 package com.wifin.kachingme.settings;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -8,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -42,6 +44,17 @@ import com.wifin.kachingme.util.HttpConfig;
 import com.wifin.kachingme.util.KachingMeConfig;
 import com.wifin.kachingme.util.cropimage.CropImage;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.ByteArrayBody;
+import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -69,7 +82,9 @@ public class Contact extends Activity
     String data;
     SharedPreferences sp1;
     String number;
-    ArrayList<String> image_file = new ArrayList<String>();
+    ArrayList<String> image_file = new ArrayList<>();
+    public ArrayList<String> map = new ArrayList<>();
+    MultipartEntity entity;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -83,6 +98,7 @@ public class Contact extends Activity
         initContact();
         screenContact();
 
+        Constant.printMsg("Contact Screen From App Info ::: ");
         sp1 = PreferenceManager.getDefaultSharedPreferences(this);
         String no = sp1.getString("number", "");
         String country_code = sp1.getString("countrycode", "");
@@ -105,7 +121,14 @@ public class Contact extends Activity
             @Override
             public void onClick(View v)
             {
-                addScreenShot();
+                if (Constant.mList.size() < 2)
+                {
+                    addScreenShot();
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Can't able to attach More", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -114,7 +137,14 @@ public class Contact extends Activity
             @Override
             public void onClick(View v)
             {
-                addScreenShot();
+                if (Constant.mList.size() < 2)
+                {
+                    addScreenShot();
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Can't able to attach More", Toast.LENGTH_SHORT).show();
+                }
             }
         });
 
@@ -123,11 +153,37 @@ public class Contact extends Activity
             @Override
             public void onClick(View v)
             {
+                Constant.printMsg("Contact Us OnClicked For Image Upload :: ");
+
                 if (etContactQuery.getText().toString().trim().length() > 0)
                 {
-                    data = jSonFrom();
+                    new Thread(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            Contact.this.runOnUiThread(new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    try
+                                    {
+                                        for (int i = 0; i < Constant.mList.size(); i++)
+                                        {
+                                            new ImageUploadTask().execute(i + "", number, "Screen_" + i + ".jpg", "0.0", "0.0", etContactQuery.getText().toString());
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        e.printStackTrace();
 
-                    new postContactusDetails().execute();
+                                        Constant.printMsg("Contact Us Multiple Image 1 ::: " + e.toString());
+                                    }
+                                }
+                            });
+                        }
+                    }).start();
                 }
                 else
                 {
@@ -290,6 +346,20 @@ public class Contact extends Activity
 
     public class postContactusDetails extends AsyncTask<String, String, String>
     {
+        protected void onPreExecute()
+        {
+            super.onPreExecute();
+
+            if (map.size() < 0)
+            {
+                Constant.printMsg("Contact Page Map :: No Image Selected");
+            }
+            else
+            {
+                Constant.printMsg("Contact Page Map :: " + map.size() + " ::: " + map.toString());
+            }
+        }
+
         @Override
         protected String doInBackground(String... params)
         {
@@ -307,7 +377,6 @@ public class Contact extends Activity
         @Override
         protected void onPostExecute(String result)
         {
-            // TODO Auto-generated method stub
             super.onPostExecute(result);
 
             Constant.printMsg("contactus result res:;" + result);
@@ -348,19 +417,18 @@ public class Contact extends Activity
                 {
                     Uri selectedImage = imageReturnedIntent.getData();
                     String[] filePathColumn = { MediaStore.Images.Media.DATA };
-                    Cursor cursor = getContentResolver().query(selectedImage,
-                            filePathColumn, null, null, null);
+                    Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
                     cursor.moveToFirst();
 
                     int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
                     String filePath = cursor.getString(columnIndex);
-                    // Constant.printMsg("filepath is : "+filePath);
                     cursor.close();
+
+                    map.add(filePath);
 
                     Intent intent = new Intent(this, CropImage.class);
                     intent.setType("image/*");
                     intent.putExtra(CropImage.IMAGE_PATH, filePath);
-
                     intent.putExtra("outputX", 126);
                     intent.putExtra("outputY", 126);
                     intent.putExtra("aspectX", 1);
@@ -368,17 +436,17 @@ public class Contact extends Activity
                     intent.putExtra("scale", true);
                     intent.putExtra("return-data", true);
                     startActivityForResult(intent, REQUEST_CODE_CROP_IMAGE);
-
                 }
                 break;
 
             case REQUEST_CODE_CROP_IMAGE:
-                if (resultCode == RESULT_OK) {
 
-                    final Bundle extras = imageReturnedIntent.getExtras();
-
-                    if (CropImage.croppedImage != null) {
-                        try {
+                if (resultCode == RESULT_OK)
+                {
+                    if (CropImage.croppedImage != null)
+                    {
+                        try
+                        {
                             Bitmap bitmap = CropImage.croppedImage;
 
                             ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -386,11 +454,11 @@ public class Contact extends Activity
                             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
 
                             ByteArrayOutputStream outstream_thumb = new ByteArrayOutputStream();
-                            try {
 
+                            try
+                            {
                                 int quality = 100;
-                                bitmap.compress(Bitmap.CompressFormat.JPEG, quality,
-                                        outstream_thumb);
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outstream_thumb);
 
                                 while ((outstream_thumb.size() / 1024) > 180) {
                                     outstream_thumb = new ByteArrayOutputStream();
@@ -401,36 +469,40 @@ public class Contact extends Activity
                             }
                             catch (Exception e)
                             {
-                                // ACRA.getErrorReporter().handleException(e);
-                                a_vcard.android.util.Log.w("TAG",
-                                        "Error saving image file: " + e.getMessage());
-
+                                Constant.printMsg("Error saving image file: " + e.getMessage());
                             }
 
                             img_byte = outstream_thumb.toByteArray();
-                            // String str = new String(bytes, "UTF-8"); // for UTF-8
+
                             String str1 = null;
-                            try {
+
+                            try
+                            {
                                 str1 = new String(img_byte, "UTF-8");
-                            } catch (UnsupportedEncodingException e) {
+                            }
+                            catch (UnsupportedEncodingException e)
+                            {
                                 // TODO Auto-generated catch block
                                 e.printStackTrace();
                             }
-                            Constant.printMsg("str1 >> " + str1); // encoding
+
+                            Constant.printMsg("Contact Us >> " + str1); // encoding
 
                             ByteArrayOutputStream baos = new ByteArrayOutputStream();
                             bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
                             byte[] b = baos.toByteArray();
                             String temp = Base64.encodeToString(b, Base64.DEFAULT);
-                            Constant.printMsg("str1 >>  dfgfg " + temp); // encoding
+                            Constant.printMsg("Contact Us >>  dfgfg " + temp); // encoding
                             // File file = new File(temp);
                             Constant.mList.add(temp);
                             image_file.add(temp);
-                            Constant.printMsg("resuly   " + image_file);
+                            Constant.printMsg("Contact Us Image File ::: " + image_file + " Map List ::: " + map.toString());
 
                             CropImage.croppedImage = null;
-                        } catch (Exception e) {
-
+                        }
+                        catch (Exception e)
+                        {
+                            Constant.printMsg("Contact Us ::: " + e.toString());
                         }
                     }
                 }
@@ -465,20 +537,146 @@ public class Contact extends Activity
                         startActivityForResult(intent, REQUEST_CODE_CROP_IMAGE);
                     }
                 }
-                break;
-
+            break;
         }
-        Collections.reverse(Constant.mList);
 
+        Collections.reverse(Constant.mList);
         mAdapter = new ContactAdapter(Contact.this, Constant.mList);
         grid_photo.setAdapter(mAdapter);
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
+    }
+
+    private class ImageUploadTask extends AsyncTask<String, Void, String>
+    {
+        String sResponse = null, resultImage = null;
+        ProgressDialog dialogImageUpload;
+
+        protected void onPreExecute()
+        {
+            super.onPreExecute();
+
+            dialogImageUpload = new ProgressDialog(Contact.this);
+            dialogImageUpload.setMessage("Sending Error Report");
+            dialogImageUpload.setCancelable(false);
+            dialogImageUpload.show();
+        }
+
+        @Override
+        protected String doInBackground(String... params)
+        {
+            try
+            {
+                String url = KachingMeConfig.FEEDBACK_USER;
+                int mapval = Integer.parseInt(params[0]);
+                Bitmap bitmap = decodeFile(map.get(mapval));
+                HttpClient httpClient = new DefaultHttpClient();
+                HttpContext localContext = new BasicHttpContext();
+                HttpPost httpPost = new HttpPost(url);
+                entity = new MultipartEntity();
+
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+                byte[] data = bos.toByteArray();
+
+                entity.addPart("primaryNo", new StringBody(params[1]));
+                entity.addPart("files", new ByteArrayBody(data, "image/jpeg", params[2]));
+                entity.addPart("latitude", new StringBody(params[3]));
+                entity.addPart("longitude", new StringBody(params[4]));
+                entity.addPart("comment", new StringBody(params[5]));
+
+                httpPost.setEntity(entity);
+
+                Constant.printMsg("Contact Us Parameters ::: " + entity.toString());
+                Constant.printMsg("Contact Us Parameters ::: " + params[1] + " :: " + params[2] + " :: " + params[3] + " :: " + params[4] + " :: " + params[5]);
+
+                HttpResponse response = httpClient.execute(httpPost, localContext);
+                sResponse = EntityUtils.getContentCharSet(response.getEntity());
+                System.out.println("Contact Us Response :: " + sResponse);
+                resultImage = EntityUtils.toString(response.getEntity());
+                Constant.printMsg("Contact Us Entity ::: " + resultImage + " ::: " + response.getEntity());
+            }
+            catch (Exception e)
+            {
+                Log.e(e.getClass().getName(), e.getMessage(), e);
+            }
+            return sResponse;
+        }
+
+        @Override
+        protected void onPostExecute(String sResponse)
+        {
+            try
+            {
+                if (dialogImageUpload != null)
+                {
+                    dialogImageUpload.dismiss();
+                }
+
+                if (resultImage.equalsIgnoreCase("SUCCESS"))
+                {
+                    if (Constant.mList.size() != 0)
+                    {
+                        Constant.mList.clear();
+                    }
+                    Toast.makeText(getApplicationContext()," Submitted successfully", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(Contact.this, AppInfo.class));
+                    finish();
+                }
+                else
+                {
+                    if (Constant.mList.size() != 0)
+                    {
+                        Constant.mList.clear();
+                    }
+                    Toast.makeText(getApplicationContext()," Network Issue Try after Sometimes.!", Toast.LENGTH_SHORT).show();
+                    startActivity(new Intent(Contact.this, AppInfo.class));
+                    finish();
+                }
+            }
+            catch (Exception e)
+            {
+                Log.e(e.getClass().getName(), e.getMessage(), e);
+            }
+        }
+    }
+
+    public Bitmap decodeFile(String filePath)
+    {
+        // Decode image size
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(filePath, o);
+        final int REQUIRED_SIZE = 1024;
+        int width_tmp = o.outWidth, height_tmp = o.outHeight;
+        int scale = 1;
+
+        while (true)
+        {
+            if (width_tmp < REQUIRED_SIZE && height_tmp < REQUIRED_SIZE)
+                break;
+            width_tmp /= 2;
+            height_tmp /= 2;
+            scale *= 2;
+        }
+
+        BitmapFactory.Options o2 = new BitmapFactory.Options();
+        o2.inSampleSize = scale;
+        Bitmap bitmap = BitmapFactory.decodeFile(filePath, o2);
+        return bitmap;
     }
 
     public void onBackPressed()
     {
         super.onBackPressed();
 
+        if (Constant.mList.size() != 0)
+        {
+            Constant.mList.clear();
+        }
+        else
+        {
+            Constant.printMsg("List Empty");
+        }
         startActivity(new Intent(Contact.this, AppInfo.class));
 
         finish();

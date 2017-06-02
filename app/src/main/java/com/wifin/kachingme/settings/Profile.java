@@ -1,5 +1,6 @@
 package com.wifin.kachingme.settings;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -9,6 +10,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.graphics.Bitmap;
@@ -19,6 +21,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.renderscript.Allocation;
@@ -44,6 +47,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.loopj.android.http.RequestParams;
 import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.applications.KachingMeApplication;
 import com.wifin.kachingme.applications.SherlockBaseActivity;
@@ -60,10 +66,11 @@ import com.wifin.kachingme.util.Constant;
 import com.wifin.kachingme.util.HttpConfig;
 import com.wifin.kachingme.util.KachingMeConfig;
 import com.wifin.kachingme.util.ProfileRoundImg;
-import com.wifin.kachingme.util.SendWeb;
 import com.wifin.kachingme.util.Utils;
+import com.wifin.kachingme.util.Validation;
 import com.wifin.kachingme.util.cropimage.CropImage;
 
+import org.apache.http.Header;
 import org.jivesoftware.smack.chat.Chat;
 import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.packet.Message;
@@ -71,9 +78,11 @@ import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.RosterEntry;
 import org.jivesoftware.smackx.vcardtemp.VCardManager;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -101,7 +110,7 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
     View popupView;
     int height, width;
     SharedPreferences sp1, preferences;
-    String number, country_code, statusSave, emailSave, nameSave;
+    String number, country_code, statusSave, emailSave, nameSave, action, type;
     FrameLayout mBlurImgLayout;
     LinearLayout mNameLayout, mStatusLayout, mNumberLayout, mEmailLayout;
     View.OnTouchListener customPopUpTouchListenr = new View.OnTouchListener() {
@@ -113,149 +122,13 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         }
 
     };
+    Bitmap updateImage;
+    ProfileRoundImg roundImgProfile;
     private ChatManager chatManager;
     private Chat chat;
     // newly added
     private Uri fileUri;
     private PopupWindow pwindo;
-    Bitmap updateImage;
-    ProfileRoundImg roundImgProfile;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.profile);
-        dbAdapter = KachingMeApplication.getDatabaseAdapter();
-        initialization();
-        screenArrangement();
-        getSupportActionBar().setTitle(
-                getResources().getString(R.string.contact_info));
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-
-        tabletSize = getResources().getBoolean(R.bool.isTablet);
-        LayoutInflater layoutInflater = (LayoutInflater) getBaseContext()
-                .getSystemService(LAYOUT_INFLATER_SERVICE);
-        popupView = layoutInflater.inflate(R.layout.popup_gallery, null);
-        pwindo = new PopupWindow(popupView, LayoutParams.WRAP_CONTENT,
-                LayoutParams.WRAP_CONTENT);
-        sp1 = PreferenceManager.getDefaultSharedPreferences(this);
-        preferences = getSharedPreferences(KachingMeApplication.getPereference_label(),
-                Activity.MODE_PRIVATE);
-        number = sp1.getString("number", "");
-        country_code = sp1.getString("countrycode", "");
-        ConcurrentAsyncTaskExecutor.executeConcurrently(new MyAsync());
-    }
-
-    private void initialization() {
-        img_profile = (ImageView) findViewById(R.id.profile_pic);
-        img_profile_bg = (ImageView) findViewById(R.id.profile_picBaground);
-        txt_email = (TextView) findViewById(R.id.txt_email_id);
-        txt_name = (TextView) findViewById(R.id.txt_name);
-        txt_phone = (TextView) findViewById(R.id.txt_phone);
-        txt_status = (TextView) findViewById(R.id.txt_status_id);
-        mBlurImgLayout = (FrameLayout) findViewById(R.id.blur_img_layout);
-        mStatusLayout = (LinearLayout) findViewById(R.id.status_layout);
-        mNumberLayout = (LinearLayout) findViewById(R.id.number_layout);
-        mEmailLayout = (LinearLayout) findViewById(R.id.email_layout);
-        mNameLayout = (LinearLayout) findViewById(R.id.name_layout);
-
-        mStatusLabel = (TextView) findViewById(R.id.status_label);
-        mNumberLabel = (TextView) findViewById(R.id.number_label);
-        mEmailLabel = (TextView) findViewById(R.id.email_label);
-        mNameLabel = (TextView) findViewById(R.id.name_label);
-
-        // img_profile=(ImageView)findViewById(R.id.profile_img_p_pic);
-
-        btn_edit_email = (TextView) findViewById(R.id.btn_edit_email);
-        btn_edit_picture = (TextView) findViewById(R.id.btn_edit_picture);
-        btn_edit_name = (TextView) findViewById(R.id.btn_edit_name);
-        btn_edit_status = (TextView) findViewById(R.id.btn_edit_status);
-        btn_edit_picture.setOnClickListener(this);
-        btn_edit_name.setOnClickListener(this);
-        btn_edit_status.setOnClickListener(this);
-        btn_edit_email.setOnClickListener(this);
-        img_profile.setOnClickListener(this);
-
-        Constant.typeFace(this, txt_email);
-        Constant.typeFace(this, txt_name);
-        Constant.typeFace(this, txt_phone);
-        Constant.typeFace(this, txt_status);
-        Constant.typeFace(this, mStatusLabel);
-        Constant.typeFace(this, mNumberLabel);
-        Constant.typeFace(this, mEmailLabel);
-        Constant.typeFace(this, mNameLabel);
-        Constant.typeFace(this, btn_edit_email);
-        Constant.typeFace(this, btn_edit_picture);
-        Constant.typeFace(this, btn_edit_name);
-        Constant.typeFace(this, btn_edit_status);
-    }
-
-    @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_edit_picture:
-                if (Connectivity.isConnected(this)) {
-                    selectImage();
-                } else {
-                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.btn_edit_name:
-                if (Connectivity.isConnected(this)) {
-                    setEdit(txt_name, "Name");
-                } else {
-                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.btn_edit_status:
-                if (Connectivity.isConnected(this)) {
-                    setEdit(txt_status, "Status");
-                } else {
-                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.btn_edit_email:
-                if (Connectivity.isConnected(this)) {
-                    setEdit(txt_email, "Email");
-                } else {
-                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
-                }
-                break;
-            case R.id.profile_pic:
-                if (Connectivity.isConnected(this)) {
-                    Constant.printMsg("Clicked on profile picture....");
-                    File f = new File(Constant.local_profile_picture_dir
-                            + KachingMeApplication.getjid().split("@")[0] + ".jpg");
-                    // you can create a new file name "test.BMP" in sdcard folder.
-                    try {
-                        if (bmp != null) {
-                            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-                         //   bmp.compress(CompressFormat.PNG, 100, bytes);
-
-                            f.createNewFile();
-                            FileOutputStream fo = new FileOutputStream(f);
-                            fo.write(bytes.toByteArray());
-                            fo.close();
-                        }
-                    } catch (Exception e) {
-                        // ACRA.getErrorReporter().handleException(e);
-                        // TODO: handle exception
-                        e.printStackTrace();
-                    }
-                    if (f.exists()) {
-                        Intent intent = new Intent();
-                        // intent.putExtra("path",f);
-                        intent.setAction(Intent.ACTION_VIEW);
-                        intent.setDataAndType(Uri.fromFile(f), "image/jpg");
-                        startActivity(intent);
-                    }
-                } else {
-                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
-                }
-                break;
-        }
-
-    }
 
     public static Bitmap rotate(Bitmap bitmap, int degree) {
         int w = bitmap.getWidth();
@@ -311,31 +184,6 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         return inSampleSize;
     }
 
-	/*
-     * private ServiceConnection mConnection = new ServiceConnection() { public
-	 * void onServiceConnected(ComponentName className, IBinder service) {
-	 *
-	 * mBoundService = ((KaChingMeService.LocalBinder) service) .getService();
-	 * connection = mBoundService.getConnection(); new MyAsync().execute(); }
-	 *
-	 * public void onServiceDisconnected(ComponentName className) {
-	 *
-	 * mBoundService = null; } };
-	 *
-	 * void doBindService() {
-	 *
-	 * bindService(new Intent(profile.this, KaChingMeService.class),
-	 * mConnection, Context.BIND_AUTO_CREATE); isBound = true; }
-	 *
-	 * void doUnbindService() { if (isBound) {
-	 *
-	 * unbindService(mConnection); isBound = false; } }
-	 */
-//	@Override
-//	protected void onDestroy() {
-//		super.onDestroy();
-//	}
-
     public static int getOrientation(Context context, Uri photoUri) {
         Cursor cursor = context.getContentResolver().query(photoUri,
                 new String[]{MediaStore.Images.ImageColumns.ORIENTATION},
@@ -351,6 +199,114 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         } finally {
             cursor.close();
         }
+    }
+
+    public static String encodeToBase64(Bitmap image, CompressFormat compressFormat, int quality) {
+        ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
+        image.compress(compressFormat, quality, byteArrayOS);
+        return Base64.encodeToString(byteArrayOS.toByteArray(), Base64.DEFAULT);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.profile);
+        dbAdapter = KachingMeApplication.getDatabaseAdapter();
+        initialization();
+        screenArrangement();
+        getSupportActionBar().setTitle(
+                getResources().getString(R.string.contact_info));
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        tabletSize = getResources().getBoolean(R.bool.isTablet);
+        LayoutInflater layoutInflater = (LayoutInflater) getBaseContext()
+                .getSystemService(LAYOUT_INFLATER_SERVICE);
+        popupView = layoutInflater.inflate(R.layout.popup_gallery, null);
+        pwindo = new PopupWindow(popupView, LayoutParams.WRAP_CONTENT,
+                LayoutParams.WRAP_CONTENT);
+        sp1 = PreferenceManager.getDefaultSharedPreferences(this);
+        preferences = getSharedPreferences(KachingMeApplication.getPereference_label(),
+                Activity.MODE_PRIVATE);
+        number = sp1.getString("number", "");
+        country_code = sp1.getString("countrycode", "");
+        ConcurrentAsyncTaskExecutor.executeConcurrently(new MyAsync());
+
+        Intent intent = getIntent();
+        action = intent.getAction();
+        type = intent.getType();
+
+        if (Intent.ACTION_ATTACH_DATA.equals(action) && type != null) {
+            if (type.startsWith("image/")) {
+                Uri selectedImage = intent.getData();
+                String[] filePathColumn = {MediaStore.Images.Media.DATA};
+                Cursor cursor = getContentResolver().query(selectedImage, filePathColumn, null, null, null);
+                cursor.moveToFirst();
+
+                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                String filePath = cursor.getString(columnIndex);
+                cursor.close();
+                Constant.printMsg("siva check....Profile 1...." + filePath + "   ");
+
+                Intent intentCrop = new Intent(this, CropImage.class);
+                intentCrop.setType("image/*");
+                intentCrop.putExtra(CropImage.IMAGE_PATH, filePath);
+                intentCrop.putExtra("outputX", 126);
+                intentCrop.putExtra("outputY", 126);
+                intentCrop.putExtra("aspectX", 1);
+                intentCrop.putExtra("aspectY", 1);
+                intentCrop.putExtra("scale", true);
+                intentCrop.putExtra("return-data", true);
+                startActivityForResult(intentCrop, REQUEST_CODE_CROP_IMAGE);
+            } else {
+                Constant.printMsg("Image Share :::: " + "Empty");
+            }
+        } else {
+            Constant.printMsg("Image Share :::: " + "No Intent");
+        }
+    }
+
+    private void initialization() {
+        img_profile = (ImageView) findViewById(R.id.profile_pic);
+        img_profile_bg = (ImageView) findViewById(R.id.profile_picBaground);
+        txt_email = (TextView) findViewById(R.id.txt_email_id);
+        txt_name = (TextView) findViewById(R.id.txt_name);
+        txt_phone = (TextView) findViewById(R.id.txt_phone);
+        txt_status = (TextView) findViewById(R.id.txt_status_id);
+        mBlurImgLayout = (FrameLayout) findViewById(R.id.blur_img_layout);
+        mStatusLayout = (LinearLayout) findViewById(R.id.status_layout);
+        mNumberLayout = (LinearLayout) findViewById(R.id.number_layout);
+        mEmailLayout = (LinearLayout) findViewById(R.id.email_layout);
+        mNameLayout = (LinearLayout) findViewById(R.id.name_layout);
+
+        mStatusLabel = (TextView) findViewById(R.id.status_label);
+        mNumberLabel = (TextView) findViewById(R.id.number_label);
+        mEmailLabel = (TextView) findViewById(R.id.email_label);
+        mNameLabel = (TextView) findViewById(R.id.name_label);
+
+        // img_profile=(ImageView)findViewById(R.id.profile_img_p_pic);
+
+        btn_edit_email = (TextView) findViewById(R.id.btn_edit_email);
+        btn_edit_picture = (TextView) findViewById(R.id.btn_edit_picture);
+        btn_edit_name = (TextView) findViewById(R.id.btn_edit_name);
+        btn_edit_status = (TextView) findViewById(R.id.btn_edit_status);
+        btn_edit_picture.setOnClickListener(this);
+        btn_edit_name.setOnClickListener(this);
+        btn_edit_status.setOnClickListener(this);
+        btn_edit_email.setOnClickListener(this);
+        img_profile.setOnClickListener(this);
+
+        Constant.typeFace(this, txt_email);
+        Constant.typeFace(this, txt_name);
+        Constant.typeFace(this, txt_phone);
+        Constant.typeFace(this, txt_status);
+        Constant.typeFace(this, mStatusLabel);
+        Constant.typeFace(this, mNumberLabel);
+        Constant.typeFace(this, mEmailLabel);
+        Constant.typeFace(this, mNameLabel);
+        Constant.typeFace(this, btn_edit_email);
+        Constant.typeFace(this, btn_edit_picture);
+        Constant.typeFace(this, btn_edit_name);
+        Constant.typeFace(this, btn_edit_status);
     }
 
 
@@ -370,6 +326,74 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
 //        tmpOut.copyTo(outputBitmap);
 //        return outputBitmap;
 //    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.btn_edit_picture:
+                if (Connectivity.isConnected(this)) {
+                    selectImage();
+                } else {
+                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.btn_edit_name:
+                if (Connectivity.isConnected(this)) {
+                    setEdit(txt_name, "Name");
+                } else {
+                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.btn_edit_status:
+                if (Connectivity.isConnected(this)) {
+                    setEdit(txt_status, "Status");
+                } else {
+                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.btn_edit_email:
+                if (Connectivity.isConnected(this)) {
+                    setEdit(txt_email, "Email");
+                } else {
+                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case R.id.profile_pic:
+                if (Connectivity.isConnected(this)) {
+                    Constant.printMsg("Clicked on profile picture....");
+                    File f = new File(Constant.local_profile_picture_dir
+                            + KachingMeApplication.getjid().split("@")[0] + "_" + ".jpg");
+                    // you can create a new file name "test.BMP" in sdcard folder.
+                   /* try {
+                        if (bmp != null) {
+                            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+                         //   bmp.compress(CompressFormat.PNG, 100, bytes);
+
+                            f.createNewFile();
+                            FileOutputStream fo = new FileOutputStream(f);
+                            fo.write(bytes.toByteArray());
+                            fo.close();
+                        }
+                    } catch (Exception e) {
+                        // ACRA.getErrorReporter().handleException(e);
+                        // TODO: handle exception
+                        e.printStackTrace();
+                    }*/
+                    if (f.exists()) {
+                        Intent intent = new Intent();
+                        // intent.putExtra("path",f);
+                        intent.setAction(Intent.ACTION_VIEW);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        intent.setDataAndType(Uri.fromFile(f), "image/jpg");
+                        startActivity(intent);
+                    }
+                } else {
+                    Toast.makeText(this, "Please Check Your Network Connection.!!", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -403,7 +427,7 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
 
         switch (requestCode) {
             case 1:
-                Constant.printMsg("siva check....RESULT_OK...." + RESULT_OK);
+                Constant.printMsg("siva check....RESULT_OK...." + RESULT_OK + "   " + resultCode);
                 if (resultCode == RESULT_OK) {
                     Uri selectedImage = imageReturnedIntent.getData();
                     String[] filePathColumn = {MediaStore.Images.Media.DATA};
@@ -415,6 +439,10 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
                     String filePath = cursor.getString(columnIndex);
                     // Constant.printMsg("filepath is : "+filePath);
                     cursor.close();
+
+
+                    Constant.printMsg("siva check....Profile 1...." + filePath + "   ");
+
 
                     Intent intent = new Intent(this, CropImage.class);
                     intent.setType("image/*");
@@ -432,12 +460,25 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
                 break;
 
             case REQUEST_CODE_CROP_IMAGE:
-                Constant.printMsg("siva check....REQUEST_CODE_CROP_IMAGE...." + REQUEST_CODE_CROP_IMAGE);
+                Constant.printMsg("siva check....REQUEST_CODE_CROP_IMAGE...." + resultCode + "...." + RESULT_OK);
                 if (resultCode == RESULT_OK) {
                     final Bundle extras = imageReturnedIntent.getExtras();
-                    if (CropImage.croppedImage  != null) {
+                    if (CropImage.croppedImage != null) {
                         try {
-                            Bitmap bitmap = CropImage.croppedImage ;
+                            Bitmap bitmap = CropImage.croppedImage;
+                            File dir = new File(Constant.local_profile_picture_dir
+                                    + KachingMeApplication.getjid().split("@")[0] + "_" + ".jpg");
+                            if (dir.isDirectory()) {
+                                String[] children = dir.list();
+                                for (int i = 0; i < children.length; i++) {
+                                    new File(dir, children[i]).delete();
+                                }
+                            }
+                            FileOutputStream outFile = new FileOutputStream(Constant.local_profile_picture_dir
+                                    + KachingMeApplication.getjid().split("@")[0] + "_" + ".jpg");
+                            bitmap.compress(CompressFormat.JPEG, 100, outFile);
+
+
                             ByteArrayOutputStream out = new ByteArrayOutputStream();
                             bitmap.compress(CompressFormat.PNG, 100, out);
                             ByteArrayOutputStream outstream_thumb = new ByteArrayOutputStream();
@@ -477,13 +518,17 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
 
                             CropImage.croppedImage = null;
 
-
-                            ConcurrentAsyncTaskExecutor.executeConcurrently(new MyAsyncSave(),null, null, null);
+                            Constant.printMsg("siva check....REQUEST_CODE_CROP_IMAGE....finally");
+                            ConcurrentAsyncTaskExecutor.executeConcurrently(new MyAsyncSave(), null, null, null, Constant.local_profile_picture_dir
+                                    + KachingMeApplication.getjid().split("@")[0] + "_" + ".jpg");
                         } catch (Exception e) {
-
+                            Constant.printMsg("siva check....REQUEST_CODE_CROP_IMAGE....Eception" + e);
+                            e.printStackTrace();
                         }
                     }
 
+                } else {
+                    Constant.printMsg("siva check....REQUEST_CODE_CROP_IMAGE....else" + REQUEST_CODE_CROP_IMAGE);
                 }
                 break;
 
@@ -503,6 +548,9 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
                                         .getString(R.string.imagesize_must_be_smaller),
                                 true);
                     } else {
+
+                        Constant.printMsg("siva check....Profile 22...." + fileUri.getPath());
+
                         Intent intent = new Intent(this, CropImage.class);
                         intent.setType("image/*");
                         intent.putExtra(CropImage.IMAGE_PATH, fileUri.getPath());
@@ -522,63 +570,6 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
 
         }
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
-    }
-
-    public void setEdit(final TextView text, final String status) {
-        AlertDialog.Builder alert = new AlertDialog.Builder(this);
-        alert.setTitle(status);
-        // alert.setMessage("Message");
-        // Set an EditText view to get user input
-        final EditText input = new EditText(this);
-        input.setText(text.getText());
-        input.setSelectAllOnFocus(true);
-        alert.setView(input);
-        alert.setPositiveButton(getResources().getString(R.string.Ok),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        if (status.equalsIgnoreCase("name")) {
-                            String value = input.getText().toString();
-                            String temp = text.getText().toString();
-                            text.setText(value);
-                            if (!value.isEmpty()) {
-                                if (!temp.equals(value)) {
-                                    img_byte = null;
-                                    ConcurrentAsyncTaskExecutor.executeConcurrently(new MyAsyncSave(),value, txt_email.getText().toString(), null);
-//                                    new MyAsyncSave().execute(value, txt_email.getText().toString(), null);
-                                } else {
-//                                    Toast.makeText(getApplicationContext(), "Please Changes Something.!!", Toast.LENGTH_SHORT).show();
-                                }
-                            } else {
-                                Toast.makeText(getApplicationContext(), "Name Fields Cannot be Empty", Toast.LENGTH_SHORT).show();
-                            }
-                        } else {
-                            if (status.equalsIgnoreCase("email")) {
-                                String value = input.getText().toString();
-                                String temp = text.getText().toString();
-                                text.setText(value);
-                                if (!value.isEmpty()) {
-                                    if (!temp.equals(value)) {
-                                        img_byte = null;
-                                        ConcurrentAsyncTaskExecutor.executeConcurrently(new MyAsyncSave(),value, txt_name.getText().toString(), value, null);
-//                                        new MyAsyncSave().execute(txt_name.getText().toString(), value, null);
-                                    } else {
-//                                        Toast.makeText(getApplicationContext(), "Please Changes Something.!!", Toast.LENGTH_SHORT).show();
-                                    }
-                                } else {
-                                    Toast.makeText(getApplicationContext(), "Email Fields Cannot be Empty", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        }
-                    }
-                });
-
-        alert.setNegativeButton(getResources().getString(R.string.cancel),
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        // Canceled.
-                    }
-                });
-        alert.show();
     }
 
 //    public void uploadFile(String strURL, boolean is_image) {
@@ -875,6 +866,65 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
 //        }
 //    }
 
+    public void setEdit(final TextView text, final String status) {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(status);
+        // alert.setMessage("Message");
+        // Set an EditText view to get ` input
+        final EditText input = new EditText(this);
+        input.setText(text.getText());
+        input.setSelectAllOnFocus(true);
+        alert.setView(input);
+        alert.setPositiveButton(getResources().getString(R.string.Ok),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        if (status.equalsIgnoreCase("name")) {
+                            String value = input.getText().toString();
+                            String temp = text.getText().toString();
+                            if (!value.isEmpty()) {
+                                if (!temp.equals(value)) {
+                                    text.setText(value);
+                                    img_byte = null;
+                                    ConcurrentAsyncTaskExecutor.executeConcurrently(new MyAsyncSave(), value, txt_email.getText().toString(), null);
+                                } else {
+                                    //Toast.makeText(getApplicationContext(), "Please Changes Something.!!", Toast.LENGTH_SHORT).show();
+                                }
+                            } else {
+                                Toast.makeText(getApplicationContext(), "Name Fields Cannot be Empty", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            if (status.equalsIgnoreCase("email")) {
+                                String value = input.getText().toString();
+                                String temp = text.getText().toString();
+                                if (!value.isEmpty()) {
+                                    if (Validation.isEmailAddress(input, true)) {
+                                        if (!temp.equals(value)) {
+                                            text.setText(value);
+                                            img_byte = null;
+                                            ConcurrentAsyncTaskExecutor.executeConcurrently(new MyAsyncSave(), txt_name.getText().toString().trim(), value, null);
+                                        } else {
+                                            //Toast.makeText(getApplicationContext(), "Please Changes Something.!!", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        Toast.makeText(getApplicationContext(), "Invalid Email Id.!", Toast.LENGTH_SHORT).show();
+                                    }
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "Email Fields Cannot be Empty", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }
+                    }
+                });
+
+        alert.setNegativeButton(getResources().getString(R.string.cancel),
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int whichButton) {
+                        // Canceled.
+                    }
+                });
+        alert.show();
+    }
+
     private void popup() {
         // TODO Auto-generated method stub
         try {
@@ -1007,41 +1057,43 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private void selectImage() {
-        final CharSequence[] options = {"Photo", "Gallery"};
-        AlertDialog.Builder builder = new AlertDialog.Builder(Profile.this);
-        builder.setTitle("Select Picture");
-        builder.setItems(options, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int item) {
-                if (options[item].equals("Photo")) {
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            final CharSequence[] options = {"Photo", "Gallery"};
+            AlertDialog.Builder builder = new AlertDialog.Builder(Profile.this);
+            builder.setTitle("Select Picture");
+            builder.setItems(options, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int item) {
+                    if (options[item].equals("Photo")) {
+                        Intent intent;
+                        intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        fileUri = Utils.getOutputMediaFileUri(1);
+                        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set
 
-                    Intent intent;
-                    intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    fileUri = Utils.getOutputMediaFileUri(1);
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set
+                        startActivityForResult(intent,
+                                CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
 
-                    startActivityForResult(intent,
-                            CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+                    } else if (options[item].equals("Gallery")) {
 
-                } else if (options[item].equals("Gallery")) {
+                        Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
+                        photoPickerIntent.setType("image/*");
+                        try {
+                            startActivityForResult(photoPickerIntent, 1);
+                        } catch (ActivityNotFoundException e) {
 
-                    Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
-                    photoPickerIntent.setType("image/*");
-                    try {
-                        startActivityForResult(photoPickerIntent, 1);
-                    } catch (ActivityNotFoundException e) {
+                        }
 
                     }
 
                 }
-
-            }
-        });
-        builder.show();
+            });
+            builder.show();
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+        }
     }
 
     public void insertStatusDB(ContentValues v) {
@@ -1056,7 +1108,6 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         } finally {
             db.close();
         }
-
     }
 
     private Bitmap blurRenderScript(Bitmap smallBitmap, int radius) {
@@ -1086,7 +1137,6 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         renderScript.destroy();
 
         return bitmap;
-
     }
 
     private Bitmap RGB565toARGB888(Bitmap img) throws Exception {
@@ -1178,7 +1228,7 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
             // txt_phone.setText("+" + country_code+number);
             String phoneNumber = preferences.getString("ChatUserNumber", "");
             Constant.printMsg("profile number ::>>>> "
-                    + phoneNumber+"....."+ KachingMeApplication.getjid().split("@")[0]);
+                    + phoneNumber + "....." + KachingMeApplication.getjid().split("@")[0]);
             if (phoneNumber != null && !phoneNumber.equalsIgnoreCase("null") &&
                     !phoneNumber.isEmpty()) {
                 txt_phone.setText("+" + phoneNumber);
@@ -1208,46 +1258,8 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
             emailSave = params[1];
             statusSave = params[2];
             Constant.printMsg("profile Update values status.." + statusSave + "....name...." + nameSave + "....email...." + emailSave);
-            Constant.printMsg("profile Update values picture.." +img_byte);
-            try {
-                try {
-                    vc = VCardManager.getInstanceFor(
-                            TempConnectionService.connection).loadVCard();
-                } catch (Exception e) {
-                    Constant.printMsg("profile Update vcard Exception" + e);
-                }
-                if (nameSave != null) {
-                    vc.setFirstName(nameSave);
-                }
-                if (emailSave != null) {
-                    vc.setEmailWork(emailSave);
-                }
-                if (statusSave != null) {
-                    vc.setField("SORT-STRING", statusSave);
-                }
-                if (img_byte != null && img_byte.length>0) {
-                    vc.setAvatar(img_byte);
-                }
-                // vc.setField("SORT-STRING", KachingMeApplication.getStatus());
-                vc.setJabberId(KachingMeApplication.getjid());
-                VCardManager.getInstanceFor(TempConnectionService.connection).saveVCard(vc);
-                Constant.printMsg("profile Update Before send Packate");
-                chatManager = ChatManager.getInstanceFor(TempConnectionService.connection);
-
-                Roster roster_c = Roster.getInstanceFor(TempConnectionService.connection);
-                Collection<RosterEntry> entries = roster_c.getEntries();
-                Profile.this.roster = new String[entries.size()];
-                int i = 0;
-                for (RosterEntry rosterEntry : entries) {
-                    roster[i] = rosterEntry.getUser();
-                    i++;
-                }
-            } catch (Exception e) {
-                // ACRA.getErrorReporter().handleException(e);
-               // e.printStackTrace();
-                Constant.printMsg("profile Update vcard final  Exception" + e);
-            }
-            if (img_byte != null && img_byte.length>0) {
+            Constant.printMsg("profile Update values picture.." + img_byte);
+            if (img_byte != null && img_byte.length > 0) {
                 KachingMeApplication.setAvatar(img_byte);
             }
             if (nameSave != null && emailSave != null) {
@@ -1260,7 +1272,7 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                     encodeName = nameSave;
-                    encodeEmail =emailSave;
+                    encodeEmail = emailSave;
                 }
                 HttpConfig ht = new HttpConfig();
                 result = ht.httpget(KachingMeConfig.UPDATE_EMAIL_NAME + "phoneNumber=" + preferences.getString("MyPrimaryNumber", "")
@@ -1278,7 +1290,7 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
                 insertStatusDB(v);
                 KachingMeApplication.setStatus(statusSave);
             }
-            if (img_byte != null && img_byte.length>0) {
+            if (img_byte != null && img_byte.length > 0) {
                 try {
                     Constant.printMsg("Profile update.picture.............");
                     HttpConfig ht = new HttpConfig();
@@ -1292,7 +1304,8 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
                     Gson gson = new Gson();
                     String strData = gson.toJson(profileUpdate).toString();
                     Constant.printMsg("Profile update........post data........." + strData);
-                    result = ht.doPostMobizee(strData, KachingMeConfig.UPDATE_PROFILE);
+                    //result = ht.doPostMobizee(strData, KachingMeConfig.UPDATE_PROFILE);
+                    updateProfilePicture(KachingMeApplication.getUserID().split("@")[0], params[3], progressdialog);
                 } catch (Exception e) {
                     e.printStackTrace();
                     Constant.printMsg("Profile update....result err....." + e);
@@ -1312,40 +1325,163 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            if (result != null && result.length() > 0) {
-                if (result.contains("Profile photo updated successfully")){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
                     try {
-                        for (int i = 0; i < roster.length; i++) {
-                            Message msg = new Message();
-                            msg.setStanzaId("vcardedit");
-                            msg.setType(Message.Type.chat);
-                            msg.setTo(roster[i]);
-                            TempConnectionService.connection.sendStanza(msg);
+                        Constant.printMsg("profile Update Before VCardManager");
+                        VCardManager vCardManager = null;
+                        try {
+                            vCardManager = VCardManager.getInstanceFor(
+                                    TempConnectionService.connection);
+                            vc = vCardManager.loadVCard();
+                        } catch (Exception e) {
+                            Constant.printMsg("profile Update vcard Exception" + e);
+                        }
+                        if (vCardManager != null) {
+                            Constant.printMsg("profile Update After VCardManager");
+                            if (nameSave != null) {
+                                vc.setFirstName(nameSave);
+                            }
+                            if (emailSave != null) {
+                                vc.setEmailWork(emailSave);
+                            }
+                            if (statusSave != null) {
+                                vc.setField("SORT-STRING", statusSave);
+                            }
+                            if (img_byte != null && img_byte.length > 0) {
+                                vc.setAvatar(img_byte);
+                            }
+                            // vc.setField("SORT-STRING", KachingMeApplication.getStatus());
+                            vc.setJabberId(KachingMeApplication.getjid());
+                            vCardManager.saveVCard(vc);
+                            Constant.printMsg("profile Update Before send Packate");
+                            chatManager = ChatManager.getInstanceFor(TempConnectionService.connection);
+
+                            Roster roster_c = Roster.getInstanceFor(TempConnectionService.connection);
+                            Collection<RosterEntry> entries = roster_c.getEntries();
+                            Profile.this.roster = new String[entries.size()];
+                            int i = 0;
+                            for (RosterEntry rosterEntry : entries) {
+                                roster[i] = rosterEntry.getUser();
+                                i++;
+                            }
+                            try {
+                                for (int j = 0; j < roster.length; j++) {
+                                    Message msg = new Message();
+                                    msg.setStanzaId("vcardedit");
+                                    msg.setType(Message.Type.chat);
+                                    msg.setTo(roster[j]);
+                                    TempConnectionService.connection.sendStanza(msg);
+                                }
+                            } catch (Exception e) {
+                                // ACRA.getErrorReporter().handleException(e);fv
+                                // TODO: handle exception
+                                e.printStackTrace();
+                            }
                         }
                     } catch (Exception e) {
-                        // ACRA.getErrorReporter().handleException(e);fv
-                        // TODO: handle exception
-                        e.printStackTrace();
+                        // ACRA.getErrorReporter().handleException(e);
+                        // e.printStackTrace();
+                        Constant.printMsg("profile Update vcard final  Exception" + e);
                     }
-                    SendWeb.Update_Profile_web_async(Profile.this,
-                            KachingMeApplication.getjid(), txt_name.getText().toString(),
-                            txt_email.getText().toString(), img_byte);
-                    Toast.makeText(getApplicationContext(), "Profile Picture Updated", Toast.LENGTH_SHORT).show();
-                }else{
-                    /**need to do failure state*/
-                    //Toast.makeText(getApplicationContext(), "Failure to Update", Toast.LENGTH_SHORT).show();
                 }
-            } else {
-                Toast.makeText(getApplicationContext(), "Network Error.!!", Toast.LENGTH_SHORT).show();
-            }
-            progressdialog.cancel();
+            }).start();
         }
     }
 
-    public static String encodeToBase64(Bitmap image, CompressFormat compressFormat, int quality) {
-        ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
-        image.compress(compressFormat, quality, byteArrayOS);
-        return Base64.encodeToString(byteArrayOS.toByteArray(), Base64.DEFAULT);
+    private void updateProfilePicture(String primayNumber, String filePath, final ProgressDialog progressDialog) {
+        try {
+            RequestParams request_params = new RequestParams();
+            request_params.setUseJsonStreamer(false);
+            request_params.put("primaryNo", primayNumber);
+            request_params.put("fileType", "4");
+            request_params.put("fileName", "null");
+            request_params.put("latitude", "0");
+            request_params.put("longitude", "0");
+            request_params.put("reciverId", "1");
+            request_params.put("groupId", "null");
+            Long tsLong = System.currentTimeMillis() / 1000;
+            String timeStamp = tsLong.toString();
+            request_params.put("msgId", "" + timeStamp);
+            request_params.put("file", new File(filePath), "image/jpeg");
+
+            AsyncHttpClient client = new AsyncHttpClient();
+            client.setTimeout(60000);
+            client.post(Profile.this,
+                    KachingMeConfig.UPLOAD_MEDIA,
+                    null,
+                    request_params, "multipart/form-data",
+                    new AsyncHttpResponseHandler(Looper.getMainLooper()) {
+
+                        @Override
+                        public void onFailure(int arg0, Header[] position,
+                                              byte[] arg2, Throwable arg3) {
+                            // TODO Auto-generated method stub
+                            Constant.printMsg("update profile onFailure......" + arg3);
+                            if (progressDialog != null && progressDialog.isShowing())
+                                progressDialog.cancel();
+                            Toast.makeText(getApplicationContext(), "Failure to Update", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onCancel() {
+                            Constant.printMsg("update profile onSuccess......");
+                            if (progressDialog != null && progressDialog.isShowing())
+                                progressDialog.cancel();
+                            Toast.makeText(getApplicationContext(), "Network Error.!!", Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onSuccess(int arg0, Header[] position,
+                                              byte[] arg2) {
+                            String content = new String(arg2);
+                            String url = null, msg_id, msg;
+                            Constant.printMsg("update profile onSuccess......" + content);
+                            if (progressDialog != null && progressDialog.isShowing())
+                                progressDialog.cancel();
+                            try {
+                                JSONObject jsonObject_Image = new JSONObject(content);
+                                url = jsonObject_Image.getString("url");
+                                msg_id = jsonObject_Image.getString("msgId");
+                                msg = jsonObject_Image.getString("msg");
+                                Constant.printMsg("update profile nresult......" + url + "..." + msg_id + "...." + msg);
+                                if (msg.equalsIgnoreCase("SUCCESS")) {
+                                    if (msg != null && msg.length() > 0) {
+                                        if (msg.trim().equalsIgnoreCase("SUCCESS")) {
+                                            Toast.makeText(getApplicationContext(), "Profile Picture Updated", Toast.LENGTH_SHORT).show();
+                                        } else {
+                                            /**need to do failure state*/
+                                            Toast.makeText(getApplicationContext(), "Failure to Update", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        Toast.makeText(getApplicationContext(), "Network Error.!!", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            } catch (Exception e) {
+                                Constant.printMsg("path of img::::exp::::>>>>>>" + e);
+                            }
+                        }
+                    });
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1004:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
     }
 
     @Override
@@ -1429,7 +1565,6 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         btn_edit_name.setGravity(Gravity.CENTER);
         btn_edit_email.setGravity(Gravity.CENTER);
 
-
         FrameLayout.LayoutParams mProfileImgEditParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 FrameLayout.LayoutParams.WRAP_CONTENT);
@@ -1464,7 +1599,6 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
         txt_name.setPadding(width * 5 / 100, width * 3 / 100, width * 5 / 100, width * 3 / 100);
 
         txt_status.setPadding(width * 5 / 100, width * 3 / 100, width * 5 / 100, width * 3 / 100);
-
 
         if (width >= 600) {
             mStatusLabel.setTextSize(16);
@@ -1504,4 +1638,5 @@ public class Profile extends SherlockBaseActivity implements OnClickListener {
             txt_email.setTextSize(10);
         }
     }
+
 }

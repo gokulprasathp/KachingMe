@@ -52,6 +52,9 @@ import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.xdata.Form;
 import org.jivesoftware.smackx.xdata.FormField;
 import org.json.JSONObject;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -95,7 +98,7 @@ public class DeleteAccount extends Activity
         initDelete();
         arrangeScreenDelete();
 
-        btDeleteYes.setOnClickListener(new View.OnClickListener()
+        /*btDeleteYes.setOnClickListener(new View.OnClickListener()
         {
             @Override
             public void onClick(View v)
@@ -108,6 +111,42 @@ public class DeleteAccount extends Activity
                 {
                     Constant.printMsg("GGGGGGGGGGGGG" + e.toString());
                 }
+            }
+        });*/
+
+        btDeleteYes.setOnClickListener(new View.OnClickListener()
+        {
+            @Override
+            public void onClick(View v)
+            {
+                AlertDialog.Builder alertDeleteAcc = new AlertDialog.Builder(DeleteAccount.this);
+                alertDeleteAcc.setMessage("Are You Sure to Delete the Account");
+                alertDeleteAcc.setCancelable(false);
+                alertDeleteAcc.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        try
+                        {
+                            get_Group_List();
+                            dialog.dismiss();
+                        }
+                        catch (Exception e)
+                        {
+                            Constant.printMsg("GGGGGGGGGGGGG" + e.toString());
+                        }
+                    }
+                });
+                alertDeleteAcc.setNegativeButton("No", new DialogInterface.OnClickListener()
+                {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        dialog.dismiss();
+                    }
+                });
+                alertDeleteAcc.show();
             }
         });
 
@@ -356,9 +395,13 @@ public class DeleteAccount extends Activity
             MultiUserChatManager muc_manager = TempConnectionService.MUC_MANAGER;
 
             for (int j = 0; j < mem_jid.size(); j++) {
-                muc = muc_manager.getMultiUserChat(mem_jid.get(j));
                 try {
-                    muc.join(mem_jid.get(j));
+                    muc = muc_manager.getMultiUserChat(JidCreate.entityBareFrom(mem_jid.get(j)));
+                } catch (XmppStringprepException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    muc.join(Resourcepart.from(mem_jid.get(j)));
                 } catch (Exception e) {
                     // ACRA.getErrorReporter().handleException(e);
                     e.printStackTrace();
@@ -367,14 +410,14 @@ public class DeleteAccount extends Activity
 
                 try {
 
-                    muc.revokeOwnership(KachingMeApplication.getjid());
+                    muc.revokeOwnership(JidCreate.from(KachingMeApplication.getjid()));
                     String mem_list = null;
                     Collection<Affiliate> owner = muc.getOwners();
 
                     int i = 0;
                     for (Affiliate affiliate : owner) {
                         if (i == 0) {
-                            mem_list = affiliate.getJid();
+                            mem_list = affiliate.getJid().toString();
                         } else {
                             mem_list = mem_list + "," + affiliate.getJid();
                         }
@@ -382,7 +425,7 @@ public class DeleteAccount extends Activity
                         com.wifin.kachingme.util.Log.d("MUC_info", "Owner::" + affiliate.getJid());
                     }
 
-                    Message msg = new Message(mem_jid.get(j), Message.Type.groupchat);
+                    Message msg = new Message(JidCreate.from(mem_jid.get(j)), Message.Type.groupchat);
 
                     // msg.setSubject("Remove");
                     msg.setBody(mem_list);
@@ -460,48 +503,48 @@ public class DeleteAccount extends Activity
             if (deleted && deleted1) {
                 com.wifin.kachingme.util.Log.d(TAG, "Before account delete .... after");
 
-                AsyncHttpClient client = new AsyncHttpClient();
-                RequestParams request_params = new RequestParams();
-                request_params.add("jid", KachingMeApplication.getjid());
-                client.post(KachingMeConfig.DELETE_USER_PHP,
-                        request_params, new AsyncHttpResponseHandler() {
-                            @Override
-                            public void onFinish() {
-                                // TODO Auto-generated method stub
-                                com.wifin.kachingme.util.Log.d("Remove_user", "User_Delete_Finish");
-                                editor.remove("pin");
-                                editor.commit();
-                                finish();
-                                super.onFinish();
-                            }
-
-                            @Override
-                            public void onStart() {
-                                // TODO Auto-generated method stub
-                                com.wifin.kachingme.util.Log.d("Remove_user", "User_Delete_Sart");
-                                super.onStart();
-                            }
-
-                            @Override
-                            public void onFailure(int arg0, Header[] arg1,
-                                                  byte[] arg2, Throwable arg3) {
-                                // TODO Auto-generated method stub
-                                com.wifin.kachingme.util.Log.d("Remove_user", "User_Delete_Failure::"
-                                        + new String(arg2));
-                            }
-
-                            @Override
-                            public void onSuccess(int arg0, Header[] arg1,
-                                                  byte[] arg2) {
-                                // TODO Auto-generated method stub
-                                com.wifin.kachingme.util.Log.d("Remove_user", "User_Delete::"
-                                        + new String(arg2));
-                                editor.remove("pin");
-                                editor.commit();
-                                finish();
-                            }
-
-                        });
+//                AsyncHttpClient client = new AsyncHttpClient();
+//                RequestParams request_params = new RequestParams();
+//                request_params.add("jid", KachingMeApplication.getjid());
+//                client.post(KachingMeConfig.DELETE_USER_PHP,
+//                        request_params, new AsyncHttpResponseHandler() {
+//                            @Override
+//                            public void onFinish() {
+//                                // TODO Auto-generated method stub
+//                                com.wifin.kachingme.util.Log.d("Remove_user", "User_Delete_Finish");
+//                                editor.remove("pin");
+//                                editor.commit();
+//                                finish();
+//                                super.onFinish();
+//                            }
+//
+//                            @Override
+//                            public void onStart() {
+//                                // TODO Auto-generated method stub
+//                                com.wifin.kachingme.util.Log.d("Remove_user", "User_Delete_Sart");
+//                                super.onStart();
+//                            }
+//
+//                            @Override
+//                            public void onFailure(int arg0, Header[] arg1,
+//                                                  byte[] arg2, Throwable arg3) {
+//                                // TODO Auto-generated method stub
+//                                com.wifin.kachingme.util.Log.d("Remove_user", "User_Delete_Failure::"
+//                                        + new String(arg2));
+//                            }
+//
+//                            @Override
+//                            public void onSuccess(int arg0, Header[] arg1,
+//                                                  byte[] arg2) {
+//                                // TODO Auto-generated method stub
+//                                com.wifin.kachingme.util.Log.d("Remove_user", "User_Delete::"
+//                                        + new String(arg2));
+//                                editor.remove("pin");
+//                                editor.commit();
+//                                finish();
+//                            }
+//
+//                        });
 
             }
             // System.exit(0);
@@ -520,9 +563,9 @@ public class DeleteAccount extends Activity
     public void Admin_exit(String new_admin, String jid) {
         try {
             MultiUserChatManager muc_manager = TempConnectionService.MUC_MANAGER;
-            muc = muc_manager.getMultiUserChat(jid);
+            muc = muc_manager.getMultiUserChat(JidCreate.entityBareFrom(jid));
             try {
-                muc.join(jid);
+                muc.join(Resourcepart.from(jid));
             } catch (Exception e) {
                 // ACRA.getErrorReporter().handleException(e);
                 e.printStackTrace();
@@ -531,7 +574,7 @@ public class DeleteAccount extends Activity
 
             dbAdapter = KachingMeApplication.getDatabaseAdapter();
 
-            Chat_list_GetSet chat_list = dbAdapter.getChat_List(muc.getRoom());
+            Chat_list_GetSet chat_list = dbAdapter.getChat_List(muc.getRoom().toString());
             Form f1 = muc.getConfigurationForm();
             List<String> admin = new ArrayList<String>();
             admin.add(new_admin);
@@ -578,8 +621,8 @@ public class DeleteAccount extends Activity
 
             try {
 
-                muc.revokeOwnership(KachingMeApplication.getUserID()
-                        + KachingMeApplication.getHost());
+                muc.revokeOwnership(JidCreate.from(KachingMeApplication.getUserID()
+                        + KachingMeApplication.getHost()));
 
 				/* muc.sendConfigurationForm(f1); */
                 String mem_list = null;
@@ -588,7 +631,7 @@ public class DeleteAccount extends Activity
                 int i = 0;
                 for (Affiliate affiliate : owner) {
                     if (i == 0) {
-                        mem_list = affiliate.getJid();
+                        mem_list = affiliate.getJid().toString();
                     } else {
                         mem_list = mem_list + "," + affiliate.getJid();
                     }

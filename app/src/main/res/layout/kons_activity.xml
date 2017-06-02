@@ -67,6 +67,7 @@
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
                     android:background="@color/white"
+                    android:scaleType="fitXY"
                     android:focusable="true"
                     android:src="@drawable/emoji_btn_normal"
                     android:text="">

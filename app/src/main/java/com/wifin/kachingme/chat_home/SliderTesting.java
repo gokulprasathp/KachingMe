@@ -8,6 +8,7 @@
 
 package com.wifin.kachingme.chat_home;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
@@ -24,6 +25,7 @@ import android.database.SQLException;
 import android.graphics.Color;
 import android.graphics.Point;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -57,6 +59,7 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -67,10 +70,13 @@ import com.wifin.kachingme.bradcast_recivers.GlobalBroadcast;
 import com.wifin.kachingme.buxs.BuxSActivity;
 import com.wifin.kachingme.cart.CartActivity;
 import com.wifin.kachingme.chat.broadcast_chat.Broadcast_create;
+import com.wifin.kachingme.chat.muc_chat.MUC_Info;
 import com.wifin.kachingme.chat.muc_chat.NewGroup_FragmentActivity;
+import com.wifin.kachingme.chat.muc_chat.NewGroup_MemberList;
 import com.wifin.kachingme.chat.single_chat.ChatTest;
 import com.wifin.kachingme.database.DatabaseHelper;
 import com.wifin.kachingme.database.Dbhelper;
+import com.wifin.kachingme.kaching_feature.auto_response.ResponseActivity;
 import com.wifin.kachingme.kaching_feature.dazz.BannerActivity;
 import com.wifin.kachingme.kaching_feature.dazz.BannerActivityChat;
 import com.wifin.kachingme.kaching_feature.dazz.BannerActivityDazzAdapter;
@@ -109,6 +115,7 @@ import com.wifin.kachingme.util.GPSTrackerUtils;
 import com.wifin.kachingme.util.HttpConfig;
 import com.wifin.kachingme.util.KachingMeConfig;
 import com.wifin.kachingme.util.Log;
+import com.wifin.kachingme.util.NotificationSharedPreference;
 import com.wifin.kachingme.util.ResideMenu;
 import com.wifin.kachingme.util.ResideMenuItem;
 import com.wifin.kachingme.util.SimpleGestureFilter;
@@ -146,15 +153,18 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
     Dbhelper db;
     DatabaseHelper dbbase;
     String mCount;
-    String db_data;
-    ImageView mLeftSliderMenu_Img, mRightSliderMenu_Search, mRightSliderMenu_Add, mLeftSliderLogo_Img, mSliderLogo_Img;
+    String db_data, action, type;
+    ImageView mLeftSliderMenu_Img, mLeftSliderLogo_Img, mSliderLogo_Img;
+    public static ImageView mRightSliderMenu_Add,mRightSliderMenu_Search;
+    public static ProgressBar progressBarRefresh;
     AppBarLayout mHomeAppBarLayout;
     CoordinatorLayout mCoorddinatorLayout;
     Toolbar mToolBar;
     LinearLayout mToolbarIconLayout, mSliderLogoLayout;
     DrawerLayout mDrawerLayout;
-    FloatingActionButton mFloatingActionBtn, mFloatingActionBtnRefresh, mFloatingActionBtnGroupAdd;
-    HomeTabSwipe adapter;
+    FloatingActionButton mFloatingActionBtn, mFloatingActionBtnGroupAdd;
+    public static FloatingActionButton mFloatingActionBtnRefresh;
+    public static HomeTabSwipe adapter;
     boolean isForward;
     LinearLayout mBottomLayout, mBottomChatLayout, mBottomCartLayout, mBottomBuxsLayout, mForwardLayout;
     TextView mBottomChatText, mBottomBuxsText, mBottomCartText, mForwardText;
@@ -163,12 +173,18 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
     double latitude, longitude;
     SharedPreferences preference;
     /* bottom Layout VarIABLE*/
-    private ViewPager viewPager;
+    public static ViewPager viewPager;
     private ResideMenu resideMenu;
     private ResideMenuItem menuLeftChat, menuLeftNymn, menuLeftDazz, menuLeftKons, menuLeftDest, menuLeftKrok,
-            menuLeftBuxs, menuLeftCart;
+            menuLeftResp, menuLeftBuxs, menuLeftCart;
     private ResideMenuItem menuRightSets, menuRightStas, menuRightProf, menuRightShsr, menuRightBrod,
             menuRightShwt, menuRightWher, menuRightLogout;
+
+    CommonMethods commonMethods;
+
+    SharedPreferences prefResponse;
+    String preferenceResp = "auto_response", responseMsg = "";
+    boolean response_state = false;
 
     public static void setBadge(Context context, int count) {
         String launcherClassName = getLauncherClassName(context);
@@ -219,6 +235,55 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         return dir.delete();
     }
 
+    public static void logoutTheUserFirebase() {
+        KachingMeApplication.getsharedpreferences_Editor().remove("wallpaper").commit();
+        Constant.freelistmain.clear();
+        Constant.printMsg("deleted db::beforeeeeee");
+        mActivity.ed.remove("pin");
+        mActivity.ed.remove("sec_count");
+        mActivity.ed.clear();
+        mActivity.ed.commit();
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mActivity);
+        Editor editorClear = sp.edit();
+        editorClear.clear();
+        editorClear.commit();
+        Editor editor = sp.edit();
+        editor.putString("activity_name", "");
+        editor.putBoolean("decline", false);
+        editor.putInt("nofreebie", 0);
+        editor.commit();
+        SharedPreferences sps = mActivity.getSharedPreferences(KachingMeApplication.getPereference_label(),
+                Activity.MODE_PRIVATE);
+        Editor editor1 = sps.edit();
+        editor1.putString("activity_name", "");
+        editor1.putBoolean("decline", false);
+        editor1.putInt("nofreebie", 0);
+        editor1.commit();
+        mActivity.dbadapter.dumpDatabase();
+        mActivity.db.dumpDatabase();
+        Constant.login = false;
+        Constant.emptyFreebie = false;
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Presence pr = new Presence(Presence.Type.unavailable);
+                    TempConnectionService.connection.sendStanza(pr);
+                    TempConnectionService.connection.disconnect();
+                } catch (Exception e) {
+
+                }
+            }
+        });
+        thread.start();
+        mActivity.deleteInternalAndExternalStorage();
+        //mActivity.resideMenu.closeMenu();
+        Intent intent = new Intent(mActivity, com.wifin.kachingme.registration_and_login.MainActivity.class);
+        mActivity.startActivity(intent);
+        mActivity.finish();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // TODO Auto-generated method stub
@@ -230,7 +295,7 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         mActivity = this;
         preference = getSharedPreferences(KachingMeApplication.getPereference_label(),
                 Activity.MODE_PRIVATE);
-
+        commonMethods = new CommonMethods(this);
         View view = getWindow().getDecorView();
         view.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
         try {
@@ -264,6 +329,38 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         viewPager.setOffscreenPageLimit(3);
 
         context = SliderTesting.this;
+
+        prefResponse = context.getSharedPreferences(preferenceResp, MODE_PRIVATE);
+        response_state = prefResponse.getBoolean("status_auto", false);
+        responseMsg = prefResponse.getString("status_msg", null);
+        Constant.printMsg("Preference Status :: " + response_state + " Msg :: " + responseMsg);
+
+        // Get intent, action and MIME type
+        Intent intent = getIntent();
+        action = intent.getAction();
+        type = intent.getType();
+
+        if (Intent.ACTION_SEND.equals(action) && type != null) {
+            if ("text/plain".equals(type)) {
+                // Handle text being sent
+            } else if (type.startsWith("image/")) {
+                Constant.singleImagUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM); // Handle single image being sent
+                Constant.printMsg("Image Share :::: " + Constant.singleImagUri.toString());
+            } else if (type.startsWith("video/")) {
+                Constant.singleVideoUri = (Uri) intent.getParcelableExtra(Intent.EXTRA_STREAM);
+                Constant.printMsg("Video Share ::: " + Constant.singleVideoUri.toString());
+            }
+        } else if (Intent.ACTION_SEND_MULTIPLE.equals(action) && type != null) {
+            if (type.startsWith("image/")) {
+                // Handle multiple images being sent
+                Constant.multipleImageUri = intent.getParcelableArrayListExtra(Intent.EXTRA_STREAM);
+                Constant.printMsg("Image Share Multiple :::: " + Constant.multipleImageUri.toString());
+            }
+            if (type.startsWith("video/")) {
+                // Handle multiple images being sent
+                Toast.makeText(getApplicationContext(), "KachingMe Not Allow To Send Multiple Videos", Toast.LENGTH_SHORT).show();
+            }
+        }
 
         viewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
 
@@ -305,7 +402,6 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
 
         }
 
-        setCurrentTab();
         msg_ids = null;
         Bundle bundle = getIntent().getExtras();
         String query = "SELECT * FROM " + Dbhelper.TABLE_CART;
@@ -329,6 +425,14 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
                 isForward = false;
             }
         }
+
+        try {
+            new NotificationSharedPreference(this).clearDataNewtork();
+            NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            notificationManager.cancelAll();
+        } catch (Exception e) {
+
+        }
     }
 
     public void initVariable() {
@@ -341,6 +445,7 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         mSliderLogo_Img = (ImageView) findViewById(R.id.slider_logo_image);
         mRightSliderMenu_Search = (ImageView) findViewById(R.id.right_menu_search);
         mRightSliderMenu_Add = (ImageView) findViewById(R.id.right_menu_add);
+        progressBarRefresh = (ProgressBar) findViewById(R.id.right_menu_progressBar);
         mFloatingActionBtn = (FloatingActionButton) findViewById(R.id.floatingbtn);
         mFloatingActionBtnGroupAdd = (FloatingActionButton) findViewById(R.id.floatingbtnGroup);
         mFloatingActionBtnRefresh = (FloatingActionButton) findViewById(R.id.floatingbtnRefresh);
@@ -439,19 +544,25 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
                 mRightSliderMenu_Add.setVisibility(View.GONE);
                 mSliderLogoLayout.setVisibility(View.GONE);
                 mHeaderClose.setVisibility(View.GONE);
+                progressBarRefresh.setVisibility(View.GONE);
                 mHeaderLayout.setVisibility(View.VISIBLE);
                 showSoftKeyboard(mHeaderEditText);
                 break;
             case R.id.right_menu_add:
-                try {
-                    Intent addContactIntent = new Intent(Intent.ACTION_INSERT);
-                    addContactIntent.setType(ContactsContract.Contacts.CONTENT_TYPE);
-                    addContactIntent.putExtra(ContactsContract.Intents.Insert.PHONE, "");
-                    startActivity(addContactIntent);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.WRITE_CONTACTS)) {
+                    try {
+                        Intent addContactIntent = new Intent(Intent.ACTION_INSERT);
+                        addContactIntent.setType(ContactsContract.Contacts.CONTENT_TYPE);
+                        addContactIntent.putExtra(ContactsContract.Intents.Insert.PHONE, "");
+                        startActivity(addContactIntent);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    resideMenu.closeMenu();
+                } else {
+                    Constant.permissionRequest(this, Manifest.permission.WRITE_CONTACTS, Constant.PERMISSION_CODE_CONTACTS);
                 }
-                resideMenu.closeMenu();
+
                 break;
             case R.id.floatingbtn:
                 viewPager.setCurrentItem(2);
@@ -471,24 +582,20 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
                 /*need code to back press of chat*/
                 break;
 
+
+
+
             case R.id.floatingbtnRefresh:
                 if (Connectivity.isConnected(this)) {
-                    Animation startRotateAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_view);
-                    mFloatingActionBtnRefresh.startAnimation(startRotateAnimation);
-
+                    mFloatingActionBtnRefresh.setVisibility(View.GONE);
+                    //Animation startRotateAnimation = AnimationUtils.loadAnimation(getApplicationContext(), R.anim.rotate_view);
+                    //mFloatingActionBtnRefresh.startAnimation(startRotateAnimation);
+                    mRightSliderMenu_Add.setVisibility(View.GONE);
+                    mRightSliderMenu_Search.setVisibility(View.INVISIBLE);
+                    progressBarRefresh.setVisibility(View.VISIBLE);
                     if (!GlobalBroadcast.isServiceRunning(ContactLastSync.class.getCanonicalName(), this)) {
                         startService(new Intent(SliderTesting.this, ContactLastSync.class));
                     }
-                    Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            // TODO Auto-generated method stub
-                            //FavouriteContacts.loadContactList();
-                            Intent loadContactBroadcast = new Intent("contact_update");
-                            getApplicationContext().sendBroadcast(loadContactBroadcast);
-                        }
-                    }, 5000);
                 } else {
                     Toast.makeText(this, "Check Your Network Connection.",
                             Toast.LENGTH_SHORT).show();
@@ -504,6 +611,8 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
 //                mHeaderEditText.setFocusable(false);
                 mHeaderEditText.setText("");
                 hideSoftKeyboard();
+
+
                 if (tabLayout.getSelectedTabPosition() == 2) {
                     //FavouriteContacts.loadContactList();
                     Intent loadContactBroadcast = new Intent("contact_update");
@@ -548,6 +657,10 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
             Constant.mKroKFromSlider = true;
             startActivity(new Intent(SliderTesting.this, KaraokeListActivity.class));
             //finish();
+            resideMenu.closeMenu();
+        } else if (v == menuLeftResp) {
+            startActivity(new Intent(SliderTesting.this, ResponseActivity.class));
+            finish();
             resideMenu.closeMenu();
         } else if (v == menuLeftBuxs) {
             resideMenu.closeMenu();
@@ -634,8 +747,9 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         loginPostPojo.setOtp("");
         loginPostPojo.setLongitude(stringLatitude);
         loginPostPojo.setLatitude(stringLongitude);
-        if (Constant.Imei_no != null) {
-            loginPostPojo.setImei(Constant.Imei_no);
+        loginPostPojo.setActivityNo(preference.getString("ChatUserNumber", ""));
+        if (preference.getString("ImeiNo", "") != null) {
+            loginPostPojo.setImei(preference.getString("ImeiNo", ""));
         } else {
             loginPostPojo.setImei("");
         }
@@ -652,16 +766,14 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
                         Settings.Global.AUTO_TIME) == 1) {
                     cartValidationProcess();
                 } else {
-                    CommonMethods cm = new CommonMethods(this);
-                    cm.autoTimeEnable();
+                    commonMethods.autoTimeEnable();
                 }
             } else {
                 if (Settings.System.getInt(getContentResolver(),
                         Settings.System.AUTO_TIME) == 1) {
                     cartValidationProcess();
                 } else {
-                    CommonMethods cm = new CommonMethods(this);
-                    cm.autoTimeEnable();
+                    commonMethods.autoTimeEnable();
                 }
             }
         } catch (Settings.SettingNotFoundException e) {
@@ -716,8 +828,7 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
 
     @Override
     protected void onStop() {
-        if (msg_ids != null)
-            msg_ids = null;
+
         super.onStop();
         Constant.printMsg("onStop Called..............");
         // hideSoftKeyboard();
@@ -727,35 +838,49 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
     @Override
     protected void onResume() {
         super.onResume();
-        Constant.printMsg("onResume Called............");
-        if (resideMenu.isOpened()) {
-            resideMenu.closeMenu();
-        }
+        try {
+            Constant.printMsg("onResume Called............");
+            Broadcast_create.selected_users = null;
+            MUC_Info.selected_users = null;
+            NewGroup_MemberList.selected_users = null;
 
-        tabLayout = (TabLayout) findViewById(R.id.home_tab_layout);
-        tabLayout.addTab(tabLayout.newTab());
-        tabLayout.addTab(tabLayout.newTab());
-        tabLayout.addTab(tabLayout.newTab());
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+            if (resideMenu.isOpened()) {
+                resideMenu.closeMenu();
+            }
 
-        tabLayout.setupWithViewPager(viewPager);
+            tabLayout = (TabLayout) findViewById(R.id.home_tab_layout);
+            tabLayout.addTab(tabLayout.newTab());
+            tabLayout.addTab(tabLayout.newTab());
+            tabLayout.addTab(tabLayout.newTab());
+            tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        for (int i = 0; i < tabLayout.getTabCount(); i++) {
-            TabLayout.Tab tab = tabLayout.getTabAt(i);
-            tab.setCustomView(adapter.getTabView(i));
-        }
+            tabLayout.setupWithViewPager(viewPager);
 
-        getSupportActionBar().hide();
-        mHeaderLayout.setVisibility(View.GONE);
-        mSliderLogoLayout.setVisibility(View.VISIBLE);
-        mRightSliderMenu_Search.setVisibility(View.VISIBLE);
-        mRightSliderMenu_Add.setVisibility(View.VISIBLE);
-        tabLayout.setVisibility(View.VISIBLE);
+            for (int i = 0; i < tabLayout.getTabCount(); i++) {
+                TabLayout.Tab tab = tabLayout.getTabAt(i);
+                tab.setCustomView(adapter.getTabView(i));
+            }
+
+            getSupportActionBar().hide();
+            mHeaderLayout.setVisibility(View.GONE);
+            mSliderLogoLayout.setVisibility(View.VISIBLE);
+            mRightSliderMenu_Search.setVisibility(View.VISIBLE);
+            mRightSliderMenu_Add.setVisibility(View.VISIBLE);
+            tabLayout.setVisibility(View.VISIBLE);
 //                mHeaderEditText.setFocusable(false);
-        if (!mHeaderEditText.getText().toString().isEmpty())
-            mHeaderEditText.setText("");
-        hideSoftKeyboard();
-        mFinishBackgroundAcrtivity();
+            if (!mHeaderEditText.getText().toString().isEmpty())
+                mHeaderEditText.setText("");
+            hideSoftKeyboard();
+            mFinishBackgroundAcrtivity();
+            setCurrentTab();
+
+//            if(viewPager.getAdapter()!=null){
+//                viewPager.getAdapter().notifyDataSetChanged();
+//            }
+
+        } catch (Exception e) {
+
+        }
     }
 
     @Override
@@ -893,17 +1018,17 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         menuLeftKons = new ResideMenuItem(this, R.drawable.selectorfornewkons, "KonS", "left");
         menuLeftDest = new ResideMenuItem(this, R.drawable.selectorfornewdes, "DesT", "left");
         menuLeftKrok = new ResideMenuItem(this, R.drawable.selectorfornewkrok, "KroK", "left");
+        menuLeftResp = new ResideMenuItem(this, R.drawable.selectorforresp, "ResP", "left");
 //        menuLeftAddContact = new ResideMenuItem(this, R.drawable.selector_for_profile, "Add ContacT", "left");
-
 //        menuLeftBuxs = new ResideMenuItem(this, R.drawable.lefts_buxs, "BuxS");
 //        menuLeftCart = new ResideMenuItem(this, R.drawable.lefts_cart, "CarT");
-
 //        menuLeftChat.setOnClickListener(this);
         menuLeftNymn.setOnClickListener(this);
         menuLeftDazz.setOnClickListener(this);
         menuLeftKons.setOnClickListener(this);
         menuLeftDest.setOnClickListener(this);
         menuLeftKrok.setOnClickListener(this);
+        menuLeftResp.setOnClickListener(this);
 //        menuLeftAddContact.setOnClickListener(this);
 //        menuLeftCart.setOnClickListener(this);
 //        resideMenu.addMenuItem(menuLeftChat, ResideMenu.DIRECTION_LEFT);
@@ -912,6 +1037,7 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         resideMenu.addMenuItem(menuLeftKons, ResideMenu.DIRECTION_LEFT);
         resideMenu.addMenuItem(menuLeftDest, ResideMenu.DIRECTION_LEFT);
         resideMenu.addMenuItem(menuLeftKrok, ResideMenu.DIRECTION_LEFT);
+        resideMenu.addMenuItem(menuLeftResp, ResideMenu.DIRECTION_LEFT);
 //        resideMenu.addMenuItem(menuLeftAddContact, ResideMenu.DIRECTION_LEFT);
 //        resideMenu.addMenuItem(menuLeftCart, ResideMenu.DIRECTION_LEFT);
 //        c[0] = menuLeftNymn.getId();
@@ -1109,25 +1235,36 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
     }
 
     public void Show_Self_desc_time(int selected) {
+        Constant.mTimeFromSlider = 0;
         final CharSequence[] items = getResources().getStringArray(
                 R.array.self_des_time);
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(getResources().getString(R.string.self_des_time));
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
 
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                Constant.mDesTFromSlider = true;
-                Constant.printMsg("slider trueeeeeeeeeeeeeeeee");
-                Intent i = new Intent(SliderTesting.this, SliderTesting.class);
-                startActivity(i);
-                finish();
+
                 if (Constant.mTimeFromSlider == 0) {
-                    viewPager.setCurrentItem(0);
                     Constant.mDesTFromSlider = false;
+
                 } else {
-                    viewPager.setCurrentItem(2);
+                    Constant.mDesTFromSlider = true;
+
                 }
+                Constant.printMsg("slider trueeeeeeeeeeeeeeeee");
+//                Intent i = new Intent(SliderTesting.this, SliderTesting.class);
+//                startActivity(i);
+//                finish();
+//                if(builder!=null){
+//                    builder.setCancelable()
+//                }
+//                if (Constant.mTimeFromSlider == 0) {
+//                    viewPager.setCurrentItem(0);
+//                    Constant.mDesTFromSlider = false;
+//                } else {
+//                    viewPager.setCurrentItem(0);
+//                }
 
             }
 
@@ -1139,6 +1276,7 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
                     public void onClick(DialogInterface dialog, int which) {
                         // TODO Auto-generated method stub
                         Constant.mTimeFromSlider = self_desc_time[which];
+                        Constant.printMsg("dhfgdalf" + Constant.mTimeFromSlider);
                     }
                 });
         builder.show();
@@ -1254,13 +1392,16 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         }
 
         if (Constant.mKonsFromSlider == true) {
+            Constant.mKonsFromSlider =false;
             viewPager.setCurrentItem(2);
         }
         if (Constant.mDazZFromSlider == true) {
+            Constant.mDazZFromSlider = false;
             viewPager.setCurrentItem(2);
         }
         if (Constant.mDesTFromSlider == true) {
-            viewPager.setCurrentItem(2);
+            Constant.mDesTFromSlider =false;
+            viewPager.setCurrentItem(0);
         }
         if (Constant.mKroKFromSlider) {
             Constant.mKroKFromSlider = false;
@@ -1474,7 +1615,7 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         mLeftLogoParams.width = (int) width * 40 / 100;
         mLeftLogoParams.height = (int) height * 6 / 100;
-        mLeftLogoParams.leftMargin = (int) (width * 30 / 100);
+        mLeftLogoParams.leftMargin = (int) (width * 28 / 100);
         mLeftLogoParams.gravity = Gravity.CENTER;
         mLeftSliderLogo_Img.setLayoutParams(mLeftLogoParams);
 
@@ -1487,6 +1628,7 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
         mRightMenuParams.gravity = Gravity.CENTER | Gravity.RIGHT;
         mRightSliderMenu_Search.setLayoutParams(mRightMenuParams);
         mRightSliderMenu_Add.setLayoutParams(mRightMenuParams);
+        progressBarRefresh.setLayoutParams(mRightMenuParams);
 
         CoordinatorLayout.LayoutParams floatingParams = new CoordinatorLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -1666,53 +1808,17 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
 
     }
 
-    public static void logoutTheUserFirebase() {
-        KachingMeApplication.getsharedpreferences_Editor().remove("wallpaper").commit();
-        Constant.freelistmain.clear();
-        Constant.printMsg("deleted db::beforeeeeee");
-        mActivity.ed.remove("pin");
-        mActivity.ed.remove("sec_count");
-        mActivity.ed.clear();
-        mActivity.ed.commit();
-
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(mActivity);
-        Editor editorClear = sp.edit();
-        editorClear.clear();
-        editorClear.commit();
-        Editor editor = sp.edit();
-        editor.putString("activity_name", "");
-        editor.putBoolean("decline", false);
-        editor.putInt("nofreebie", 0);
-        editor.commit();
-        SharedPreferences sps = mActivity.getSharedPreferences(KachingMeApplication.getPereference_label(),
-                Activity.MODE_PRIVATE);
-        Editor editor1 = sps.edit();
-        editor1.putString("activity_name", "");
-        editor1.putBoolean("decline", false);
-        editor1.putInt("nofreebie", 0);
-        editor1.commit();
-        mActivity.dbadapter.dumpDatabase();
-        mActivity.db.dumpDatabase();
-        Constant.login = false;
-        Constant.emptyFreebie = false;
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Presence pr = new Presence(Presence.Type.unavailable);
-                    TempConnectionService.connection.sendStanza(pr);
-                    TempConnectionService.connection.disconnect();
-                } catch (Exception e) {
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1002:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
                 }
-            }
-        });
-        thread.start();
-        mActivity.deleteInternalAndExternalStorage();
-        //mActivity.resideMenu.closeMenu();
-        Intent intent = new Intent(mActivity, com.wifin.kachingme.registration_and_login.MainActivity.class);
-        mActivity.startActivity(intent);
-        mActivity.finish();
+                break;
+        }
     }
 
     private class logoutTheUser extends AsyncTask<String, String, String> {
@@ -1789,6 +1895,7 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
                     thread.start();
                     deleteInternalAndExternalStorage();
                     resideMenu.closeMenu();
+                    commonMethods.postEarnedBux("logout");
                     Intent intent = new Intent(SliderTesting.this, com.wifin.kachingme.registration_and_login.MainActivity.class);
                     startActivity(intent);
                     finish();
@@ -1803,6 +1910,25 @@ public class SliderTesting extends AppCompatActivity implements TabLayout.OnTabS
                 Toast.makeText(getApplicationContext(), "Network Error.!Please try again later!",
                         Toast.LENGTH_SHORT).show();
             }
+        }
+    }
+
+    public static void updateHedder(){
+        try {
+            tabLayout = (TabLayout) mActivity.findViewById(R.id.home_tab_layout);
+            tabLayout.addTab(tabLayout.newTab());
+            tabLayout.addTab(tabLayout.newTab());
+            tabLayout.addTab(tabLayout.newTab());
+            tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+
+            tabLayout.setupWithViewPager(viewPager);
+
+            for (int i = 0; i < tabLayout.getTabCount(); i++) {
+                TabLayout.Tab tab = tabLayout.getTabAt(i);
+                tab.setCustomView(adapter.getTabView(i));
+            }
+        } catch (Exception e) {
+
         }
     }
 }

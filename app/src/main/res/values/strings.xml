@@ -1,12 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="APP_ID">1586690354973245</string>
-    <string name="API_KEY">AIzaSyC_LnuQIF89g4DTwUqKFtWvF9j6iTKGSeU</string>
+    <string name="APP_ID">241627042910321</string>
+    <string name="API_KEY">AIzaSyC9HBmGD4zSDVznHex2fKU4hzd4ZZkgqrs</string>
+    <string name="app_name">KaChing.me</string>
+    <string name="version_no">Version 1.1</string>
 
     <string name="nynm_title">Enter Your Text</string>
     <string name="nynm_message">Enter Your NynM</string>
     <string name="btCancel">Cancel</string>
     <string name="btAdd">Add</string>
+
+    <string name="response_disable">Disable</string>
+    <string name="auto_response_hint">Enter Auto Response Message</string>
+    <string name="auto_response_title">Add Auto Response Text</string>
+    <string name="auto_resp_proceed">Proceed</string>
+    <string name="auto_resp_dismiss">Dismiss</string>
 
     <string name="bottom_cart">CarT</string>
     <string name="bottom_buxs">BuxS</string>
@@ -14,8 +22,6 @@
 
     <string name="archive_all_conversastion">Archieve all conversations</string>
     <string name="are_sure_archieve_coversastion">Are you sure you want to archive ALL chats?</string>
-    <string name="app_name">KaChing.me</string>
-    <string name="version_no">Version 1.1</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
     <string name="title_activity_splash">SplashActivity</string>
@@ -155,6 +161,7 @@
     <string name="login">Login</string>
     <string name="sync_contacts">Sync contacts</string>
     <string name="profile">Profile</string>
+    <string name="profile_pic">KachingMe Profile Picture</string>
     <string name="profile_name">Profile Name</string>
     <string name="personal_info">Personal Info</string>
     <string name="create_brochure">Create Brochure</string>
@@ -217,7 +224,8 @@
     <string name="invalide_email">Invalid Email address</string>
     <string name="hey_im_usning_niftycha">Hey! I am Using KaChing.me</string>
     <string name="email_exist">Email you entered is already exist</string>
-    <string name="we_sent_sms">We\'ve sent one time activation code to your phone number <b>%1$s</b></string>
+    <string name="we_sent_sms">We\'ve will give a missed call to your phone number <b>%1$s</b></string>
+    <string name="we_sent_sms_no_number">We\'ve will give a missed call to your phone number.</string>
     <string name="sorry_you_have_entered_wrong_pin">Sorry, You have entered wrong pin!!</string>
     <string name="blocked">Blocked</string>
     <string name="block">Block</string>
@@ -458,11 +466,14 @@
     <string name="no_longer_participant">"You can't send messages to this group because you're no longer a participant "</string>
     <string name="already_member_of_group">%1$s is already a member of group</string>
     <string name="tap_here_for_info">Tap here for info..</string>
-    <string name="varification_note">*If you dont receive the activation code with 5 mins, click "Send Again" above</string>
+    <string name="varification_note">*If you dont receive any call within 2 mins, click "Call Again" above</string>
+    <string name="otp_varification_note">KaChing.me will give missed call to verify your phone number.</string>
+    <string name="otp_varification_hint">Enter First Five Digit From Missed Call</string>
+
     <string name="no_database_found_on_cloud">No database backup fond on cloud!!</string>
-    <string name="set_wallpaper">Set wallpaper</string>
-    <string name="no_wallpaper">No wallpaper</string>
-    <string name="default_wallpaper">Default wallpaper</string>
+    <string name="set_wallpaper">Gallery</string>
+    <string name="no_wallpaper">No Wallpaper</string>
+    <string name="default_wallpaper">Animated wallpaper</string>
     <string name="wallpaper">Wallpaper</string>
 
     <!-- ############### App configuration ############################### -->

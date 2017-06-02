@@ -9,6 +9,8 @@ import com.wifin.kachingme.applications.KachingMeApplication;
 import com.wifin.kachingme.database.DatabaseHelper;
 import com.wifin.kachingme.util.Constant;
 
+import org.jxmpp.jid.impl.JidCreate;
+
 /**
  * Sending Typing status in Group chat @MUC_Chat.java
  * 
@@ -37,7 +39,7 @@ public class IntentTypingService extends IntentService {
 
 				try {
 					TempConnectionService.messageEventManager
-							.sendComposingNotification(list.get(i),
+							.sendComposingNotification(JidCreate.from(list.get(i)),
 									Constant.TYPING_STATUS_GROUP);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block

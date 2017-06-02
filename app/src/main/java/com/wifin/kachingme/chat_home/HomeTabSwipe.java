@@ -77,6 +77,20 @@ public class HomeTabSwipe extends FragmentPagerAdapter {
         Constant.typeFace(context, tv);
         ImageView img = (ImageView) v.findViewById(R.id.imgView);
         img.setImageResource(imageResId[position]);
+        /*try {
+            totalChatCount = (TextView) v.findViewById(R.id.total_chat_count);
+
+            LinearLayout.LayoutParams mImageParams1 = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            mImageParams1.width = Constant.screenWidth * 7 / 100;
+            mImageParams1.height = Constant.screenWidth * 7 / 100;
+            totalChatCount.setLayoutParams(mImageParams1);
+
+            totalChatCount.setText(Constant.mChatCounts.get(position));
+        } catch (Exception e) {
+
+        }*/
 
         LinearLayout.LayoutParams mImageParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -91,6 +105,7 @@ public class HomeTabSwipe extends FragmentPagerAdapter {
         txtParams.gravity = Gravity.CENTER;
         txtParams.topMargin = Constant.screenHeight * 1 / 2 / 100;
         tv.setLayoutParams(txtParams);
+//        totalChatCount.setLayoutParams(txtParams);
 
         return v;
     }
@@ -110,6 +125,12 @@ public class HomeTabSwipe extends FragmentPagerAdapter {
         ImageSpan imageSpan = new ImageSpan(image, ImageSpan.ALIGN_BOTTOM);
         sb.setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
         return sb;
+    }
+
+    @Override
+    public int getItemPosition(Object object) {
+        // POSITION_NONE makes it possible to reload the PagerAdapter
+        return POSITION_NONE;
     }
 }
 

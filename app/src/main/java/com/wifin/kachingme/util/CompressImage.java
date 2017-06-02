@@ -117,6 +117,7 @@ public class CompressImage {
                 matrix.postRotate(270);
                 Log.d("EXIF", "Exif: " + orientation);
             }
+            System.gc();
             scaledBitmap = Bitmap.createBitmap(scaledBitmap, 0, 0,
                     scaledBitmap.getWidth(), scaledBitmap.getHeight(), matrix,
                     true);

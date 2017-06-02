@@ -8,6 +8,7 @@ import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smackx.iqlast.LastActivityManager;
 import org.jivesoftware.smackx.iqlast.packet.LastActivity;
+import org.jxmpp.jid.impl.JidCreate;
 
 import android.app.Activity;
 import android.view.View;
@@ -31,7 +32,7 @@ public class GetJidPresenceStatus {
         try {
             Roster roster = Roster
                     .getInstanceFor(TempConnectionService.connection);
-            Presence presence = roster.getPresence(jid);
+            Presence presence = roster.getPresence(JidCreate.bareFrom(jid));
 
 
             if (presence.isAvailable()) {
@@ -104,7 +105,7 @@ public class GetJidPresenceStatus {
 			 * LastActivityManager.isLastActivitySupported( connection, jid));
 			 */
             LastActivity la = LastActivityManager.getInstanceFor(
-                    TempConnectionService.connection).getLastActivity(jid);
+                    TempConnectionService.connection).getLastActivity(JidCreate.from(jid));
 
             Calendar cal = Calendar.getInstance();
             Long l = (cal.getTimeInMillis() - (la.getIdleTime() * 1000));

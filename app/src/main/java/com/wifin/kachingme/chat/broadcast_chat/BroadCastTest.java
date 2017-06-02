@@ -9,6 +9,7 @@
 package com.wifin.kachingme.chat.broadcast_chat;
 
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -33,6 +34,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.media.ThumbnailUtils;
@@ -120,6 +122,7 @@ import com.wifin.kachingme.chat.chat_common_classes.CustomPhotoGalleryActivity;
 import com.wifin.kachingme.chat.chat_common_classes.LocationShare;
 import com.wifin.kachingme.chat.chat_common_classes.SendContact;
 import com.wifin.kachingme.chat.chat_common_classes.SongList;
+import com.wifin.kachingme.chat.muc_chat.MUCTest;
 import com.wifin.kachingme.chat.muc_chat.OrientationGroup;
 import com.wifin.kachingme.chat_home.SliderTesting;
 import com.wifin.kachingme.database.DatabaseHelper;
@@ -171,12 +174,12 @@ import com.wifin.kachingme.util.SelectionMode;
 import com.wifin.kachingme.util.TimeUtils;
 import com.wifin.kachingme.util.Utils;
 
-import org.acra.ACRAConstants;
+//import org.acra.ACRAConstants;
 import org.apache.http.Header;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.ConnectionListener;
 import org.jivesoftware.smack.ExceptionCallback;
-import org.jivesoftware.smack.PacketCollector;
+
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.StanzaListener;
 import org.jivesoftware.smack.XMPPConnection;
@@ -187,7 +190,6 @@ import org.jivesoftware.smack.iqrequest.IQRequestHandler;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.IQ;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.packet.PlainStreamElement;
 import org.jivesoftware.smack.packet.Stanza;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.jiveproperties.JivePropertiesManager;
@@ -201,6 +203,8 @@ import org.jivesoftware.smackx.xevent.MessageEventManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -227,7 +231,7 @@ import a_vcard.android.provider.Contacts;
 
 import java.util.Collections;
 
-public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
+public class BroadCastTest extends AppCompatActivity implements
         EmojiconGridFragment.OnEmojiconClickedListener,
         EmojiconFragmentGroup.OnEmojiconBackspaceClickedListener, Animation.AnimationListener, OnItemClickListenerInterface {
 
@@ -612,7 +616,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
     int[] self_desc_time = {0, 5, 10, 15};
     int selected_self_desc_time = 0;
     int selected_self_desc_index = 0;
-    LinearLayout emoji_frag,  mTextLay, linearLayoutPopup;
+    LinearLayout emoji_frag, linearLayoutPopup;
     SharedPreferences sp, pref, sp1;
     SharedPreferences.Editor ed;
     SharedPreferences sharedPrefs;
@@ -620,7 +624,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
     int i = 0;
     ArrayList<ContactsGetSet> users;
     int mBuxCount = 0;
-    ImageView an_background;
     ImageView img_chat_background1;
     GIFView img_chat_background;
     ImageView img_chat_avatar;
@@ -812,7 +815,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             Window window = getWindow();
 
             window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-
             setContentView(R.layout.chat_muc);
 
             dest_msg_list = new ArrayList<>();
@@ -830,6 +832,23 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mIntVariable();
             mScreenArrangement();
             Constant.mKonsFromChat = false;
+
+            if (Constant.singleImagUri != null)
+            {
+                handleSendImage(Constant.singleImagUri);
+            }
+
+            if (Constant.singleVideoUri != null)
+            {
+                handleSendSingleVideo(Constant.singleVideoUri);
+            }
+
+            if (Constant.multipleImageUri.size() != 0)
+            {
+                handleSendMultipleImages();
+
+                Constant.printMsg("Selected Image Size ::: " + Constant.multipleImageUri.size());
+            }
 
             loaderManager = getSupportLoaderManager();
 
@@ -853,10 +872,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
             emoji_frag = (LinearLayout) findViewById(R.id.emoji_frag);
-            an_background = (ImageView) findViewById(R.id.anim_background);
-            if (ChatDictionary.mDictionaryList.size() == 0) {
-                fetchNymFrom();
-            }
+
             Constant.mZzleGroup = false;
             Constant.mKonsFromChat = false;
             Constant.mBazzleGroup = false;
@@ -866,7 +882,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             Constant.mKonsFromSlider = false;
             Constant.mKroKFromSlider = false;
 
-            mTextLay = (LinearLayout) findViewById(R.id.text_lay);
             shake = AnimationUtils.loadAnimation(this, R.anim.shakeanim);
             listMeaning = (ListView) findViewById(R.id.mnglist);
             mMove = AnimationUtils.loadAnimation(getApplicationContext(),
@@ -928,10 +943,10 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                 if (Constant.wallType.equalsIgnoreCase("file"))
                 {
-                    File f = new File(KachingMeApplication.getsharedpreferences()
-                            .getString("wallpaper", null));
-                    img_chat_background1.setVisibility(View.VISIBLE);
-                    img_chat_background1.setImageURI(Uri.fromFile(f));
+                    File f = new File(KachingMeApplication.getsharedpreferences().getString("wallpaper", null));
+                    Drawable d = Drawable.createFromPath(f.getAbsolutePath());
+                    getWindow().setBackgroundDrawable(d);
+                    img_chat_background1.setVisibility(View.GONE);
                     img_chat_background.setVisibility(View.GONE);
                 }
                 else
@@ -940,18 +955,18 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     img_chat_background.setVisibility(View.VISIBLE);
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
 
-                    File f = new File(KachingMeApplication.getsharedpreferences()
-                            .getString("wallpaper", null));
+                    File f = new File(KachingMeApplication.getsharedpreferences().getString("wallpaper", null));
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
 
                     Constant.printMsg("paththththth ::::: >>>>>>> " + f);
-
                     String pathName = f.getAbsolutePath();
-                    Toast.makeText(getApplicationContext(), "" + pathName,
-                            Toast.LENGTH_LONG).show();
                     Constant.gifimage = pathName;
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
                 }
+            }
+            else
+            {
+                getWindow().setBackgroundDrawableResource(R.drawable.bg) ;
             }
 
             Bundle bundle = getIntent().getExtras();
@@ -1088,16 +1103,89 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     // ////////*Images Message*////////////
                     else if (msg.getMedia_wa_type().equals("1")) {
 
-                        Forword_Image(msg);
+
+                        try {
+                            File file = null;
+                            file = new File(Constant.local_image_dir
+                                    + msg.getMedia_name());
+
+                            if(file!=null) {
+                                if (file.exists()) {
+                                    msg.setStatus(3);
+                                    msg.setNeeds_push(1);
+                                    msg.setMedia_url(null);
+                                    isFirstCall = false;
+                                    Forword_Image(msg);
+                                }else
+                                {
+                                    Toast.makeText(mParentActivity,"No media file found",Toast.LENGTH_SHORT).show();
+                                }
+                            }else
+                            {
+                                Toast.makeText(mParentActivity,"No media file found",Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                        }
 
                     }
                     // ////////*Videos Message*////////////
                     else if (msg.getMedia_wa_type().equals("2")) {
-                        Forword_Video(msg);
+
+                        try {
+                            File file = null;
+                            file = new File(Constant.local_video_dir
+                                    + msg.getMedia_name());
+
+                            if(file!=null) {
+                                if (file.exists()) {
+                                    msg.setStatus(3);
+                                    msg.setNeeds_push(1);
+                                    msg.setMedia_url(null);
+                                    isFirstCall = false;
+                                    Forword_Video(msg);
+                                }else
+                                {
+                                    Toast.makeText(mParentActivity,"No media file found",Toast.LENGTH_SHORT).show();
+                                }
+                            }else
+                            {
+                                Toast.makeText(mParentActivity,"No media file found",Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                        }
+
+
                     }
                     // ////////*Audios Message*////////////
                     else if (msg.getMedia_wa_type().equals("3")) {
-                        Forword_Audio(msg);
+
+
+                        try {
+                            File file = null;
+                            file = new File(Constant.local_audio_dir
+                                    + msg.getMedia_name());
+
+                            if(file!=null) {
+                                if (file.exists()) {
+                                    msg.setStatus(3);
+                                    msg.setNeeds_push(1);
+                                    msg.setMedia_url(null);
+                                    isFirstCall = false;
+                                    Forword_Audio(msg);
+                                }else
+                                {
+                                    Toast.makeText(mParentActivity,"No media file found",Toast.LENGTH_SHORT).show();
+                                }
+                            }else
+                            {
+                                Toast.makeText(mParentActivity,"No media file found",Toast.LENGTH_SHORT).show();
+                            }
+                        } catch (Exception e) {
+                            Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                        }
+
                     }
                     // ////////*Location Message*////////////
                     else if (msg.getMedia_wa_type().equals("4")) {
@@ -1537,8 +1625,13 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                         return;
                     }
+                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                            .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                                    0);
 
                     if (mMenuVisible == false) {
+
+
                         Constant.printMsg("siva check seleted or not false.............." + mMenuVisible);
                         mChatHedderMenuLayout.setBackgroundColor(Color
                                 .parseColor("#00000000"));
@@ -1609,6 +1702,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                             }
                         }
                         //    mode.finish();
+                        Constant.fromChat = true;
                         Intent intent = new Intent(mParentActivity, SliderTesting.class);
                         Log.i("Forword", "Message IDS " + msg_ids);
                         intent.putExtra("msg_ids", msg_ids);
@@ -1617,6 +1711,9 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         return;
                     }
 
+                    ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                            .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                                    0);
 
                     String query = "select status from " + Dbhelper.TABLE_LOCK
                             + " where jid = '" + jid + "'";
@@ -1707,9 +1804,17 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 public boolean onTouch(View v, MotionEvent event) {
 
                     topMenuHideFunction();
-                    if(mPopup){
-                        downArrowClickAction();
-                    }
+                    v.setFocusable(true);
+                    v.setFocusableInTouchMode(true);
+//                    if(mPopup){
+//                        downArrowClickAction();
+//                    }
+                    FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT);
+                    mScrollViewParams.topMargin = height * 8 / 100;
+                    mScrollViewParams.bottomMargin = (height * 11 / 100);
+                    mScrollView.setLayoutParams(mScrollViewParams);
                     if (emoji_frag.getVisibility() == View.VISIBLE) {
                         emoji_frag.setVisibility(View.GONE);
                         btn_emo.setImageResource(R.drawable.emoji_btn_normal);
@@ -1717,16 +1822,16 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     }
                     //mPopup = false;
 
-                    if (is_enter_is_send) {
-
-                        edt_msg.setInputType(1);
-
-                    } else {
+//                    if (is_enter_is_send) {
+//
+//                        edt_msg.setInputType(1);
+//
+//                    } else {
 
                         edt_msg.setInputType(InputType.TYPE_CLASS_TEXT
                                 | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
 
-                    }
+//                    }
                     edt_msg.onTouchEvent(event); // call native handler
 
                     return true; // consume touch even
@@ -1748,12 +1853,24 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     }
 
                     if (emoji_frag.getVisibility() == View.VISIBLE) {
+                        FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT);
+                        mScrollViewParams.topMargin = height * 8 / 100;
+                        mScrollViewParams.bottomMargin = (height * 11 / 100);
+                        mScrollView.setLayoutParams(mScrollViewParams);
                         emoji_frag.setVisibility(View.GONE);
                         btn_emo.setImageResource(R.drawable.emoji_btn_normal);
                         ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
                                 .toggleSoftInput(InputMethodManager.SHOW_FORCED,
                                         InputMethodManager.HIDE_IMPLICIT_ONLY);
                     } else {
+                        FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT);
+                        mScrollViewParams.topMargin = height * 8 / 100;
+                        mScrollViewParams.bottomMargin = (height * 45 / 100);
+                        mScrollView.setLayoutParams(mScrollViewParams);
                         emoji_frag.setVisibility(View.VISIBLE);
                         // btn_emo.setImageResource(R.drawable.smiling36);
                         btn_emo.setImageResource(R.drawable.ic_action_hardware_keyboard);
@@ -1808,6 +1925,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                                 {
 
                                 }
+                                return true;
                             }
                         }
                         else
@@ -2411,7 +2529,23 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 }
             }
 
-            if (mIsLogClick) {
+            if (mIsLogClick || emoji_frag.isShown()) {
+
+                emoji_frag.setVisibility(View.GONE);
+                // btn_emo.setImageResource(R.drawable.smiling36);
+                btn_emo.setImageResource(R.drawable.emoji_btn_normal);
+
+                FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.MATCH_PARENT);
+                mScrollViewParams.topMargin = height * 8 / 100;
+                mScrollViewParams.bottomMargin = (height * 11 / 100);
+                mScrollView.setLayoutParams(mScrollViewParams);
+
+                ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                        .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                                0);
+
                 for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
 
                     mRightTipLayout = (FrameLayout) findViewById(Integer.valueOf(mOnLongSelectedPostions.get(i)) + 200000);
@@ -2454,6 +2588,8 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
 
                 mChatHedderCopyLayout.setVisibility(View.GONE);
+                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
 
             } else {
                 try {
@@ -2489,16 +2625,18 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
 
         } catch (Exception e) {
-
+            super.onBackPressed();
         }
 
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
         Intent intent;
-        switch (item.getItemId()) {
+
+        switch (item.getItemId())
+        {
             case android.R.id.home:
 
                 Log.d("Chat",
@@ -2514,6 +2652,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 intent.putExtra("name", home_title);
                 startActivity(intent);
                 break;
+
             case R.id.menu_block:
                 if (KachingMeApplication.getIsNetAvailable()) {
                     if (item.getTitle().equals(
@@ -2534,6 +2673,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                                     R.string.no_internet_connection));
                 }
                 break;
+
             case R.id.menu_capture:
 
                 selectImage();
@@ -2542,9 +2682,18 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             case R.id.audio_file:
 
-               startActivity(new Intent(this, SongList.class));
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE))
+                {
+                    Constant.mFromBrodAudio = true;
+                    startActivity(new Intent(mParentActivity, SongList.class));
+                }
+                else
+                {
+                    Constant.permissionRequest(mParentActivity, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
 
                 break;
+
             case R.id.clear_chat:
                 AlertDialog.Builder b = new AlertDialog.Builder(mParentActivity);
                 b.setMessage("Are you sure you want to clear this chat ?")
@@ -2692,8 +2841,13 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             getSupportActionBar().hide();
             mParentActivity = this;
 
+
+
             Constant.userStatus = Constant.ONLINE_STATUS;
 
+//            if (ChatDictionary.mDictionaryList.size() == 0) {
+                fetchNymFrom();
+//            }
             updateReadMessages();
 
             IntentFilter filter = new IntentFilter();
@@ -2797,7 +2951,12 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 Constant.printMsg(" BBBB INside Presence typing");
 
 
-                Message msg = new Message(jid, Message.Type.chat);
+                Message msg = null;
+                try {
+                    msg = new Message(JidCreate.from(jid), Message.Type.chat);
+                } catch (XmppStringprepException e) {
+                    e.printStackTrace();
+                }
                 msg.setStanzaId(status);
 
                 if (mIsMirrorEnabled)
@@ -2901,7 +3060,12 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             public void run() {
                 try {
 
-                    Message msg = new Message(jid, Message.Type.chat);
+                    Message msg = null;
+                    try {
+                        msg = new Message(JidCreate.from(jid), Message.Type.chat);
+                    } catch (XmppStringprepException e) {
+                        e.printStackTrace();
+                    }
                     msg.setStanzaId(msg_id);
                     // msg.setBody(stringmsg);
                     msg.setBody(Utils.EncryptMessage(stringmsg));
@@ -2923,7 +3087,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                     // chatManager = ChatManager.getInstanceFor(connection);
 
-                    chat = TempConnectionService.chatmanager.createChat(jid,
+                    chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(jid),
                             TempConnectionService.mChatCreatedListener.getMessageListener());
                     DeliveryReceiptRequest.addTo(msg);
                     dest_list.add(Constant.mselected_self_destruct_time);
@@ -2998,62 +3162,68 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 @Override
                 public void run() {
                     // TODO Auto-generated method stub
-                    ArrayList<MessageGetSet> unreadMessageList = new ArrayList<MessageGetSet>();
-                    unreadMessageList = dbAdapter.getUnreadMessages(jid);
-                    Constant.printMsg("Unread Message Called...::" +
-                            unreadMessageList.size());
+                    try {
+                        ArrayList<MessageGetSet> unreadMessageList = new ArrayList<MessageGetSet>();
+                        unreadMessageList = dbAdapter.getUnreadMessages(jid);
+                        Constant.printMsg("Unread Message Called...::" +
+                                unreadMessageList.size());
 
 
-                    for (final MessageGetSet messageGetSet : unreadMessageList) {
+                        for (final MessageGetSet messageGetSet : unreadMessageList) {
 
-                        dbAdapter.setUpdateMessage_display(jid,
-                                messageGetSet.getKey_id());
+                            dbAdapter.setUpdateMessage_display(jid,
+                                    messageGetSet.getKey_id());
 
-                        final Message ack = new Message(jid,
-                                Message.Type.chat);
+                            final Message ack = new Message(JidCreate.from(jid),
+                                    Message.Type.chat);
 
-                        if (TempConnectionService.connection != null) {
-                            if (TempConnectionService.connection.isConnected()) {
+                            if (TempConnectionService.connection != null) {
+                                if (TempConnectionService.connection.isConnected()) {
 
-                                ack.setSubject(Constant.STATUS_DISPLAYED);
-                                ack.addExtension(new DeliveryReceipt(messageGetSet
-                                        .getKey_id()));
-                                try {
-                                    Constant.printMsg("GGGGGGGGGGGGGGGSIU"
-                                            + messageGetSet.getKey_id());
+                                    ack.setSubject(Constant.STATUS_DISPLAYED);
+                                    ack.addExtension(new DeliveryReceipt(messageGetSet
+                                            .getKey_id()));
+                                    try {
+                                        Constant.printMsg("GGGGGGGGGGGGGGGSIU"
+                                                + messageGetSet.getKey_id());
 
-                                    TempConnectionService.connection
-                                            .sendStanza(ack);
-                                } catch (SmackException.NotConnectedException e) {
-                                    e.printStackTrace();
+                                        TempConnectionService.connection
+                                                .sendStanza(ack);
+                                    } catch (SmackException.NotConnectedException e) {
+                                        e.printStackTrace();
+                                    }
+                                } else {
+
+                                    mPendingDeliveryAckMessege.add(messageGetSet
+                                            .getKey_id() + "#" + jid);
+
                                 }
                             } else {
-
                                 mPendingDeliveryAckMessege.add(messageGetSet
                                         .getKey_id() + "#" + jid);
-
                             }
-                        } else {
-                            mPendingDeliveryAckMessege.add(messageGetSet
-                                    .getKey_id() + "#" + jid);
+
+                            // StatusListenerMethods.sendReceipt(jid,
+                            // messageGetSet.getKey_id(),
+                            // Constant.STATUS_DISPLAYED);
+
                         }
 
-                        // StatusListenerMethods.sendReceipt(jid,
-                        // messageGetSet.getKey_id(),
-                        // Constant.STATUS_DISPLAYED);
-
+                        mFinalPendingDeliveryAckMessege
+                                .addAll(mPendingDeliveryAckMessege);
+                        Constant.printMsg("AAAAAAAAAAAAAAAAAA!!!!"
+                                + mPendingDeliveryAckMessege);
+                        Constant.printMsg("AAAAAAAAAAAAAAAAAASSSSSSSSSSS!!!!"
+                                + mFinalPendingDeliveryAckMessege);
+                        SharedPreferences.Editor prefsEditor = myPrefs.edit();
+                        prefsEditor.putStringSet("pending_delivery_msg",
+                                mFinalPendingDeliveryAckMessege);
+                        prefsEditor.commit();
+                    } catch (XmppStringprepException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-
-                    mFinalPendingDeliveryAckMessege
-                            .addAll(mPendingDeliveryAckMessege);
-                    Constant.printMsg("AAAAAAAAAAAAAAAAAA!!!!"
-                            + mPendingDeliveryAckMessege);
-                    Constant.printMsg("AAAAAAAAAAAAAAAAAASSSSSSSSSSS!!!!"
-                            + mFinalPendingDeliveryAckMessege);
-                    SharedPreferences.Editor prefsEditor = myPrefs.edit();
-                    prefsEditor.putStringSet("pending_delivery_msg",
-                            mFinalPendingDeliveryAckMessege);
-                    prefsEditor.commit();
 
                 }
             });
@@ -3130,8 +3300,12 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             KachingMeApplication.setBlocked_user(mBlockedList);
 
-            mngr.updatePrivacyList(KachingMeApplication.getUserID(),
-                    privacy_items_updated);
+            try {
+                mngr.updatePrivacyList(KachingMeApplication.getUserID(),
+                        privacy_items_updated);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             Log.d("Privacy List", "List unblocked..");
             supportInvalidateOptionsMenu();
@@ -4366,7 +4540,14 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         msggetset.setKey_remote_jid(jid);
         msggetset.setNeeds_push(1);
         msggetset.setSend_timestamp(new Date().getTime());
-        msggetset.setStatus(3);
+        if (Connectivity.isOnline(mParentActivity) && Connectivity.isTempConnection()) {
+            msggetset.setStatus(2);
+
+        } else {
+            msggetset.setStatus(3);
+
+        }
+
         msggetset.setTimestamp(new Date().getTime());
         msggetset.setThumb_image(null);
         msggetset.setLatitude(Double.parseDouble(lat));
@@ -4457,7 +4638,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     if (chat == null) {
 
                         chat = TempConnectionService.chatmanager.createChat(
-                                jid,
+                                JidCreate.entityFullFrom(jid),
                                 TempConnectionService.mChatCreatedListener.getMessageListener());
                     }
                     // MessageEventManager.addNotificationsRequests(msg, true,
@@ -4475,7 +4656,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                         for (int i = 0; i < members.length; i++) {
                             chat = TempConnectionService.chatmanager.createChat(
-                                    members[i],
+                                    JidCreate.entityFullFrom(members[i]),
                                     TempConnectionService.mChatCreatedListener.getMessageListener());
                             msg = new Message();
                             msg.setTo(members[i]);
@@ -4514,10 +4695,10 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             }
         };
         thread.start();
-//        Intent login_broadcast = new Intent("chat");
-//        login_broadcast.putExtra("jid", "" + jid);
-//        getApplicationContext().sendBroadcast(login_broadcast);
-//
+        Intent login_broadcast = new Intent("chat");
+        login_broadcast.putExtra("jid", "" + jid);
+        getApplicationContext().sendBroadcast(login_broadcast);
+
 //        new FetchChat().execute();
     }
 
@@ -4533,7 +4714,14 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         msggetset.setKey_remote_jid(jid);
         msggetset.setNeeds_push(1);
         msggetset.setSend_timestamp(new Date().getTime());
-        msggetset.setStatus(3);
+        if (Connectivity.isOnline(mParentActivity) && Connectivity.isTempConnection()) {
+            msggetset.setStatus(2);
+
+        } else {
+            msggetset.setStatus(3);
+
+        }
+
         msggetset.setTimestamp(new Date().getTime());
         msggetset.setThumb_image(null);
         msggetset.setMedia_name(name+","+numberContactSend);
@@ -4656,7 +4844,8 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     if (chat == null) {
 
                         chat = TempConnectionService.chatmanager.createChat(
-                                jid,
+                                JidCreate.entityFullFrom(
+                                        jid),
                                 TempConnectionService.mChatCreatedListener.getMessageListener());
                     }
 
@@ -4670,9 +4859,9 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         {
                             for (int i = 0; i < members.length; i++) {
                                 chat = TempConnectionService.chatmanager.createChat(
-                                        members[i],
+                                        JidCreate.entityFullFrom(members[i]),
                                         TempConnectionService.mChatCreatedListener.getMessageListener());
-                                msg = new Message(members[i], Message.Type.chat);
+                                msg = new Message(JidCreate.from(members[i]), Message.Type.chat);
                                 // msg.setPacketID("" + packet_id);
                                 msg.setStanzaId("" + packet_id);
                                 // msg.setBody(vcard);
@@ -4711,11 +4900,10 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         };
 
         thread.start();
+        Intent login_broadcast = new Intent("chat");
+        login_broadcast.putExtra("jid", "" + jid);
+        getApplicationContext().sendBroadcast(login_broadcast);
 
-//        Intent login_broadcast = new Intent("chat");
-//        login_broadcast.putExtra("jid", "" + jid);
-//        getApplicationContext().sendBroadcast(login_broadcast);
-//
 //        new FetchChat().execute();
     }
 
@@ -4828,8 +5016,8 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
     public void voice_dialog() {
         myRecorder = new MediaRecorder();
         myRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-        myRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-        myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+        myRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+        myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
         boolean success = (new File(Constant.local_audio_dir)).mkdirs();
         final Dialog dialog = new Dialog(this);
@@ -4867,8 +5055,21 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         btn_record.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-                Log.e("Record", "Long Pressed");
+                Constant.printMsg("kfsfsfslkdflksdf");
+                try {
+                    presence_recording();
+                    myRecorder.start();
+                } catch (Exception e) {
+                    // ACRA.getErrorReporter().handleException(e);
+                    e.printStackTrace();
+                }
+
+                ch.setBase(SystemClock.elapsedRealtime());
+                Log.e("Record", "Action Up");
+                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_record));
                 ch.start();
+                is_startrec = false;
+                // ch.start();
                 return true;
             }
         });
@@ -4879,87 +5080,81 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 // TODO Auto-generated method stub
                 if (event.getAction() == MotionEvent.ACTION_DOWN) {
                     if (!is_started) {
-                        try {
-                            presence_recording();
-                            myRecorder.start();
-                        } catch (Exception e) {
-                            // ACRA.getErrorReporter().handleException(e);
-                            e.printStackTrace();
-                        }
 
-                        ch.setBase(SystemClock.elapsedRealtime());
-                        Log.e("Record", "Action Up");
-                        btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_record));
-                        ch.start();
                         is_started = true;
-                        is_startrec = false;
+
+                        //  return false;
                     }
                 } else if (event.getAction() == MotionEvent.ACTION_UP) {
                     if (!is_startrec) {
-                        Log.e("Record", "Action Down");
-                        Log.e("Action Down", "Down" + is_startrec);
-
-                        btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_send));
-
-                        ch.stop();
-                        timer.cancel();
-                        String chrono_text = ch.getText().toString();
-
-                        if (chrono_text.equalsIgnoreCase("00:00")) {
-                            ch.stop();
-                            btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
-                            Toast.makeText(getApplicationContext(), "Hold To Record", Toast.LENGTH_LONG).show();
-                            is_startrec = true;
-                            is_started = true;
-                        }
                         try {
-                            if (myRecorder != null) {
-                                myRecorder.stop();
-                                myRecorder.release();
-                                myRecorder = null;
-                            }
+                            Log.e("Record", "Action Down");
+                            Log.e("Action Down", "Down" + is_startrec);
 
-                            File f = new File(file_path);
-                            String File_name = f.getName();
-                            int size = (int) f.length();
-                            int mediaDuration = 0;
+                            btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_send));
 
-                            MediaPlayer mediaAudioPlayer = new MediaPlayer();
-                            mediaAudioPlayer.setDataSource(file_path);
-                            mediaAudioPlayer.prepare();
-                            mediaDuration = mediaAudioPlayer.getDuration();
+                            ch.stop();
+                            timer.cancel();
+                            String chrono_text = ch.getText().toString();
 
-                            is_startrec = false;
-                            is_started = false;
-
-                            Log.e("Chat Test Duration", mediaDuration + "\n" + size + "\n" + File_name);
-                        } catch (IllegalStateException e) {
-                            Log.e("Chat Test Illegal", is_started + "\n" + is_startrec + "\n" + e.toString());
-
-                            e.printStackTrace();
-
-                            if (is_startrec) {
-                                is_started = false;
-                                is_startrec = false;
-                                Log.e("Illegal Status", is_started + "\n" + is_startrec);
-                            } else {
+                            if (chrono_text.equalsIgnoreCase("00:00")) {
+                                ch.stop();
+                                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
+                                Toast.makeText(getApplicationContext(), "Hold To Record", Toast.LENGTH_LONG).show();
+                                is_startrec = true;
                                 is_started = true;
-                                is_startrec = false;
-                                Log.e("Illegal Status", is_started + "\n" + is_startrec);
                             }
-                        } catch (RuntimeException e) {
-                            Log.e("Chat Test Runtime", is_started + "\n" + is_startrec + "\n" + e.toString());
-                            e.printStackTrace();
-                            btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
-                            is_startrec = true;
-                            is_started = false;
-                        } catch (IOException e) {
-                            Log.e("Chat Test", e.toString());
-                            e.printStackTrace();
+                            try {
+                                if (myRecorder != null) {
+                                    myRecorder.stop();
+                                    myRecorder.release();
+                                    myRecorder = null;
+                                }
+
+                                File f = new File(file_path);
+                                String File_name = f.getName();
+                                int size = (int) f.length();
+                                int mediaDuration = 0;
+
+                                MediaPlayer mediaAudioPlayer = new MediaPlayer();
+                                mediaAudioPlayer.setDataSource(file_path);
+                                mediaAudioPlayer.prepare();
+                                mediaDuration = mediaAudioPlayer.getDuration();
+
+                                is_startrec = false;
+                                is_started = false;
+
+                                Log.e("Chat Test Duration", mediaDuration + "\n" + size + "\n" + File_name);
+                            } catch (IllegalStateException e) {
+                                Log.e("Chat Test Illegal", is_started + "\n" + is_startrec + "\n" + e.toString());
+
+                                e.printStackTrace();
+
+                                if (is_startrec) {
+                                    is_started = false;
+                                    is_startrec = false;
+                                    Log.e("Illegal Status", is_started + "\n" + is_startrec);
+                                } else {
+                                    is_started = true;
+                                    is_startrec = false;
+                                    Log.e("Illegal Status", is_started + "\n" + is_startrec);
+                                }
+                            } catch (RuntimeException e) {
+                                Log.e("Chat Test Runtime", is_started + "\n" + is_startrec + "\n" + e.toString());
+                                e.printStackTrace();
+                                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
+                                is_startrec = true;
+                                is_started = false;
+                            } catch (IOException e) {
+                                Log.e("Chat Test", e.toString());
+                                e.printStackTrace();
+                            }
+                        } catch (Exception e) {
                         }
+
                     }
                 }
-                return true;
+                return false;
             }
         });
 
@@ -5016,48 +5211,56 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         builder.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                if (Constant.mself_destruct_time == true) {
-                    Constant.mself_destruct_msg = edt_msg.getText().toString().trim();
-                    Constant.mself_jid = jid;
-                    Constant.mself_destruct_time = false;
-                    System.out.println("called self destruct send condition inside the btn click");
-                    if (Constant.mself_destruct_msg.toString().length() != 0) {
-                        dest_msg_list.add(Constant.mselected_self_destruct_time);
-                        Constant.printMsg("msg:::"
-                                + Constant.mself_destruct_msg + "time::::"
-                                + Constant.mselected_self_destruct_time);
 
-                        int point = sharedPrefs.getInt("destpoint", 0);
-                        Constant.totaldest = point;
-                        Constant.totaldest = Count + Constant.totaldest;
 
-                        SharedPreferences.Editor e2 = sharedPrefs.edit();
-                        e2.putInt("destpoint", Constant.totaldest);
-                        e2.commit();
+                try {
+                    if (Constant.mselected_self_destruct_time != 0) {
+                        if (Constant.mself_destruct_time == true) {
+                            Constant.mself_destruct_msg = edt_msg.getText().toString().trim();
+                            Constant.mself_jid = jid;
+                            Constant.mself_destruct_time = false;
+                            System.out.println("called self destruct send condition inside the btn click");
+                            if (Constant.mself_destruct_msg.toString().length() != 0) {
+                                dest_msg_list.add(Constant.mselected_self_destruct_time);
+                                Constant.printMsg("msg:::"
+                                        + Constant.mself_destruct_msg + "time::::"
+                                        + Constant.mselected_self_destruct_time);
 
-                        Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+                                int point = sharedPrefs.getInt("destpoint", 0);
+                                Constant.totaldest = point;
+                                Constant.totaldest = Count + Constant.totaldest;
 
-                        Long buxval1 = Constant.bux + Constant.desTpoint;
-                        Constant.bux = buxval1;
-                        Constant.printMsg("dest buxxxx:::::" + buxval1 + "   " + Constant.totaldest + "   " + Constant.bux);
+                                SharedPreferences.Editor e2 = sharedPrefs.edit();
+                                e2.putInt("destpoint", Constant.totaldest);
+                                e2.commit();
 
-                        SharedPreferences.Editor e3 = sharedPrefs.edit();
-                        e3.putLong("buxvalue", buxval1);
-                        e3.commit();
-                        mDest = true;
+                                Constant.bux = sharedPrefs.getLong("buxvalue", 0);
 
-                        sendMessage("<s>"
-                                + Constant.mselected_self_destruct_time + "-"
-                                + Constant.mself_destruct_msg + "-"
-                                + Constant.mself_jid);
+                                Long buxval1 = Constant.bux + Constant.desTpoint;
+                                Constant.bux = buxval1;
+                                Constant.printMsg("dest buxxxx:::::" + buxval1 + "   " + Constant.totaldest + "   " + Constant.bux);
 
-                        Constant.printMsg("Destruct service called 1" + GlobalBroadcast.isServiceRunning(DestructServiceBroad.class.getCanonicalName(), mParentActivity));
+                                SharedPreferences.Editor e3 = sharedPrefs.edit();
+                                e3.putLong("buxvalue", buxval1);
+                                e3.commit();
+                                mDest = true;
 
-                        if (!GlobalBroadcast.isServiceRunning(DestructServiceBroad.class.getCanonicalName(), mParentActivity)) {
-                            Constant.printMsg("Destruct service called 2" + GlobalBroadcast.isServiceRunning(DestructServiceBroad.class.getCanonicalName(), mParentActivity));
-                            startService(new Intent(mParentActivity, DestructServiceBroad.class));
+                                sendMessage("<s>"
+                                        + Constant.mselected_self_destruct_time + "-"
+                                        + Constant.mself_destruct_msg + "-"
+                                        + Constant.mself_jid);
+
+                                Constant.printMsg("Destruct service called 1" + GlobalBroadcast.isServiceRunning(DestructServiceBroad.class.getCanonicalName(), mParentActivity));
+
+                                if (!GlobalBroadcast.isServiceRunning(DestructServiceBroad.class.getCanonicalName(), mParentActivity)) {
+                                    Constant.printMsg("Destruct service called 2" + GlobalBroadcast.isServiceRunning(DestructServiceBroad.class.getCanonicalName(), mParentActivity));
+                                    startService(new Intent(mParentActivity, DestructServiceBroad.class));
+                                }
+                            }
                         }
                     }
+                } catch (Exception e) {
+
                 }
             }
         });
@@ -5124,7 +5327,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             // chatManager = ChatManager.getInstanceFor(connection);
             if (chat == null) {
 
-                chat = TempConnectionService.chatmanager.createChat(jid,
+                chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(jid),
                         TempConnectionService.mChatCreatedListener.getMessageListener());
             }
 
@@ -5352,105 +5555,105 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             // db.close();
         }
         return status_lock;
-
     }
 
-    private void selectImage() {
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.gallery_popup);
-        dialog.setCancelable(true);
+    private void selectImage()
+    {
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE))
+        {
+            final Dialog dialog = new Dialog(this);
+            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+            dialog.setContentView(R.layout.gallery_popup);
+            dialog.setCancelable(true);
 
-        TextView mGalleryText = (TextView) dialog.findViewById(R.id.gallery_text);
-        TextView mPhotoText = (TextView) dialog.findViewById(R.id.photo_text);
-        TextView mVideoText = (TextView) dialog
-                .findViewById(R.id.video_text);
+            TextView mGalleryText = (TextView) dialog.findViewById(R.id.gallery_text);
+            TextView mPhotoText = (TextView) dialog.findViewById(R.id.photo_text);
+            TextView mVideoText = (TextView) dialog
+                    .findViewById(R.id.video_text);
 
-        LinearLayout mGalleryLayout = (LinearLayout) dialog.findViewById(R.id.header_layout);
-        LinearLayout mSelectionLayout = (LinearLayout) dialog.findViewById(R.id.selection_layout);
+            LinearLayout mGalleryLayout = (LinearLayout) dialog.findViewById(R.id.header_layout);
+            LinearLayout mSelectionLayout = (LinearLayout) dialog.findViewById(R.id.selection_layout);
 
+            LinearLayout.LayoutParams galleryLayoutParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            galleryLayoutParams.width = width * 60 / 100;
+            galleryLayoutParams.height = height * 5 / 100;
+            galleryLayoutParams.gravity = Gravity.CENTER;
+            mGalleryLayout.setLayoutParams(galleryLayoutParams);
 
-        LinearLayout.LayoutParams galleryLayoutParams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        galleryLayoutParams.width = width * 60 / 100;
-        galleryLayoutParams.height = height * 5 / 100;
-        galleryLayoutParams.gravity = Gravity.CENTER;
-        mGalleryLayout.setLayoutParams(galleryLayoutParams);
+            LinearLayout.LayoutParams text_layout = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            text_layout.width = width * 60 / 100;
+            text_layout.height = width * 21 / 100;
+            text_layout.gravity = Gravity.CENTER;
+            mSelectionLayout.setLayoutParams(text_layout);
 
+            LinearLayout.LayoutParams textparams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            textparams.width = width * 60 / 100;
+            textparams.leftMargin = width * 5 / 100;
+            textparams.height = width * 10 / 100;
+            textparams.gravity = Gravity.CENTER;
+            mPhotoText.setLayoutParams(textparams);
+            mVideoText.setLayoutParams(textparams);
+            mGalleryText.setLayoutParams(textparams);
+            mGalleryText.setGravity(Gravity.CENTER | Gravity.LEFT);
+            mGalleryText.setLeft(width * 5 / 100);
+            mVideoText.setGravity(Gravity.CENTER | Gravity.LEFT);
+            mPhotoText.setGravity(Gravity.CENTER | Gravity.LEFT);
+            Constant.typeFace(this, mGalleryText);
+            Constant.typeFace(this, mVideoText);
+            Constant.typeFace(this, mPhotoText);
 
-        LinearLayout.LayoutParams text_layout = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        text_layout.width = width * 60 / 100;
-        text_layout.height = width * 21 / 100;
-        text_layout.gravity = Gravity.CENTER;
-        mSelectionLayout.setLayoutParams(text_layout);
+            if (width >= 600) {
 
+                mGalleryText.setTextSize(17);
+                mPhotoText.setTextSize(17);
+                mVideoText.setTextSize(17);
 
-        LinearLayout.LayoutParams textparams = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        textparams.width = width * 60 / 100;
-        textparams.leftMargin = width * 5 / 100;
-        textparams.height = width * 10 / 100;
-        textparams.gravity = Gravity.CENTER;
-        mPhotoText.setLayoutParams(textparams);
-        mVideoText.setLayoutParams(textparams);
-        mGalleryText.setLayoutParams(textparams);
-        mGalleryText.setGravity(Gravity.CENTER | Gravity.LEFT);
-        mGalleryText.setLeft(width * 5 / 100);
-        mVideoText.setGravity(Gravity.CENTER | Gravity.LEFT);
-        mPhotoText.setGravity(Gravity.CENTER | Gravity.LEFT);
-        Constant.typeFace(this, mGalleryText);
-        Constant.typeFace(this, mVideoText);
-        Constant.typeFace(this, mPhotoText);
+            } else if (width > 501 && width < 600) {
 
+                mGalleryText.setTextSize(16);
+                mPhotoText.setTextSize(16);
+                mVideoText.setTextSize(16);
 
-        if (width >= 600) {
+            } else if (width > 260 && width < 500) {
 
-            mGalleryText.setTextSize(17);
-            mPhotoText.setTextSize(17);
-            mVideoText.setTextSize(17);
+                mGalleryText.setTextSize(15);
+                mPhotoText.setTextSize(15);
+                mVideoText.setTextSize(15);
 
-        } else if (width > 501 && width < 600) {
+            } else if (width <= 260) {
 
-            mGalleryText.setTextSize(16);
-            mPhotoText.setTextSize(16);
-            mVideoText.setTextSize(16);
+                mGalleryText.setTextSize(14);
+                mPhotoText.setTextSize(14);
+                mVideoText.setTextSize(14);
 
-        } else if (width > 260 && width < 500) {
+            }
 
-            mGalleryText.setTextSize(15);
-            mPhotoText.setTextSize(15);
-            mVideoText.setTextSize(15);
-
-        } else if (width <= 260) {
-
-            mGalleryText.setTextSize(14);
-            mPhotoText.setTextSize(14);
-            mVideoText.setTextSize(14);
-
+            mPhotoText.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                    image_picker(1);
+                }
+            });
+            mVideoText.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    dialog.dismiss();
+                    image_picker(2);
+                }
+            });
+            dialog.show();
         }
-
-
-        mPhotoText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                image_picker(1);
-            }
-        });
-        mVideoText.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                dialog.dismiss();
-                image_picker(2);
-            }
-        });
-        dialog.show();
-
-
+        else
+        {
+            Constant.permissionRequest(this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+        }
     }
 
     @Override
@@ -5785,20 +5988,23 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         }
         else
         {
-            if (is_enter_is_send)
+            if (Constant.checkPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO))
             {
-                Toast.makeText(getApplicationContext(), "Enter Message to Send", Toast.LENGTH_SHORT).show();
+                Constant.printMsg("Permission Granted");
+                voice_dialog();
             }
             else
             {
-                voice_dialog();
+                Constant.permissionRequest(this, Manifest.permission.RECORD_AUDIO, Constant.PERMISSION_CODE_MISCEL);
             }
         }
     }
 
     // Updating the Shared Preference with Media Sent Network Usage....
-    public void updateMediaNetwork(long upValue) {
-        try {
+    public void updateMediaNetwork(long upValue)
+    {
+        try
+        {
             long val = 0;
             HashMap<String, String> user = mNewtSharPref.getMedia_SentDetails();
 
@@ -5819,10 +6025,11 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mNewtSharPref.setMediaData_Sent(data);
 
             updateMesageCountForMedia();
-        } catch (NumberFormatException e) {
+        }
+        catch (NumberFormatException e)
+        {
 
         }
-
     }
 
     // Media count Neetwork usage
@@ -5862,315 +6069,15 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         }
     }
 
-    @Override
-    public void addAsyncStanzaListener(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
 
-    }
-
-    @Override
-    public void addConnectionListener(ConnectionListener arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addOneTimeSyncCallback(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addPacketInterceptor(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    @Deprecated
-    public void addPacketListener(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addPacketSendingListener(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void addSyncStanzaListener(StanzaListener arg0, StanzaFilter arg1) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public PacketCollector createPacketCollector(StanzaFilter arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PacketCollector createPacketCollector(PacketCollector.Configuration arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PacketCollector createPacketCollectorAndSend(IQ arg0)
-            throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public PacketCollector createPacketCollectorAndSend(StanzaFilter arg0,
-                                                        Stanza arg1) throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public int getConnectionCounter() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public <F extends ExtensionElement> F getFeature(String arg0, String arg1) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public FromMode getFromMode() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public void setFromMode(FromMode arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public String getHost() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public long getLastStanzaReceived() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public long getPacketReplyTimeout() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public void setPacketReplyTimeout(long arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public int getPort() {
-        // TODO Auto-generated method stub
-        return 0;
-    }
-
-    @Override
-    public String getServiceName() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public String getStreamId() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public String getUser() {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean hasFeature(String arg0, String arg1) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isAnonymous() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isAuthenticated() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isConnected() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isSecureConnection() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean isUsingCompression() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public IQRequestHandler registerIQRequestHandler(IQRequestHandler arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public boolean removeAsyncStanzaListener(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void removeConnectionListener(ConnectionListener arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void removePacketCollector(PacketCollector arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void removePacketInterceptor(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    @Deprecated
-    public boolean removePacketListener(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void removePacketSendingListener(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public boolean removeSyncStanzaListener(StanzaListener arg0) {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public void send(PlainStreamElement arg0) throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendIqWithResponseCallback(IQ arg0, StanzaListener arg1)
-            throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendIqWithResponseCallback(IQ arg0, StanzaListener arg1,
-                                           ExceptionCallback arg2) throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendIqWithResponseCallback(IQ arg0, StanzaListener arg1,
-                                           ExceptionCallback arg2, long arg3) throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    @Deprecated
-    public void sendPacket(Stanza arg0) throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendStanza(Stanza arg0) throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendStanzaWithResponseCallback(Stanza arg0, StanzaFilter arg1,
-                                               StanzaListener arg2) throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendStanzaWithResponseCallback(Stanza arg0, StanzaFilter arg1,
-                                               StanzaListener arg2, ExceptionCallback arg3)
-            throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public void sendStanzaWithResponseCallback(Stanza arg0, StanzaFilter arg1,
-                                               StanzaListener arg2, ExceptionCallback arg3, long arg4)
-            throws SmackException.NotConnectedException {
-        // TODO Auto-generated method stub
-
-    }
-
-    @Override
-    public IQRequestHandler unregisterIQRequestHandler(IQRequestHandler arg0) {
-        // TODO Auto-generated method stub
-        return null;
-    }
-
-    @Override
-    public IQRequestHandler unregisterIQRequestHandler(String arg0,
-                                                       String arg1, IQ.Type arg2) {
-        // TODO Auto-generated method stub
-        return null;
-    }
 
     /**
      * Down Arrow button clicked functionality
      */
-    public void downArrowClickAction() {
-
-
-        try {
+    public void downArrowClickAction()
+    {
+        try
+        {
             if (emoji_frag.getVisibility() == View.VISIBLE) {
                 emoji_frag.setVisibility(View.GONE);
                 btn_emo.setImageResource(R.drawable.emoji_btn_normal);
@@ -6208,14 +6115,12 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             slideMenuLayoutParamsHedder.leftMargin = (width * 3 / 100);
             mSliderMenuLayout.setLayoutParams(slideMenuLayoutParamsHedder);
-            
-            
+
             LinearLayout.LayoutParams slideMenuLayoutParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             slideMenuLayoutParams.height = height * 10 / 100;
             slideMenuLayoutParams.topMargin = height * 5 / 100;
-
             linearLayoutPopup.setLayoutParams(slideMenuLayoutParams);
 
             LinearLayout.LayoutParams slideItemsLayoutParams = new LinearLayout.LayoutParams(
@@ -6259,7 +6164,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             slideItemsDownImgParams1.leftMargin = width * 1 / 100;
             mDownTipImg.setLayoutParams(slideItemsDownImgParams1);
 
-
             mnymn.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -6274,10 +6178,9 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                     // sendMessage(mParseString);
                 }
-
             });
 
-            autodes.setOnClickListener(new View.OnClickListener() {
+            /*autodes.setOnClickListener(new View.OnClickListener() {
 
                 @Override
                 public void onClick(View v) {
@@ -6297,12 +6200,61 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                                 "Please enter some text",
                                 Toast.LENGTH_SHORT).show();
                     }
-
                 }
+            });*/
 
+            autodes.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    if (edt_msg.getText().toString().length() != 0)
+                    {
+                        if (Connectivity.isOnline(mParentActivity))
+                        {
+                            try
+                            {
+                                String[] words = edt_msg.getText().toString().split("\\s+");
+
+                                Constant.printMsg("Destruct Msg ::: 04 " + words.length + "   " + mFinalNyms);
+
+                                if (mFinalNyms.size() > 0)
+                                {
+                                    Toast.makeText(getApplicationContext(), "Can't Able to Send Nymn Message as DesT", Toast.LENGTH_SHORT).show();
+                                }
+                                else
+                                {
+                                    Show_Self_desc_time(selected_self_desc_index);
+
+                                    Constant.mselfdestruct = true;
+                                }
+
+                                Constant.printMsg("Destruct Msg ::: ff " + Constant.mChatText);
+                            }
+                            catch (Exception e)
+                            {
+                                e.printStackTrace();
+                            }
+
+                            Constant.printMsg("Destruct Msg ::: 00 " + Constant.mself_destruct_msg);
+                        }
+                        else
+                        {
+                            Toast.makeText(getApplicationContext(),
+                                    "Check Your Network Connection",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    else
+                    {
+                        Toast.makeText(getApplicationContext(),
+                                "Please enter some text",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
             });
 
-            mdazzle.setOnClickListener(new View.OnClickListener() {
+            /*mdazzle.setOnClickListener(new View.OnClickListener() {
 
                 @Override
                 public void onClick(View v) {
@@ -6316,26 +6268,33 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     Constant.mChatText="";
 
                     try {
+                        boolean mTempIsMatch=false;
                         String[] words = edt_msg.getText().toString().split("\\s+");
-                        if(mMessegeList.size()>0) {
+                        Constant.printMsg("fralkjf"+words.length+"   "+mFinalNyms);
+                        if (mFinalNyms.size() > 0) {
                             for (int i = 0; i < words.length; i++) {
-                                for (int j = 0; j < mMessegeList.size(); j++) {
-
+                                mTempIsMatch=false;
+                                for (int j = 0; j < mFinalNyms.size(); j++) {
+                                    Constant.printMsg("fralkjf000"+words[i]+"   "+mFinalNyms);
                                     try {
 
-                                        if (mMessegeList.get(j).toString().substring(0,mMessegeList.get(j).toString().length()-1).equalsIgnoreCase(words[i].substring(0, words[i].length() - 1))) {
+                                        if (mFinalNyms.get(j).toString().substring(0, mFinalNyms.get(j).toString().length() - 1).equalsIgnoreCase(words[i].substring(0, words[i].length() - 1))) {
 
                                             Constant.mChatText += words[i].substring(0, words[i].length() - 1) + " ";
-
-                                        } else {
-                                            Constant.mChatText += words[i] + " ";
+                                            Constant.printMsg("fralkjf111"+Constant.mChatText);
+                                            mTempIsMatch=true;
                                         }
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
                                 }
+                                if(mTempIsMatch==false) {
+                                    Constant.printMsg("fralkjf222"+Constant.mChatText);
+
+                                    Constant.mChatText += words[i] + " ";
+                                }
                             }
-                        }else{
+                        } else {
                             Constant.mChatText = edt_msg.getText().toString();
                         }
                     } catch (Exception e) {
@@ -6344,12 +6303,45 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     Intent intent = new Intent(mParentActivity,
                             DazzPlainActivity.class);
                     startActivity(intent);
-                    //                }
+                }
+            });*/
 
-                   // mPopup = false;
+            mdazzle.setOnClickListener(new View.OnClickListener()
+            {
+                @Override
+                public void onClick(View v)
+                {
+                    if (mPopup)
+                    {
+                        downArrowClickAction();
+                    }
 
+                    Constant.mChatText = "";
+
+                    try
+                    {
+                        String[] words = edt_msg.getText().toString().split("\\s+");
+
+                        Constant.printMsg("fralkjf" + words.length + "   " + mFinalNyms);
+
+                        if (mFinalNyms.size() > 0)
+                        {
+                            Toast.makeText(getApplicationContext(), "Can't Able to Send Nymn Message as DazZ", Toast.LENGTH_SHORT).show();
+                        }
+                        else
+                        {
+                            Constant.mChatText = edt_msg.getText().toString();
+                            Intent intent = new Intent(mParentActivity, DazzPlainActivity.class);
+                            startActivity(intent);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
             });
+
             mbazzle.setOnClickListener(new View.OnClickListener() {
 
                 @Override
@@ -6364,9 +6356,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     Intent intentka = new Intent(mParentActivity,
                             KaraokeListActivity.class);
                     startActivity(intentka);
-
-                   // mPopup = false;
-
                 }
             });
 
@@ -6410,7 +6399,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 anim.setFillEnabled(true);
                 anim.setFillAfter(true);
                 mChatFooterSlideMenuImg.startAnimation(anim);
-
+                mSliderMenuLayout.setVisibility(View.VISIBLE);
                 TranslateAnimation anim1 = new TranslateAnimation(-(width * 75 / 100), 0, 0, 0);
                 anim1.setDuration(500); // 1000 ms = 1second
 
@@ -6443,7 +6432,8 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                 mSliderMenuLayout.startAnimation(anim1);
                 anim1.setFillAfter(true);
-            } else {
+            }
+            else {
 
                 mPopup = false;
                 Constant.printMsg("falseeee::::>>>>>>>");
@@ -6505,12 +6495,12 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         } catch (Exception e) {
 
         }
-
     }
 
-    public void mIntVariable() {
-
-        try {
+    public void mIntVariable()
+    {
+        try
+        {
             // Chat Hedder Views initalization
             mChatHedderBackImg = (ImageView) findViewById(R.id.chat_hedder_back_img);
             mChatHedderProfileImg = (ImageView) findViewById(R.id.chat_hedder_profile_img);
@@ -6655,17 +6645,19 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             LinearLayout.LayoutParams footerSlideMenuParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            footerSlideMenuParams.width = width * 7 / 100;
-            footerSlideMenuParams.height = height * 2 / 100;
+            footerSlideMenuParams.width = width * 6 / 100;
+            footerSlideMenuParams.height = width * 4 / 100;
             footerSlideMenuParams.gravity = Gravity.CENTER;
             mChatFooterSlideMenuImg.setLayoutParams(footerSlideMenuParams);
-
 
             LinearLayout.LayoutParams footerDownArrowParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.MATCH_PARENT);
-            footerDownArrowParams.width = width * 13 / 100;
+            footerDownArrowParams.width = width * 11 / 100;
+            footerDownArrowParams.height = width * 11 / 100;
             footerDownArrowParams.gravity = Gravity.CENTER | Gravity.CENTER;
+            footerDownArrowParams.leftMargin = 2 * width / 100;
+            footerDownArrowParams.rightMargin = 1 * width / 100;
             mDownArrowLayout.setLayoutParams(footerDownArrowParams);
 
             LinearLayout.LayoutParams footerEdittextLayoutParams = new LinearLayout.LayoutParams(
@@ -6696,10 +6688,12 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             footerSendBtnParams.width = width * 11 / 100;
             footerSendBtnParams.height = width * 11 / 100;
             footerSendBtnParams.leftMargin = width * 2 / 100;
+            footerSendBtnParams.rightMargin = width * 1 / 100;
             footerSendBtnParams.gravity = Gravity.CENTER_VERTICAL;
             mChatFooterSendBtn.setLayoutParams(footerSendBtnParams);
 
-            mChatFooterLayout.post(new Runnable() {
+            mChatFooterLayout.post(new Runnable()
+            {
                 @Override
                 public void run() {
                     //maybe also works height = ll.getLayoutParams().height;
@@ -7078,7 +7072,8 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
     /**
      * Attachment Icon click listener...
      */
-    public void attachmentOptionMenuClickListener() {
+    public void attachmentOptionMenuClickListener()
+    {
         //Imageview click
         mChatMenuGalleryImg.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -7087,6 +7082,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 selectImage();
             }
         });
+
         mChatMenuShootImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7094,6 +7090,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 imageCapture();
             }
         });
+
         mChatMenuVideoImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7101,6 +7098,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 startVideoRecording();
             }
         });
+
         mChatMenuLocationImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7108,23 +7106,31 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 locationShare();
             }
         });
+
         mChatMenuContactImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                Intent intent = new Intent(Intent.ACTION_PICK,
-                        ContactsContract.Contacts.CONTENT_URI);
-                startActivityForResult(intent, 55);
+                contactShare();
             }
         });
+
         mChatMenuAudioImg.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                startActivity(new Intent(mParentActivity, SongList.class));
+
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE))
+                {
+                    Constant.mFromBrodAudio = true;
+                    startActivity(new Intent(mParentActivity, SongList.class));
+                }
+                else
+                {
+                    Constant.permissionRequest(mParentActivity, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
             }
         });
-
 
         // Layout click
         mChatMenuGalleryLayout.setOnClickListener(new View.OnClickListener() {
@@ -7134,6 +7140,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 selectImage();
             }
         });
+
         mChatMenuShootLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7141,6 +7148,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 imageCapture();
             }
         });
+
         mChatmenuVideoLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7148,6 +7156,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 startVideoRecording();
             }
         });
+
         mChatMenuLocationLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7155,20 +7164,28 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 locationShare();
             }
         });
+
         mChatMenuContactLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                Intent intent = new Intent(Intent.ACTION_PICK,
-                        ContactsContract.Contacts.CONTENT_URI);
-                startActivityForResult(intent, 55);
+                contactShare();
             }
         });
+
         mChatMenuAudioLayout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                startActivity(new Intent(mParentActivity, SongList.class));
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE))
+                {
+                    Constant.mFromBrodAudio = true;
+                    startActivity(new Intent(mParentActivity, SongList.class));
+                }
+                else
+                {
+                    Constant.permissionRequest(mParentActivity, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
             }
         });
     }
@@ -7420,32 +7437,58 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
     /**
      * Capture Image
      */
-    public void imageCapture() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+    public void imageCapture()
+    {
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE))
+        {
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        fileUri = Utils.getOutputMediaFileUri(1);
-        // create a file to save the image
-        intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-        // file name
+            fileUri = Utils.getOutputMediaFileUri(1);
+            // create a file to save the image
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+            // file name
 
-        // start the image capture Intent
-        startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+            // start the image capture Intent
+            startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+        }
+        else
+        {
+            Constant.permissionRequest(this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+        }
     }
 
     /**
      * Share location
      */
-    public void locationShare() {
-        Intent intent = new Intent(this, LocationShare.class);
-        startActivityForResult(intent, 44);
+    public void locationShare()
+    {
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION))
+        {
+            Intent intent = new Intent(this, LocationShare.class);
+            startActivityForResult(intent, 44);
+        }
+        else
+        {
+            Constant.permissionRequest(this, Manifest.permission.ACCESS_FINE_LOCATION, Constant.PERMISSION_CODE_STORAGE);
+        }
     }
 
+    public void contactShare()
+    {
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.WRITE_CONTACTS))
+        {
+            Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+            startActivityForResult(intent, 55);
+        }
+        else
+        {
+            Constant.permissionRequest(this, Manifest.permission.WRITE_CONTACTS, Constant.PERMISSION_CODE_STORAGE);
+        }
+    }
 
-
-    public void mAddMethod(Intent intent) {
-
+    public void mAddMethod(Intent intent)
+    {
         mParentActivity.startActivityForResult(intent, REQUEST_CODE_ADD_CONTACT);
-
     }
 
     public void callOnlineStatus() {
@@ -7585,64 +7628,72 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
     }
 
     public void fetchNymFrom() {
-        try {
-            SQLException e;
-            Throwable th;
-            Dbhelper dbhelper = new Dbhelper(getApplicationContext());
-            Cursor c = null;
-            ChatDictionary.mDictionaryList.clear();
-            ChatDictionary.mDictionaryMeaningList.clear();
 
-            try {
-                String query = "SELECT * FROM nym ORDER BY name ";
-                Dbhelper db = new Dbhelper(getApplicationContext());
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
                 try {
-                    c = db.open().getDatabaseObj().rawQuery(query, null);
-                    int idIndex = c.getColumnIndex("id");
-                    int txnm = c.getColumnIndex(Contacts.PeopleColumns.NAME);
-                    int mnnm = c.getColumnIndex("meaning");
-                    Constant.printMsg("The pending cart list in db ::::"
-                            + c.getCount());
-                    if (c.getCount() > 0) {
-                        while (c.moveToNext()) {
-                            String tx = c.getString(txnm);
-                            String mn = c.getString(mnnm);
-                            Integer idnm = Integer.valueOf(c.getInt(idIndex));
-                            System.out
-                                    .println("dbadd:nym:" + tx + "  " + mn + "  ");
-                            ChatDictionary.mDictionaryList.add(tx);
-                            ChatDictionary.mDictionaryMeaningList.add(mn);
+                    SQLException e;
+                    Throwable th;
+                    Dbhelper dbhelper = new Dbhelper(getApplicationContext());
+                    Cursor c = null;
+                    ChatDictionary.mDictionaryList.clear();
+                    ChatDictionary.mDictionaryMeaningList.clear();
+
+                    try {
+                        String query = "SELECT * FROM nym ORDER BY name ";
+                        Dbhelper db = new Dbhelper(getApplicationContext());
+                        try {
+                            c = db.open().getDatabaseObj().rawQuery(query, null);
+                            int idIndex = c.getColumnIndex("id");
+                            int txnm = c.getColumnIndex(Contacts.PeopleColumns.NAME);
+                            int mnnm = c.getColumnIndex("meaning");
+                            Constant.printMsg("The pending cart list in db ::::"
+                                    + c.getCount());
+                            if (c.getCount() > 0) {
+                                while (c.moveToNext()) {
+                                    String tx = c.getString(txnm);
+                                    String mn = c.getString(mnnm);
+                                    Integer idnm = Integer.valueOf(c.getInt(idIndex));
+                                    System.out
+                                            .println("dbadd:nym:" + tx + "  " + mn + "  ");
+                                    ChatDictionary.mDictionaryList.add(tx);
+                                    ChatDictionary.mDictionaryMeaningList.add(mn);
+                                }
+                            } else {
+                                Constant.printMsg("there is nothing in db::");
+                            }
+                            c.close();
+                            db.close();
+                            dbhelper = db;
+                        } catch (SQLException e2) {
+                            e = e2;
+                            dbhelper = db;
+                        } catch (Throwable th2) {
+                            th = th2;
+                            dbhelper = db;
                         }
-                    } else {
-                        Constant.printMsg("there is nothing in db::");
+                    } catch (SQLException e3) {
+                        e = e3;
+                        try {
+                            Constant.printMsg("Sql exception in pending shop details ::::"
+                                    + e.toString());
+                            c.close();
+                            dbhelper.close();
+                        } catch (Throwable th3) {
+                            th = th3;
+                            c.close();
+                            dbhelper.close();
+
+                        }
                     }
-                    c.close();
-                    db.close();
-                    dbhelper = db;
-                } catch (SQLException e2) {
-                    e = e2;
-                    dbhelper = db;
-                } catch (Throwable th2) {
-                    th = th2;
-                    dbhelper = db;
-                }
-            } catch (SQLException e3) {
-                e = e3;
-                try {
-                    Constant.printMsg("Sql exception in pending shop details ::::"
-                            + e.toString());
-                    c.close();
-                    dbhelper.close();
-                } catch (Throwable th3) {
-                    th = th3;
-                    c.close();
-                    dbhelper.close();
+                } catch (Exception e1) {
 
                 }
             }
-        } catch (Exception e1) {
+        }).start();
 
-        }
+
     }
 
     @Override
@@ -7661,7 +7712,12 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Message msg = new Message(jid, Message.Type.chat);
+                Message msg = null;
+                try {
+                    msg = new Message(JidCreate.from(jid), Message.Type.chat);
+                } catch (XmppStringprepException e) {
+                    e.printStackTrace();
+                }
                 msg.setStanzaId(Constant.TYPING_STATUS_RECORDING);
 
                 msg.setBody(Constant.TYPING_STATUS_RECORDING);
@@ -7694,28 +7750,32 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightTextview = new EmojiconTextView(mParentActivity);
             mRightTextview.setGravity(Gravity.LEFT);
             mRightTextview.setTextColor(Color.parseColor("#000000"));
-            mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, width * 2 / 100);
             mRightTextview.setId(k);
+
 
             mRightSenderTimeText = new TextView(mParentActivity);
             mRightSenderTimeText.setGravity(Gravity.LEFT);
             mRightSenderTimeText.setTextSize(getTimeTxtSize());
             mRightSenderTimeText.setTextColor(Color.parseColor("#000000"));
-            mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             mRightTextview.setLayoutParams(textviewParams);
-            mRightSenderTimeText.setLayoutParams(textviewParams);
+
+            LinearLayout.LayoutParams textviewParams1 = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            textviewParams1.gravity=Gravity.RIGHT|Gravity.BOTTOM;
+            mRightSenderTimeText.setLayoutParams(textviewParams1);
 
             LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
-            textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            textfooterParams.topMargin = width * 1 / 100;
+                    LinearLayout.LayoutParams.FILL_PARENT);
+//            textfooterParams.topMargin = width * 1 / 100;
+            textfooterParams.gravity=Gravity.END|Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
@@ -7726,7 +7786,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightTickMark = new ImageView(mParentActivity);
             mRightTickMark.setId(k + 600000);
             mRightTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightTickMark.setPadding((int) width * 2 / 100, 0, (int) width * 1 / 100, width * 1 / 100);
+            mRightTickMark.setLayoutParams(textviewParams1);
 
             FrameLayout.LayoutParams right_bomb_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -7742,16 +7802,98 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightDestTime.setTextColor(Color.parseColor("#ffffff"));
             mRightDestTime.setLayoutParams(right_bomb_params);
             mRightDestTime.setVisibility(View.INVISIBLE);
-            mRightDestTime.setId(k + 100000);
+            int poscount=k + 100000;
+            mRightDestTime.setId(poscount);
+
 
             textFooterLayout.addView(mRightTickMark);
             textFooterLayout.addView(mRightSenderTimeText);
-            mRightChatLayout.addView(mRightTextview);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout TemptextFooterLayout = new LinearLayout(mParentActivity);
+            TemptextFooterLayout.setLayoutParams(textfooterParams);
+            TemptextFooterLayout.setBackgroundResource(R.drawable.shadow_effect);
+
+
+
+            if(msg_list.get(k).getData().length()>20 && msg_list.get(k).getData().length()<=40){
+
+                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                mRightTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, 0, width * 1 / 100);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100,0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+
+            }else if(msg_list.get(k).getData().length()>40 ){
+
+                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                mRightTickMark.setPadding((int) width * 2 / 100, 0, 0, width * 1 / 100);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100,0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100,0, (int) width * 3 / 100, width * 1 / 100);
+
+            }else{
+                TemptextFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
+                TemptextFooterLayout.setPadding(0,(int) width * 2 / 100,0,(int) width * 4 / 100);
+                mRightTickMark.setPadding(width * 1 / 100, 0, 0, 0);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 1 / 100,0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, 0);
+
+
+
+            }
+            try {
+                String text = msg_list.get(k).getData().toString();
+
+                if (text.length() > 3) {
+
+                    char s = text.charAt(0);
+                    char s1 = text.charAt(1);
+                    char s2 = text.charAt(2);
+
+                    if ((s == '<' && s1 == '-')||(s1 == 'b' && s2 == '>')||(s1 == 'z' && s2 == '>')||(s1 == 'l' && s2 == '>')||(s1 == 'x' && s2 == '>')) {
+                        Constant.printMsg("DEEEEESSSSSTTTTT1 "+text.substring(2).length()+"    "+text.substring(2));
+
+                        TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                        mRightTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, 0, width * 1 / 100);
+                        mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100,0);
+                        mRightSenderTimeText.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+
+                    }else if (s == '<') {
+                        if (s1 == 's' && s2 == '>') {
+
+                            String self_destruct = text.substring(3)
+                                    .toString();
+                            String[] parts = self_destruct.split("-");
+                            String part1 = parts[0];
+                            String part2 = parts[1];
+                            String part3 = parts[2];
+
+                            if(part2.length()>20){
+                                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                                mRightTickMark.setPadding((int) width * 2 / 100, 0, 0, width * 1 / 100);
+                                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100,0);
+                                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+
+                            }else{
+
+                                TemptextFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
+                                TemptextFooterLayout.setPadding(0,(int) width * 2 / 100,0,(int) width * 4 / 100);
+                                mRightTickMark.setPadding(width * 1 / 100, 0, 0, 0);
+                                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 1 / 100,0);
+                                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, 0);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
+
+
+            TemptextFooterLayout.addView(mRightTextview);
+            TemptextFooterLayout.addView(textFooterLayout);
+            mRightChatLayout.addView(TemptextFooterLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightDestTime);
             mRightTipLayout.addView(mRightChatLayout);
 
-            mRightTipLayout.setPadding(0, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+            mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
 
@@ -7792,25 +7934,18 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
         try {
             mRightImageChat = new ImageView(mParentActivity);
-            mRightImageChat.setPadding((int) width * 3 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+            mRightImageChat.setAdjustViewBounds(true);
             mRightImageChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mRightImageChat.setMaxWidth(width * 65 / 100);
+            mRightImageChat.setMaxHeight(height * 40 / 100);
+            mRightImageChat.setMinimumWidth(width * 30 / 100);
+            mRightImageChat.setMinimumHeight(height * 23 / 100);
 
             mRightImageTextTime = new TextView(mParentActivity);
-            mRightImageTextTime.setGravity(Gravity.RIGHT);
+//            mRightImageTextTime.setGravity(Gravity.RIGHT|Gravity.BOTTOM);
             mRightImageTextTime.setTextSize(getTimeTxtSize());
             mRightImageTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightImageTextTime.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
-            //        mRightSenderTimeText.setText(time);
-
-            FrameLayout.LayoutParams textviewParams = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.width = width * 57 / 100;
-            textviewParams.height = height * 30 / 100;
-            textviewParams.topMargin = width * 2 / 100;
-            textviewParams.gravity = Gravity.CENTER;
-            mRightImageChat.setLayoutParams(textviewParams);
-            //        mRightSenderTimeText.setLayoutParams(textviewParams);
+            mRightImageTextTime.setPadding( width * 1 / 100, width * 2 / 100, 0, 0);
 
             FrameLayout ImachChatLayout = new FrameLayout(mParentActivity);
 
@@ -7819,24 +7954,13 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightImageChatUpload.setId(k + 800000);
             mRightImageChatUpload.setBackgroundResource(R.drawable.image_upload_normal);
 
-
             mRightImageChatCancel = new ImageView(mParentActivity);
             mRightImageChatCancel.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mRightImageChatCancel.setId(k + 120000);
             mRightImageChatCancel.setBackgroundResource(R.drawable.ic_action_content_remove);
 
-
             mRightImageProgress = new ProgressBar(mParentActivity);
             mRightImageProgress.setId(k+900000);
-
-
-            FrameLayout.LayoutParams left_download_progress_params = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            left_download_progress_params.width = (int) width * 16 / 100;
-            left_download_progress_params.height = (int) width * 16 / 100;
-            left_download_progress_params.gravity = Gravity.CENTER;
-            mRightImageProgress.setLayoutParams(left_download_progress_params);
 
 
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
@@ -7848,12 +7972,19 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightImageChatUpload.setLayoutParams(left_download_icon_params);
             mRightImageChatCancel.setLayoutParams(left_download_icon_params);
 
+            FrameLayout.LayoutParams left_upload_icon_params = new FrameLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            left_upload_icon_params.width = (int) width * 16 / 100;
+            left_upload_icon_params.height = (int) width * 16 / 100;
+            left_upload_icon_params.gravity = Gravity.CENTER;
+            mRightImageProgress.setLayoutParams(left_upload_icon_params);
 
 
             ImachChatLayout.addView(mRightImageChat);
+            ImachChatLayout.addView(mRightImageProgress);
             ImachChatLayout.addView(mRightImageChatUpload);
             ImachChatLayout.addView(mRightImageChatCancel);
-            ImachChatLayout.addView(mRightImageProgress);
 
 
             LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
@@ -7861,27 +7992,58 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.FILL_PARENT);
+//            textfooterParams.gravity=Gravity.CENTER_VERTICAL;
+            textfooterParams.gravity=Gravity.END|Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mRightTickMarkParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+            mRightTickMarkParams.gravity = Gravity.LEFT|Gravity.CENTER_VERTICAL;
 
             mRightImageTickMark = new ImageView(mParentActivity);
             mRightImageTickMark.setId(k + 600000);
             mRightImageTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightImageTickMark.setPadding((int) width * 2 / 100, 0, (int) width * 1 / 100, width * 1 / 100);
+            mRightImageTextTime.setLayoutParams(mRightTickMarkParams);
+            mRightImageTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
 
             textFooterLayout.addView(mRightImageTickMark);
             textFooterLayout.addView(mRightImageTextTime);
 
-            mRightChatLayout.addView(ImachChatLayout);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout mTempLayout=new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width*2/100,width*2/100,width*2/100,width*1/100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect);
+            mTempLayout.addView(ImachChatLayout);
+            mTempLayout.addView(textFooterLayout);
+
+//            mTempLayout.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+
+////            mTempLayout.addView(textFooterLayout);
+//
+////            LinearLayout.LayoutParams mRightChatLayoutParams = new LinearLayout.LayoutParams(
+////                    LinearLayout.LayoutParams.WRAP_CONTENT,
+////                    LinearLayout.LayoutParams.WRAP_CONTENT);
+////            mRightChatLayoutParams.width = (int) width * 65 / 100;
+////            mRightChatLayoutParams.height = (int) height * 32 / 100;
+////            mRightChatLayoutParams.leftMargin = (int) width * 19 / 100;
+////            mTempLayout.setLayoutParams(mRightChatLayoutParams);
+//
+//            mTempLayout.addView(ImachChatLayout);
+//
+//            LinearLayout mTempLayoutwithStatus=new LinearLayout(mParentActivity);
+//            mTempLayoutwithStatus.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+//            mTempLayoutwithStatus.setBackgroundResource(R.drawable.shadow_effect);
+//            mTempLayoutwithStatus.addView(mTempLayout);
+//            mTempLayoutwithStatus.addView(textFooterLayout);
+
+            mRightChatLayout.addView(mTempLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
 
-            mRightTipLayout.setPadding(0, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+            mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
         } catch (Exception e) {
@@ -7894,25 +8056,33 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
         try {
             mRightVideoChat = new ImageView(mParentActivity);
-            mRightVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+            mRightVideoChat.setAdjustViewBounds(true);
             mRightVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mRightVideoChat.setMaxWidth(width * 65 / 100);
+            mRightVideoChat.setMaxHeight(width * 65 / 100);
+            mRightVideoChat.setMinimumWidth(width * 30 / 100);
+            mRightVideoChat.setMinimumHeight(height * 23 / 100);
+//            mRightVideoChat = new ImageView(mParentActivity);
+//            mRightVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+//            mRightVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
             mRightVideoTimeText = new TextView(mParentActivity);
             mRightVideoTimeText.setGravity(Gravity.RIGHT);
             mRightVideoTimeText.setTextSize(getTimeTxtSize());
             mRightVideoTimeText.setTextColor(Color.parseColor("#000000"));
-            mRightVideoTimeText.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mRightVideoTimeText.setPadding( width * 1 / 100, width * 2 / 100, 0, 0);
+
             //        mRightSenderTimeText.setText(time);
 
 
             FrameLayout.LayoutParams mLeftVideoChatParams = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftVideoChatParams.width = width * 59 / 100;
-            mLeftVideoChatParams.height = height * 30 / 100;
-            mLeftVideoChatParams.topMargin = width * 2 / 100;
-            mLeftVideoChatParams.gravity = Gravity.CENTER;
-            mRightVideoChat.setLayoutParams(mLeftVideoChatParams);
+////            mLeftVideoChatParams.width = width * 59 / 100;
+////            mLeftVideoChatParams.height = height * 30 / 100;
+////            mLeftVideoChatParams.topMargin = width * 2 / 100;
+//            mLeftVideoChatParams.gravity = Gravity.CENTER;
+//            mRightVideoChat.setLayoutParams(mLeftVideoChatParams);
             //        mRightSenderTimeText.setLayoutParams(textviewParams);
 
             FrameLayout mLeftVideoChatLayout = new FrameLayout(mParentActivity);
@@ -7932,14 +8102,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             mRightVideoProgress = new ProgressBar(mParentActivity);
 
-            FrameLayout.LayoutParams left_download_progress_params = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            left_download_progress_params.width = (int) width * 16 / 100;
-            left_download_progress_params.height = (int) width * 16 / 100;
-            left_download_progress_params.gravity = Gravity.CENTER;
-            mRightVideoProgress.setLayoutParams(left_download_progress_params);
-
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -7947,8 +8109,17 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             left_download_icon_params.height = (int) width * 15 / 100;
             left_download_icon_params.gravity = Gravity.CENTER;
             mRightVideoChatUpload.setLayoutParams(left_download_icon_params);
-
+            mRightVideoChatCancel.setLayoutParams(left_download_icon_params);
+            //     mRightVideoProgress.setLayoutParams(left_download_icon_params);
             mRightVideoButtonPlay.setLayoutParams(left_download_icon_params);
+
+            FrameLayout.LayoutParams left_upload_icon_params = new FrameLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            left_upload_icon_params.width = (int) width * 16 / 100;
+            left_upload_icon_params.height = (int) width * 16 / 100;
+            left_upload_icon_params.gravity = Gravity.CENTER;
+            mRightVideoProgress.setLayoutParams(left_upload_icon_params);
 
 
             FrameLayout.LayoutParams videoFooter_params = new FrameLayout.LayoutParams(
@@ -7967,7 +8138,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             videoimage.height = width * 8 / 100;
             videoimage.topMargin = width * 1 / 100;
             videoimage.gravity = Gravity.CENTER_VERTICAL;
-            videoimage.leftMargin = width * 3 / 100;
+            videoimage.leftMargin = width * 2 / 100;
 
             mRightVideoImgOverlay = new ImageView(mParentActivity);
             mRightVideoImgOverlay.setBackgroundResource(R.drawable.frame_overlay_gallery_video);
@@ -7982,7 +8153,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             mRightVideoDuration = new TextView(mParentActivity);
             mRightVideoDuration.setTextColor(Color.parseColor("#ffffff"));
-            mRightVideoDuration.setText("1");
             mRightVideoDuration.setLayoutParams(videoDuration_params);
 
             FrameLayout.LayoutParams videoSize_params = new FrameLayout.LayoutParams(
@@ -7990,7 +8160,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             videoSize_params.gravity = Gravity.RIGHT;
             videoSize_params.topMargin = width * 3 / 100;
-            videoSize_params.rightMargin = width * 5 / 100;
+            videoSize_params.rightMargin = width * 4 / 100;
 
 
             mRightVideoSize = new TextView(mParentActivity);
@@ -8015,27 +8185,66 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.FILL_PARENT);
+            textfooterParams.gravity=Gravity.END|Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
+
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mRightTickMarkParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+            mRightTickMarkParams.gravity = Gravity.LEFT|Gravity.CENTER_VERTICAL;
+
+//            mRightImageTickMark = new ImageView(mParentActivity);
+//            mRightImageTickMark.setId(k + 600000);
+//            mRightImageTickMark.setLayoutParams(mRightTickMarkParams);
+//            mRightImageTextTime.setLayoutParams(mRightTickMarkParams);
+//            mRightImageTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
 
             mRightVideoTickMark = new ImageView(mParentActivity);
             mRightVideoTickMark.setId(k + 600000);
             mRightVideoTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightVideoTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            mRightImageTextTime.setLayoutParams(mRightTickMarkParams);
+            mRightVideoTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
 
             textFooterLayout.addView(mRightVideoTickMark);
             textFooterLayout.addView(mRightVideoTimeText);
 
-            mRightChatLayout.addView(mLeftVideoChatLayout);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout mTempLayout=new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width*2/100,width*2/100,width*2/100,width*1/100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect);
+            mTempLayout.addView(mLeftVideoChatLayout);
+            mTempLayout.addView(textFooterLayout);
+
+//            mTempLayout.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+
+////            mTempLayout.addView(textFooterLayout);
+//
+////            LinearLayout.LayoutParams mRightChatLayoutParams = new LinearLayout.LayoutParams(
+////                    LinearLayout.LayoutParams.WRAP_CONTENT,
+////                    LinearLayout.LayoutParams.WRAP_CONTENT);
+////            mRightChatLayoutParams.width = (int) width * 65 / 100;
+////            mRightChatLayoutParams.height = (int) height * 32 / 100;
+////            mRightChatLayoutParams.leftMargin = (int) width * 19 / 100;
+////            mTempLayout.setLayoutParams(mRightChatLayoutParams);
+//
+//            mTempLayout.addView(ImachChatLayout);
+//
+//            LinearLayout mTempLayoutwithStatus=new LinearLayout(mParentActivity);
+//            mTempLayoutwithStatus.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+//            mTempLayoutwithStatus.setBackgroundResource(R.drawable.shadow_effect);
+//            mTempLayoutwithStatus.addView(mTempLayout);
+//            mTempLayoutwithStatus.addView(textFooterLayout);
+
+            mRightChatLayout.addView(mTempLayout);
+
+//            mRightChatLayout.addView(mLeftVideoChatLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
 
-            mRightTipLayout.setPadding(0, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+            mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
         } catch (Exception e) {
@@ -8078,6 +8287,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             textviewParams.gravity = Gravity.CENTER_VERTICAL;
 
             mRightContactTextView = new EmojiconTextView(mParentActivity);
+            mRightContactTextView.setSingleLine(true);
             mRightContactTextView.setGravity(Gravity.CENTER_VERTICAL);
             mRightContactTextView.setTextColor(Color.parseColor("#000000"));
             mRightContactTextView.setTypeface(Typeface.DEFAULT_BOLD);
@@ -8090,7 +8300,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightContactTextTime.setGravity(Gravity.LEFT);
             mRightContactTextTime.setTextSize(getTimeTxtSize());
             mRightContactTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightContactTextTime.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mRightContactTextTime.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
             //        mRightSenderTimeText.setText(time);
 
             LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(
@@ -8118,17 +8328,17 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightContactTickMark = new ImageView(mParentActivity);
             mRightContactTickMark.setId(k + 600000);
             mRightContactTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightContactTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            mRightContactTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 1 / 100, width * 1 / 100);
 
             textFooterLayout.addView(mRightContactTickMark);
             textFooterLayout.addView(mRightContactTextTime);
 
-
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
             mRightChatLayout.addView(contactLayout);
             mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
 
-            mRightTipLayout.setPadding(0, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+            mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
 
@@ -8622,7 +8832,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightChatLayout = new LinearLayout(mParentActivity);
             mRightChatLayout.setGravity(Gravity.RIGHT);
             mRightChatLayout.setOrientation(LinearLayout.VERTICAL);
-            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
 
             FrameLayout.LayoutParams mRightChatLayoutParams = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -8742,7 +8951,6 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightChatLayout = new LinearLayout(mParentActivity);
             mRightChatLayout.setGravity(Gravity.RIGHT);
             mRightChatLayout.setOrientation(LinearLayout.VERTICAL);
-            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
 
             FrameLayout.LayoutParams mRightChatLayoutParams = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -8886,10 +9094,16 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             @Override
             public boolean onTouch(View v, MotionEvent event) {
 
-                v.requestFocus();
-                v.setFocusableInTouchMode(true);
-
-                if(!mIsLogClick) {
+//                v.requestFocus();
+//                v.setFocusableInTouchMode(true);
+//
+//                if(!mIsLogClick) {
+//                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//                    imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+//                }
+                if(mIsLogClick) {
+                    v.requestFocus();
+                    v.setFocusableInTouchMode(true);
                     InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                 }
@@ -8908,105 +9122,193 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                 if (mIsLogClick) {
 
-                    Constant.printMsg("GGGGGGGGGGGGGGGGGGGGGGGGPOPO");
-                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
-                    String splText = msg_list.get(v.getId()-200000).getData();
+                    try {
+//                        topMenuHideFunction();
 
-                    if (mOnLongSelectedPostions.contains(v.getId() - 200000)) {
-                        boolean isOneMedia = false;
-                        boolean isSple = false;
-                        for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
-                            if(!getCopyPastMediaType(mediaType))
-                            {
-                                isOneMedia = true;
-                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
-                            }
-
-                            else  if(chekNynmDazzKon(splText))
-                            {
-                                isSple = true;
-                            }
-                            Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(i).toString() + "   " + String.valueOf(v.getId() - 200000));
-
-                            if (mOnLongSelectedPostions.get(i) == v.getId() - 200000) {
-
-                                Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
-                                v.setBackgroundColor(Color.parseColor("#00000000"));
-                                mOnLongSelectedPostions.remove(i);
-                                isOneMedia = false;
-                                isSple = false;
-                            }
-                        }
-
-                        if(isOneMedia)
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-                        }
-
-                        if(isSple)
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-                        }
-
-                    } else {
-
-                        if(!getCopyPastMediaType(mediaType))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
-
-                        else if(chekNynmDazzKon(splText))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
-
-                        mOnLongSelectedPostions.add((v.getId() - 200000));
-                        v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
-
-                    }
-
-
-                    if (mOnLongSelectedPostions.size() <= 0) {
-
-                        mOnLongSelectedPostions.clear();
-                        mIsLogClick = false;
-                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
-                        mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+//                        mIsLogClick = true;
 
                         LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.WRAP_CONTENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT);
-                        hedderTextParams.width = width * 50 / 100;
+                        hedderTextParams.width = width * 40 / 100;
                         hedderTextParams.leftMargin = width * 3 / 100;
                         hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
                         mChatHedderTextLayout.setLayoutParams(hedderTextParams);
 
-
                         LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
                                 LinearLayout.LayoutParams.WRAP_CONTENT,
                                 LinearLayout.LayoutParams.WRAP_CONTENT);
-                        hedderAttachmentParams.width = width * 4 / 100;
+                        hedderAttachmentParams.width = width * 11 / 100;
                         hedderAttachmentParams.height = width * 8 / 100;
                         hedderAttachmentParams.gravity = Gravity.CENTER;
                         mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
 
-                        LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
-                                LinearLayout.LayoutParams.WRAP_CONTENT,
-                                LinearLayout.LayoutParams.WRAP_CONTENT);
-                        hedderMenuParams.width = (width * 2 / 100) - 2;
-                        hedderMenuParams.height = width * 7 / 100;
-                        hedderMenuParams.gravity = Gravity.CENTER;
-                        mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+                        mChatHedderCopyLayout.setVisibility(View.VISIBLE);
 
-                        mChatHedderCopyLayout.setVisibility(View.GONE);
+
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                        Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId() - 200000));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                        String splText = msg_list.get(v.getId()-200000).getData();
+
+                        if (mOnLongSelectedPostions.contains((v.getId() - 200000))) {
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                if (mOnLongSelectedPostions.get(i) == (v.getId() - 200000)) {
+
+                                    Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                    v.setBackgroundColor(Color.parseColor("#00000000"));
+                                    mOnLongSelectedPostions.remove(i);
+
+                                }
+
+                            }
+
+                            for(int j=0;j<mOnLongSelectedPostions.size();j++) {
+
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                } if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if(isOneMedia)
+                            {
+
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if(isSple)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if(isDoneteBux)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if(!isOneMedia && !isSple && !isDoneteBux){
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+
+                        } else {
+
+                            mOnLongSelectedPostions.add((v.getId() - 200000));
+                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for(int j=0;j<mOnLongSelectedPostions.size();j++) {
+
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                } if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if(isOneMedia)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if(isSple)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if(isDoneteBux)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if(!isOneMedia && !isSple && !isDoneteBux){
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                        }
+
+                        if(mOnLongSelectedPostions.size()==0) {
+                            mIsLogClick = false;
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                            hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 50 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                            hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 4 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                            LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderMenuParams.width = (width * 2 / 100) - 2;
+                            hedderMenuParams.height = width * 7 / 100;
+                            hedderMenuParams.gravity = Gravity.CENTER;
+                            mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderCopyLayout.setVisibility(View.GONE);
+                        }
+                    } catch (Exception e) {
+
                     }
-
                 }else{
                     edt_msg.requestFocus();
                 }
@@ -9053,67 +9355,158 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                     Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId() - 200000));
 
-                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
                     String splText = msg_list.get(v.getId()-200000).getData();
 
                     if (mOnLongSelectedPostions.contains((v.getId() - 200000))) {
 
                         boolean isOneMedia = false;
                         boolean isSple = false;
+                        boolean isDoneteBux = false;
 
                         for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
-
-                            Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(i).toString() + "   " + String.valueOf(v.getId() - 200000));
-
-                            if(!getCopyPastMediaType(mediaType))
-                            {
-                                isOneMedia = true;
-                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
-                            }
-
-                            else if(chekNynmDazzKon(splText))
-                            {
-                                isSple = true;
-                            }
 
                             if (mOnLongSelectedPostions.get(i) == (v.getId() - 200000)) {
 
                                 Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
                                 v.setBackgroundColor(Color.parseColor("#00000000"));
                                 mOnLongSelectedPostions.remove(i);
-                                isOneMedia = false;
 
-                                isSple = false;
+                            }
+
+                        }
+
+                        for(int j=0;j<mOnLongSelectedPostions.size();j++) {
+
+                            String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                            String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                            Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                            if (!getCopyPastMediaType(mediaType)) {
+                                isOneMedia = true;
+                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                            }
+                            if (chekNynmDazzKon(tempSplText)) {
+                                isSple = true;
+                            } if (chekDonate(tempSplText)) {
+                                isDoneteBux = true;
                             }
                         }
+
                         if(isOneMedia)
                         {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-                        }
 
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
                         if(isSple)
                         {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+                        if(isDoneteBux)
                         {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+
+                        if(!isOneMedia && !isSple && !isDoneteBux){
                             mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
                         }
+
+
                     } else {
-                        if(!getCopyPastMediaType(mediaType))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
-                        else if(chekNynmDazzKon(splText))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
 
                         mOnLongSelectedPostions.add((v.getId() - 200000));
                         v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
 
+                        boolean isOneMedia = false;
+                        boolean isSple = false;
+                        boolean isDoneteBux = false;
+
+                        for(int j=0;j<mOnLongSelectedPostions.size();j++) {
+
+                            String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                            String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                            Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                            if (!getCopyPastMediaType(mediaType)) {
+                                isOneMedia = true;
+                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                            }
+                            if (chekNynmDazzKon(tempSplText)) {
+                                isSple = true;
+                            } if (chekDonate(tempSplText)) {
+                                isDoneteBux = true;
+                            }
+                        }
+
+                        if(isOneMedia)
+                        {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+                        if(isSple)
+                        {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+                        if(isDoneteBux)
+                        {
+                            mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+
+                        if(!isOneMedia && !isSple && !isDoneteBux){
+                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        }
+
+                    }
+
+                    if(mOnLongSelectedPostions.size()==0) {
+                        mIsLogClick = false;
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                        hedderTextParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderTextParams.width = width * 50 / 100;
+                        hedderTextParams.leftMargin = width * 3 / 100;
+                        hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                        mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                        hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderAttachmentParams.width = width * 4 / 100;
+                        hedderAttachmentParams.height = width * 8 / 100;
+                        hedderAttachmentParams.gravity = Gravity.CENTER;
+                        mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                        LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderMenuParams.width = (width * 2 / 100) - 2;
+                        hedderMenuParams.height = width * 7 / 100;
+                        hedderMenuParams.gravity = Gravity.CENTER;
+                        mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                        mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                        mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                        mChatHedderCopyLayout.setVisibility(View.GONE);
                     }
                 } catch (Exception e) {
 
@@ -9147,7 +9540,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
 
             mRightAudioBtnCancel = new Button(mParentActivity);
-            mRightAudioBtnCancel.setBackgroundResource(R.drawable.icon_cancel);
+            mRightAudioBtnCancel.setBackgroundResource(R.drawable.ic_action_content_remove);
             mRightAudioBtnCancel.setLayoutParams(playBtnParams);
 
             LinearLayout.LayoutParams seekBarParams = new LinearLayout.LayoutParams(
@@ -9203,7 +9596,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightAudioTextTime.setGravity(Gravity.LEFT);
             mRightAudioTextTime.setTextSize(getTimeTxtSize());
             mRightAudioTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightAudioTextTime.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mRightAudioTextTime.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
 
             LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
             textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -9222,7 +9615,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightAudioTickMark = new ImageView(mParentActivity);
             mRightAudioTickMark.setId(k + 600000);
             mRightAudioTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightAudioTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            mRightAudioTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 1 / 100, width * 1 / 100);
 
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
@@ -9257,12 +9650,13 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             textFooterLayout.addView(mRightAudioTickMark);
             textFooterLayout.addView(mRightAudioTextTime);
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
             mRightChatLayout.addView(audioLayout);
             mRightChatLayout.addView(audioTimeLayout);
             mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
 
-            mRightTipLayout.setPadding(0, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+            mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
 
@@ -9585,7 +9979,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         mTextMsg.setTypeface(null, Color.RED);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
 //                        mTextMsg.setTextSize(valueText());
@@ -9616,7 +10010,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         mTextMsg.setTypeface(null, Color.YELLOW);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         mTextMsg.setTextSize(valueText());
@@ -9654,7 +10048,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         mTextMsg.setTypeface(null, Color.RED);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
 //                        mTextMsg.setTextSize(valueText());
@@ -9908,7 +10302,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -9931,7 +10325,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         mTextMsg.setTypeface(null, Color.BLACK);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(Constant.screenWidth);
+//                        mTextMsg.setMinimumWidth(Constant.screenWidth);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -9970,7 +10364,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
                         mTextMsg.setTextColor(Color.BLACK);
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -9985,7 +10379,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         mTextMsg.setTextColor(Color.BLACK);
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         mTextMsg.setTextSize(valueText());
@@ -10003,7 +10397,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     mTextMsg.setTextColor(Color.BLACK);
                     mTextMsg.setTypeface(null, Color.BLACK);
                     mTextMsg.setBackground(null);
-                    mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                    mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                     mTextMsg.setGravity(Gravity.CENTER
                             | Gravity.LEFT);
                     mTextMsg.setTextSize(valueText());
@@ -10052,11 +10446,202 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     // Constant.printMsg("clicked syms:::::>>>>>>");
                     //                EmojiconTextView mTextMsg = (EmojiconTextView) v
                     //                        .findViewById(R.id.right_chat_text);
+                    if (mIsLogClick) {
 
-                    boolean toggle = true;
-                    int position = (Integer) v.getTag();
 
-                    String text = mTextMsg.getText().toString();
+                        try {
+                            topMenuHideFunction();
+
+                            mIsLogClick = true;
+
+                            LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 40 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                            LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 11 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                            Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                            String splText = msg_list.get(v.getId()).getData();
+
+                            if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                    if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                        Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                        mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                        mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                        mOnLongSelectedPostions.remove(i);
+
+                                    }
+
+                                }
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+
+                            } else {
+
+                                mOnLongSelectedPostions.add((v.getId()));
+                                mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                            }
+
+                            if (mOnLongSelectedPostions.size() == 0) {
+                                mIsLogClick = false;
+                                mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                                mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                                hedderTextParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderTextParams.width = width * 50 / 100;
+                                hedderTextParams.leftMargin = width * 3 / 100;
+                                hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                                mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                                hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderAttachmentParams.width = width * 4 / 100;
+                                hedderAttachmentParams.height = width * 8 / 100;
+                                hedderAttachmentParams.gravity = Gravity.CENTER;
+                                mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                                LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderMenuParams.width = (width * 2 / 100) - 2;
+                                hedderMenuParams.height = width * 7 / 100;
+                                hedderMenuParams.gravity = Gravity.CENTER;
+                                mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderCopyLayout.setVisibility(View.GONE);
+                            }
+                        } catch (Exception e) {
+
+                        }
+
+
+                    } else {
+                        boolean toggle = true;
+                        int position = (Integer) v.getTag();
+
+                        String text = mTextMsg.getText().toString();
 
 
 //                    if (mTextMsg.getCurrentTextColor() == -65536) {
@@ -10070,72 +10655,271 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 //                        mParentActivity.startActivity(intent);
 //                    }
 
-                    if (mTextMsg.getCurrentTextColor() == -256) {
+                        if (mTextMsg.getCurrentTextColor() == -256) {
 
-                        OrientationGroup.mZzleTextor = mTextMsg
-                                .getText().toString();
-
-                        // HorizonalSlideshow.mZzleTextor = mTextMsg
-                        // .getText().toString();
-
-                        Intent intent = new Intent(mParentActivity,
-                                OrientationGroup.class);
-                        mParentActivity.startActivity(intent);
-
-                        // }
-
-                    }
-                    if (mTextMsg.getCurrentTextColor() == -65536) {
-                        MessageGetSet selectedItem1 = Constant.msg_list_adapter
-                                .get(position);
-                        if (selectedItem1.getData().startsWith("<x>")) {
-
-                            Constant.mZzleText = mTextMsg.getText()
-                                    .toString();
-
-
-
-                            BannerActivityChat.mZzleText = mTextMsg
+                            OrientationGroup.mZzleTextor = mTextMsg
                                     .getText().toString();
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
 
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityChat.mZzleTextBackground = part1;
-                            BannerActivityChat.mZzleTextColor = part3;
-                            BannerActivityChat.mZzleTextSize = part4;
-                            BannerActivityChat.mZzleTextSpeed = part2;
-                            Intent intent = new Intent(mParentActivity,
-                                    BannerActivityChat.class);
-                            mParentActivity.startActivity(intent);
-                        }else {
-                            Constant.zzle = false;
+                            // HorizonalSlideshow.mZzleTextor = mTextMsg
+                            // .getText().toString();
 
-                            BannerActivityLED.mZzleText = mTextMsg
-                                    .getText().toString();
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityLED.mZzleTextBackground =part5;
-                            BannerActivityLED.mZzleTextSpeed =part3;
-                            BannerActivityLED.mZzleTextSize =part4;
                             Intent intent = new Intent(mParentActivity,
-                                    BannerActivityLED.class);
+                                    OrientationGroup.class);
                             mParentActivity.startActivity(intent);
+
+                            // }
+
+                        }
+                        if (mTextMsg.getCurrentTextColor() == -65536) {
+                            MessageGetSet selectedItem1 = Constant.msg_list_adapter
+                                    .get(position);
+                            if (selectedItem1.getData().startsWith("<x>")) {
+
+                                Constant.mZzleText = mTextMsg.getText()
+                                        .toString();
+
+
+                                BannerActivityChat.mZzleText = mTextMsg
+                                        .getText().toString();
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityChat.mZzleTextBackground = part1;
+                                BannerActivityChat.mZzleTextColor = part3;
+                                BannerActivityChat.mZzleTextSize = part4;
+                                BannerActivityChat.mZzleTextSpeed = part2;
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityChat.class);
+                                mParentActivity.startActivity(intent);
+                            } else {
+                                Constant.zzle = false;
+
+                                BannerActivityLED.mZzleText = mTextMsg
+                                        .getText().toString();
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityLED.mZzleTextBackground = part5;
+                                BannerActivityLED.mZzleTextSpeed = part3;
+                                BannerActivityLED.mZzleTextSize = part4;
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityLED.class);
+                                mParentActivity.startActivity(intent);
+                            }
                         }
                     }
                 }
+            });
+            mTextMsg.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
 
+
+                    try {
+                        topMenuHideFunction();
+
+                        mIsLogClick = true;
+
+                        LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderTextParams.width = width * 40 / 100;
+                        hedderTextParams.leftMargin = width * 3 / 100;
+                        hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                        mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                        LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderAttachmentParams.width = width * 11 / 100;
+                        hedderAttachmentParams.height = width * 8 / 100;
+                        hedderAttachmentParams.gravity = Gravity.CENTER;
+                        mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                        mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                        Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                        String splText = msg_list.get(v.getId()).getData();
+
+                        if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                    Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                    mRightTipLayout=(FrameLayout) findViewById(v.getId()+200000);
+                                    mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                    mOnLongSelectedPostions.remove(i);
+
+                                }
+
+                            }
+
+                            for(int j=0;j<mOnLongSelectedPostions.size();j++) {
+
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                } if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if(isOneMedia)
+                            {
+
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if(isSple)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if(isDoneteBux)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if(!isOneMedia && !isSple && !isDoneteBux){
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+
+                        } else {
+
+                            mOnLongSelectedPostions.add((v.getId()));
+                            mRightTipLayout=(FrameLayout) findViewById(v.getId()+200000);
+                            mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for(int j=0;j<mOnLongSelectedPostions.size();j++) {
+
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                } if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if(isOneMedia)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if(isSple)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if(isDoneteBux)
+                            {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if(!isOneMedia && !isSple && !isDoneteBux){
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                        }
+
+                        if(mOnLongSelectedPostions.size()==0) {
+                            mIsLogClick = false;
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                            hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 50 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                            hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 4 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                            LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderMenuParams.width = (width * 2 / 100) - 2;
+                            hedderMenuParams.height = width * 7 / 100;
+                            hedderMenuParams.gravity = Gravity.CENTER;
+                            mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderCopyLayout.setVisibility(View.GONE);
+                        }
+                    } catch (Exception e) {
+
+                    }
+
+
+                    return true;
+                }
             });
         } catch (Exception e) {
 
@@ -10673,7 +11457,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         txt_msg.setTypeface(null, Color.MAGENTA);
 
                         txt_msg.setBackground(null);
-                        txt_msg.setMinimumWidth(Constant.screenWidth);
+//                        txt_msg.setMinimumWidth(Constant.screenWidth);
                         txt_msg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -10700,7 +11484,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         txt_msg.setTypeface(null, Color.BLACK);
 
                         txt_msg.setBackground(null);
-                        txt_msg.setMinimumWidth(Constant.screenWidth);
+//                        txt_msg.setMinimumWidth(Constant.screenWidth);
                         txt_msg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -10776,7 +11560,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 txt_msg.setTypeface(null, Typeface.NORMAL);
 
                 txt_msg.setBackground(null);
-                txt_msg.setMinimumWidth(Constant.screenWidth);
+//                txt_msg.setMinimumWidth(Constant.screenWidth);
                 txt_msg.setTextSize(valueText());
                 txt_msg.setEmojiconSize(33);
                 LinearLayout.LayoutParams bubbleImgParams = new LinearLayout.LayoutParams(
@@ -11098,7 +11882,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
         mMeaningList=new ArrayList();
         try {
             Constant.printMsg("Priya Test Nymn mymethod " + value);
-            this.Normallist = ACRAConstants.DEFAULT_STRING_VALUE;
+            this.Normallist = "";
             String[] arr = value.split(" ");
             for (String ss : arr) {
                 if (!ss.isEmpty()) {
@@ -11204,14 +11988,14 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             while (index >= 0) {
                 this.Normallist = removeCharAt(this.Normallist, index);
                 this.ssb.replace(index, index + 1,
-                        ACRAConstants.DEFAULT_STRING_VALUE);
+                        "");
                 index = this.Normallist.indexOf(guess, index);
             }
             index = this.Normallist.indexOf(guess1);
             while (index >= 0) {
                 this.Normallist = removeCharAt(this.Normallist, index);
                 this.ssb.replace(index, index + 1,
-                        ACRAConstants.DEFAULT_STRING_VALUE);
+                        "");
                 index = this.Normallist.indexOf(guess1, index);
             }
 
@@ -11555,8 +12339,8 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     + msg_list.get(k).getMedia_name());
 
 
-            mRightVideoChat.getLayoutParams().width = (int) width * 59 / 100;
-            mRightVideoChat.getLayoutParams().height = (int) height * 30 / 100;
+//            mRightVideoChat.getLayoutParams().width = (int) width * 59 / 100;
+//            mRightVideoChat.getLayoutParams().height = (int) height * 30 / 100;
 
             String values = msg_list.get(k).get_id() + "," + fromuser;
             mRightVideoChatUpload.setTag(values);
@@ -11902,6 +12686,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             mRightImageChatUpload.setTag(values);
             mRightImageChatUpload.setVisibility(View.GONE);
             mRightImageProgress.setVisibility(View.GONE);
+            mRightImageChatCancel.setVisibility(View.GONE);
             try {
                 byte[] image_data = msg_list.get(k).getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
@@ -12517,8 +13302,8 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                 + msg_list.get(k).getLongitude();
         mLeftImageChat.setTag(lat_lon);
 
-        mLeftImageChat.getLayoutParams().width = (int) width * 59 / 100;
-        mLeftImageChat.getLayoutParams().height = (int) height * 30 / 100;
+//        mLeftImageChat.getLayoutParams().width = (int) width * 59 / 100;
+//        mLeftImageChat.getLayoutParams().height = (int) height * 30 / 100;
         mLeftImageChatDownload.setVisibility(View.GONE);
         mLeftImagetProgressBar.setVisibility(View.GONE);
 
@@ -12782,7 +13567,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                /* long l = dbAdapter.setUpdateMessage_need_push(
                         msg.getKey_id(), 0);*/
-                new uploa_audio().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
+                new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
             } else
             {
                 btn_upload.setVisibility(View.VISIBLE);
@@ -12811,7 +13596,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                     dbAdapter.setUpdateMessage_need_push(
                             msg_list.get(k).getKey_id(), 1);
-                   new uploa_audio().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
+                   new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()), fromuser);
                 } else
                 {
                     btn_upload.setVisibility(View.VISIBLE);
@@ -12865,7 +13650,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
 								/* new uploa_audio().execute(val[0],val[1]); */
 
-                new uploa_audio().execute(val[0], val[1]);
+                new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,val[0], val[1]);
 
                 btn_upload.setVisibility(View.GONE);
                 progress_audio.setVisibility(View.VISIBLE);
@@ -13785,15 +14570,32 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                     global_block_list.add(user);
 
                     if (is_list_exist == true) {
-                        privacyManager.updatePrivacyList(listName,
-                                privacyItem_list);
+                        try {
+                            privacyManager.updatePrivacyList(listName,
+                                    privacyItem_list);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     } else {
-                        privacyManager.createPrivacyList(listName,
-                                privacyItem_list);
-                        privacyManager.setActiveListName(listName);
+                        try {
+                            privacyManager.createPrivacyList(listName,
+                                    privacyItem_list);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                        try {
+                            privacyManager.setActiveListName(listName);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
                     }
 
-                    List<PrivacyList> lists = privacyManager.getPrivacyLists();
+                    List<PrivacyList> lists = null;
+                    try {
+                        lists = privacyManager.getPrivacyLists();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     Log.d("Chat", "Privacy List Lengh::" + lists.size());
                     int i = 0;
 
@@ -14479,7 +15281,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
                 ChatManager chatManager = ChatManager
                         .getInstanceFor(TempConnectionService.connection);
-                chat = TempConnectionService.chatmanager.createChat(params[1],
+                chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(params[1]),
                         TempConnectionService.mChatCreatedListener.getMessageListener());
 
 
@@ -14631,9 +15433,9 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 //                                                .addNotificationsRequests(msg,
 //                                                        true, true, true, true);
                                         for (int i = 0; i <BroadCastTest.members.length; i++) {
-                                            chat = TempConnectionService.chatmanager.createChat(members[i],
+                                            chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(members[i]),
                                                     TempConnectionService.mChatCreatedListener.getMessageListener());
-                                            Message msg = new Message(BroadCastTest.members[i], Message.Type.chat);
+                                            Message msg = new Message(JidCreate.from(BroadCastTest.members[i]), Message.Type.chat);
 
                                             msg.setStanzaId("" + message.getKey_id());
                                             msg.setBody("");
@@ -14690,9 +15492,9 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         MessageEventManager.addNotificationsRequests(msg, true,
                                 true, true, true);
                         for (int i = 0; i <BroadCastTest.members.length; i++) {
-                            chat = TempConnectionService.chatmanager.createChat(members[i],
+                            chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(members[i]),
                                     TempConnectionService.mChatCreatedListener.getMessageListener());
-                            msg = new Message(BroadCastTest.members[i], Message.Type.chat);
+                            msg = new Message(JidCreate.from(BroadCastTest.members[i]), Message.Type.chat);
 
                             msg.setStanzaId("" + message.getKey_id());
                             msg.setBody("");
@@ -14792,7 +15594,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             try {
                 ChatManager chatManager = ChatManager
                         .getInstanceFor(TempConnectionService.connection);
-                chat = TempConnectionService.chatmanager.createChat(params[1],
+                chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(params[1]),
                         TempConnectionService.mChatCreatedListener.getMessageListener());
                 Message msg = new Message();
                 // JivePropertiesManager.addProperty(msg,"msg_type", 2);
@@ -14915,9 +15717,9 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 //                                                .addNotificationsRequests(msg,
 //                                                        true, true, true, true);
                                         for (int i = 0; i <BroadCastTest.members.length; i++) {
-                                            chat = TempConnectionService.chatmanager.createChat(members[i],
+                                            chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(members[i]),
                                                     TempConnectionService.mChatCreatedListener.getMessageListener());
-                                            Message msg = new Message(BroadCastTest.members[i], Message.Type.chat);
+                                            Message msg = new Message(JidCreate.from(BroadCastTest.members[i]), Message.Type.chat);
                                             msg.setStanzaId("" + message.getKey_id());
                                             msg.setBody("");
                                             JivePropertiesManager.addProperty(msg, "media_type",
@@ -14972,9 +15774,9 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                         MessageEventManager.addNotificationsRequests(msg, true,
                                 true, true, true);
                         for (int i = 0; i <BroadCastTest.members.length; i++) {
-                            chat = TempConnectionService.chatmanager.createChat(members[i],
+                            chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(members[i]),
                                     TempConnectionService.mChatCreatedListener.getMessageListener());
-                            msg = new Message(BroadCastTest.members[i], Message.Type.chat);
+                            msg = new Message(JidCreate.from(BroadCastTest.members[i]), Message.Type.chat);
                             msg.setStanzaId("" + message.getKey_id());
                             msg.setBody("");
                             JivePropertiesManager.addProperty(msg, "media_type",
@@ -15456,7 +16258,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             try {
                 ChatManager chatManager = ChatManager
                         .getInstanceFor(TempConnectionService.connection);
-                chat = TempConnectionService.chatmanager.createChat(params[1],
+                chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(params[1]),
                         TempConnectionService.mChatCreatedListener.getMessageListener());
                 final Message msg = new Message();
                 /* JivePropertiesManager.addProperty(msg,"msg_type", 3); */
@@ -15570,9 +16372,9 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
                                         for (int i = 0; i <BroadCastTest.members.length; i++) {
 
                                             chat = TempConnectionService.chatmanager.createChat(
-                                                    members[i],
+                                                    JidCreate.entityFullFrom(members[i]),
                                                     TempConnectionService.mChatCreatedListener.getMessageListener());
-                                            Message msg = new Message(BroadCastTest.members[i], Message.Type.chat);
+                                            Message msg = new Message(JidCreate.from(BroadCastTest.members[i]), Message.Type.chat);
                                             msg.setStanzaId("" + message.getKey_id());
                                             msg.setBody("");
                                             msg.setTo(members[i]);
@@ -16167,7 +16969,7 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
 
             ChatManager chatManager = ChatManager
                     .getInstanceFor(TempConnectionService.connection);
-            final org.jivesoftware.smack.chat.Chat chat = TempConnectionService.chatmanager.createChat(from,
+            final org.jivesoftware.smack.chat.Chat chat = TempConnectionService.chatmanager.createChat(JidCreate.entityFullFrom(from),
                     TempConnectionService.mChatCreatedListener.getMessageListener());
 
             final Message msg = new Message();
@@ -16359,14 +17161,43 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
     {
         boolean isSpl = false;
 
-        if(text!=null)
-        {
-            if(text.length()>0) {
-                if (text.charAt(0) == '<')
+        Constant.printMsg("Gksjdfs"+text);
+
+        if (text.length() > 3) {
+
+            char s = text.charAt(0);
+            char s1 = text.charAt(1);
+            char s2 = text.charAt(2);
+
+            if ((s == '<' && s1 == '-')||(s1 == 'b' && s2 == '>')||(s1 == 'z' && s2 == '>')||(s1 == 'l' && s2 == '>')||(s1 == 'x' && s2 == '>')||(s1 == 'o' && s2 == '>')||(s1 == 'k' && s2 == '>')) {
+                isSpl = true;
+            }else if (s == '<') {
+                if (s1 == 's' && s2 == '>') {
                     isSpl = true;
+                }
             }
         }
 
+        Constant.printMsg("Gksjdfs11"+isSpl);
+
+        return isSpl;
+    }
+
+    public boolean chekDonate(String text)
+    {
+        boolean isSpl = false;
+
+        if (text.length() > 3) {
+
+            char s = text.charAt(0);
+            char s1 = text.charAt(1);
+            char s2 = text.charAt(2);
+
+            if ((s1 == 'r' && s2 == '>')||(s1 == 'a' && s2 == '>')||(s1 == 'd' && s2 == '>')) {
+                isSpl = true;
+            }
+
+        }
 
         return isSpl;
     }
@@ -16400,6 +17231,327 @@ public class BroadCastTest extends AppCompatActivity implements XMPPConnection,
             dbAdapter.setUpdateChat_lits_chat(jid, msg_id, sec);
         } else {
             dbAdapter.setInsertChat_list_chat(jid, msg_id, sec);
+        }
+    }
+
+    void handleSendText(Intent intent)
+    {
+        String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+
+        if (sharedText != null)
+        {
+            // Update UI to reflect text being shared
+        }
+    }
+
+    void handleSendImage(Uri imageUriSingle)
+    {
+        Uri imageUri = imageUriSingle;
+        if (imageUri != null)
+        {
+            // Update UI to reflect image being shared
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getContentResolver().query(imageUri, filePathColumn, null, null, null);
+            cursor.moveToFirst();
+
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            final String filePath = cursor.getString(columnIndex);
+
+            isFirstCall = false;
+
+            cursor.close();
+            File file = new File(filePath);
+            long length = file.length();
+            length = length / 1024;
+
+            if (length > 16384)
+            {
+                new AlertManager().showAlertDialog(this, getResources().getString(R.string.imagesize_must_be_smaller), true);
+            }
+            else
+            {
+                new Thread(new Runnable()
+                {
+                    public  void run()
+                    {
+                        runOnUiThread(new Runnable()
+                        {
+                            public synchronized void run()
+                            {
+                                try
+                                {
+                                    synchronized (this)
+                                    {
+                                        Constant.printMsg(" ::: " + filePath);
+
+                                        uploadFile(filePath, true);
+
+                                        Constant.singleImagUri = null;
+                                    }
+                                }
+                                catch (Exception e)
+                                {
+                                    Constant.printMsg(e.toString());
+                                }
+                            }
+                        });
+                    }
+                }).start();
+            }
+        }
+    }
+
+    void handleSendSingleVideo(Uri singleVideoUri)
+    {
+        Uri selectedImage1 = singleVideoUri;
+        String[] filePathColumn1 = {MediaStore.Images.Media.DATA};
+        Cursor cursor1 = getContentResolver().query(selectedImage1, filePathColumn1, null, null, null);
+        cursor1.moveToFirst();
+
+        int columnIndex1 = cursor1.getColumnIndex(filePathColumn1[0]);
+        final String filePath1 = cursor1.getString(columnIndex1);
+
+        cursor1.close();
+        File file = new File(filePath1);
+        long length = file.length();
+
+        length = length / 1024;
+
+        if (length > 16384)
+        {
+            new AlertManager().showAlertDialog(this, getResources().getString(R.string.videosize_must_be_smaller), true);
+        }
+        else
+        {
+            new Thread(new Runnable()
+            {
+                public void run()
+                {
+                    runOnUiThread(new Runnable()
+                    {
+                        public void run()
+                        {
+                            try
+                            {
+                                Constant.printMsg("video file path::" + filePath1);
+
+                                uploadFile(filePath1, false);
+
+                                Constant.singleVideoUri = null;
+                            }
+                            catch (Exception e)
+                            {
+                                Constant.printMsg("Single Video Share ::: " + e.toString());
+                            }
+                        }
+                    });
+                }
+            }).start();
+        }
+    }
+
+    void handleSendSingleAudio(Uri singleAudioUri)
+    {
+        Uri audioUri = singleAudioUri;
+        String[] filePathColumn1 = {MediaStore.Images.Media.DATA};
+        Cursor cursor1 = getContentResolver().query(audioUri, filePathColumn1, null, null, null);
+        cursor1.moveToFirst();
+
+        int columnIndex1 = cursor1.getColumnIndex(filePathColumn1[0]);
+        final String filePath1 = cursor1.getString(columnIndex1);
+        cursor1.close();
+
+        outputFile = Constant.local_audio_dir + System.currentTimeMillis() + ".amr";
+        Constant.printMsg("audio file path::" + filePath1);
+
+        File f1 = new File(filePath1);
+        File f2 = new File(outputFile);
+
+        try
+        {
+            copyDirectoryOneLocationToAnotherLocation(f1, f2);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+
+            Constant.printMsg("Single Audio Share ::: " + e.toString());
+        }
+    }
+
+    void handleSendMultipleImages()
+    {
+        Constant.mSelectedImage = new ArrayList();
+
+        String selectImages = "";
+
+        for (int i = 0, l = Constant.multipleImageUri.size(); i < l; i++)
+        {
+            selectImages = getRealPathFromURI(getApplicationContext(), Constant.multipleImageUri.get(i));
+
+            Constant.mSelectedImage.add(selectImages + "|");
+
+            Constant.printMsg("Selected Images ::: " + selectImages);
+        }
+        Constant.mImagepath = selectImages;
+
+        Constant.printMsg("Selected Images Path ::: " + selectImages);
+
+        imagesPathList = new ArrayList<>();
+
+        isFirstCall = false;
+
+        String[] imagesPath = Constant.mImagepath.split("\\|");
+
+        System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath);
+
+        for (int i = 0; i < imagesPath.length; i++)
+        {
+            System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath[i]);
+
+            imagesPathList.add(imagesPath[i]);
+
+            File file = new File(imagesPath[i]);
+
+            long length = file.length();
+
+            length = length / 1024;
+
+            if (length > 16384)
+            {
+                new AlertManager().showAlertDialog(this, getResources().getString(R.string.imagesize_must_be_smaller), true);
+            }
+            else
+            {
+                Thread t = new Thread(new Runnable()
+                {
+                    @Override
+                    public synchronized void run()
+                    {
+                        try
+                        {
+                            for (int i = 0; i < Constant.mSelectedImage.size(); i++)
+                            {
+                                Constant.printMsg("Image Path ::::::::::::: " + Constant.mSelectedImage.get(i) + "   " + i);
+
+                                synchronized (this)
+                                {
+                                    uploadFile(String.valueOf(Constant.mSelectedImage.get(i)), true);
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            e.printStackTrace();
+
+                            Constant.printMsg("Multiple Image 1 ::: " + e.toString());
+                        }
+                    }
+                });
+                t.start();
+
+                i = imagesPath.length;
+            }
+        }
+    }
+
+    public String getRealPathFromURI(Context context, Uri contentUri)
+    {
+        Cursor cursor = null;
+
+        try
+        {
+            String[] proj = { MediaStore.Images.Media.DATA };
+            cursor = context.getContentResolver().query(contentUri,  proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        }
+        finally
+        {
+            if (cursor != null)
+            {
+                cursor.close();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case 1001:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1002:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1003:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1004:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1005:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1006:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
         }
     }
 }

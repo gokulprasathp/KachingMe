@@ -93,8 +93,22 @@ public class KaraokeListActivity extends AppCompatActivity implements OnItemClic
 
             Constant.printMsg("Selected Song 2 :: " + " Tab Pos " + tabPosition + " View " + viewPager.getCurrentItem() + " Position " + tabLayout.getSelectedTabPosition());
         }
+        //viewPager.setCurrentItem(0);
 
-        Constant.printMsg("Selected Song 0 :: " + " Tab Pos " + tabPosition + " View " + viewPager.getCurrentItem() + " Position " + tabLayout.getSelectedTabPosition());
+        if (tabLayout.getSelectedTabPosition() == 0)
+        {
+            mTabStatus = 1;
+        }
+        else if (tabLayout.getSelectedTabPosition() == 1)
+        {
+            mTabStatus = 2;
+        }
+        else if (tabLayout.getSelectedTabPosition() == 2)
+        {
+            mTabStatus = 3;
+        }
+
+        Constant.printMsg("Selected Song 0 :: " + " Tab Pos " + tabPosition + " View " + viewPager.getCurrentItem() + " Position " + tabLayout.getSelectedTabPosition() + " Tab Lang " + mTabStatus);
 
         tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener()
         {

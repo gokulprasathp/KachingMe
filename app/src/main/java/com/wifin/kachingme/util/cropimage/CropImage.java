@@ -61,173 +61,173 @@ import java.io.OutputStream;
 import java.util.concurrent.CountDownLatch;
 
 /**
-* The activity can crop specific region of interest from an image.
-*/
-public class CropImage extends MonitoredActivity implements View.OnClickListener{
+ * The activity can crop specific region of interest from an image.
+ */
+public class CropImage extends MonitoredActivity implements View.OnClickListener {
 
-	final int IMAGE_MAX_SIZE = 1024;
+    final int IMAGE_MAX_SIZE = 1024;
 
-	private static final String TAG = "CropImage";
-	public static final String IMAGE_PATH = "image-path";
-	public static final String SCALE = "scale";
-	public static final String ORIENTATION_IN_DEGREES = "orientation_in_degrees";
-	public static final String ASPECT_X = "aspectX";
-	public static final String ASPECT_Y = "aspectY";
-	public static final String OUTPUT_X = "outputX";
-	public static final String OUTPUT_Y = "outputY";
-	public static final String SCALE_UP_IF_NEEDED = "scaleUpIfNeeded";
-	public static final String CIRCLE_CROP = "circleCrop";
-	public static final String RETURN_DATA = "return-data";
-	public static final String RETURN_DATA_AS_BITMAP = "data";
-	public static final String ACTION_INLINE_DATA = "inline-data";
+    private static final String TAG = "CropImage";
+    public static final String IMAGE_PATH = "image-path";
+    public static final String SCALE = "scale";
+    public static final String ORIENTATION_IN_DEGREES = "orientation_in_degrees";
+    public static final String ASPECT_X = "aspectX";
+    public static final String ASPECT_Y = "aspectY";
+    public static final String OUTPUT_X = "outputX";
+    public static final String OUTPUT_Y = "outputY";
+    public static final String SCALE_UP_IF_NEEDED = "scaleUpIfNeeded";
+    public static final String CIRCLE_CROP = "circleCrop";
+    public static final String RETURN_DATA = "return-data";
+    public static final String RETURN_DATA_AS_BITMAP = "data";
+    public static final String ACTION_INLINE_DATA = "inline-data";
 
-	// These are various options can be specified in the intent.
-	private Bitmap.CompressFormat mOutputFormat = Bitmap.CompressFormat.JPEG;
-	private Uri mSaveUri = null;
-	private boolean mDoFaceDetection = true;
-	private boolean mCircleCrop = false;
-	private final Handler mHandler = new Handler();
+    // These are various options can be specified in the intent.
+    private Bitmap.CompressFormat mOutputFormat = Bitmap.CompressFormat.JPEG;
+    private Uri mSaveUri = null;
+    private boolean mDoFaceDetection = true;
+    private boolean mCircleCrop = false;
+    private final Handler mHandler = new Handler();
 
-	private int mAspectX;
-	private int mAspectY;
-	private int mOutputX;
-	private int mOutputY;
-	private boolean mScale;
-	private ContentResolver mContentResolver;
-	private Bitmap mBitmap;
-	private String mImagePath;
+    private int mAspectX;
+    private int mAspectY;
+    private int mOutputX;
+    private int mOutputY;
+    private boolean mScale;
+    private ContentResolver mContentResolver;
+    private Bitmap mBitmap;
+    private String mImagePath;
 
-	boolean mWaitingToPick; // Whether we are wait the user to pick a face.
-	boolean mSaving; // Whether the "save" button is already clicked.
-	HighlightView mCrop;
+    boolean mWaitingToPick; // Whether we are wait the user to pick a face.
+    boolean mSaving; // Whether the "save" button is already clicked.
+    HighlightView mCrop;
 
-	// These options specifiy the output image size and whether we should
-	// scale the output to fit it (or just crop it).
-	private boolean mScaleUp = true;
-	private final BitmapManager.ThreadSet mDecodingThreads = new BitmapManager.ThreadSet();
+    // These options specifiy the output image size and whether we should
+    // scale the output to fit it (or just crop it).
+    private boolean mScaleUp = true;
+    private final BitmapManager.ThreadSet mDecodingThreads = new BitmapManager.ThreadSet();
 
-	private CropImageView mImageView;
-	ImageView mRotateLeft,mRotateRight;
-	TextView mCancel,mSave;
-	LinearLayout mCropLayoutBottom;
+    private CropImageView mImageView;
+    ImageView mRotateLeft, mRotateRight;
+    TextView mCancel, mSave;
+    LinearLayout mCropLayoutBottom;
 
-	@Override
-	public void onCreate(Bundle icicle) {
+    @Override
+    public void onCreate(Bundle icicle) {
 
-		super.onCreate(icicle);
-		mContentResolver = getContentResolver();
+        super.onCreate(icicle);
+        mContentResolver = getContentResolver();
 
-		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		setContentView(R.layout.cropimage);
-		initialization();
-		screenArrange();
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        setContentView(R.layout.cropimage);
+        initialization();
+        screenArrange();
 
-		showStorageToast(this);
+        showStorageToast(this);
 
-		Intent intent = getIntent();
-		Bundle extras = intent.getExtras();
-		if (extras != null) {
+        Intent intent = getIntent();
+        Bundle extras = intent.getExtras();
+        if (extras != null) {
 
-			if (extras.getString(CIRCLE_CROP) != null) {
+            if (extras.getString(CIRCLE_CROP) != null) {
 
-				if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
-					mImageView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
-				}
+                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.HONEYCOMB) {
+                    mImageView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+                }
 
-				mCircleCrop = true;
-				mAspectX = 1;
-				mAspectY = 1;
-			}
-			mImagePath = extras.getString(IMAGE_PATH);
+                mCircleCrop = true;
+                mAspectX = 1;
+                mAspectY = 1;
+            }
+            mImagePath = extras.getString(IMAGE_PATH);
 
-            Constant.printMsg("siva path....default : "+mImagePath);
-			mSaveUri = getImageUri(mImagePath);
-			mBitmap = getBitmap(mImagePath);
+            Constant.printMsg("siva path....default : " + mImagePath);
+            mSaveUri = getImageUri(mImagePath);
+            mBitmap = getBitmap(mImagePath);
 
 
-			if (extras.containsKey(ASPECT_X)
-					&& extras.get(ASPECT_X) instanceof Integer) {
+            if (extras.containsKey(ASPECT_X)
+                    && extras.get(ASPECT_X) instanceof Integer) {
 
-				mAspectX = extras.getInt(ASPECT_X);
-			} else {
+                mAspectX = extras.getInt(ASPECT_X);
+            } else {
 
-				throw new IllegalArgumentException("aspect_x must be integer");
-			}
-			if (extras.containsKey(ASPECT_Y)
-					&& extras.get(ASPECT_Y) instanceof Integer) {
+                throw new IllegalArgumentException("aspect_x must be integer");
+            }
+            if (extras.containsKey(ASPECT_Y)
+                    && extras.get(ASPECT_Y) instanceof Integer) {
 
-				mAspectY = extras.getInt(ASPECT_Y);
-			} else {
+                mAspectY = extras.getInt(ASPECT_Y);
+            } else {
 
-				throw new IllegalArgumentException("aspect_y must be integer");
-			}
-			mOutputX = extras.getInt(OUTPUT_X);
-			mOutputY = extras.getInt(OUTPUT_Y);
-			mScale = extras.getBoolean(SCALE, true);
-			mScaleUp = extras.getBoolean(SCALE_UP_IF_NEEDED, true);
-		}
+                throw new IllegalArgumentException("aspect_y must be integer");
+            }
+            mOutputX = extras.getInt(OUTPUT_X);
+            mOutputY = extras.getInt(OUTPUT_Y);
+            mScale = extras.getBoolean(SCALE, true);
+            mScaleUp = extras.getBoolean(SCALE_UP_IF_NEEDED, true);
+        }
 
-		if (mBitmap == null) {
+        if (mBitmap == null) {
 
-			Log.d(TAG, "finish!!!");
-			finish();
-			return;
-		}
+            Log.d(TAG, "finish!!!");
+            finish();
+            return;
+        }
 
-		// Make UI fullscreen.
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-		startFaceDetection();
-	}
+        // Make UI fullscreen.
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        startFaceDetection();
+    }
 
-	private void initialization() {
-		mImageView = (CropImageView) findViewById(R.id.crop_imageView);
-		mRotateLeft = (ImageView) findViewById(R.id.rotateLeft);
-		mRotateRight = (ImageView) findViewById(R.id.rotateRight);
-		mCancel = (TextView) findViewById(R.id.discard);
-		mSave = (TextView) findViewById(R.id.save);
-		mCropLayoutBottom= (LinearLayout) findViewById(R.id.cropimage_bottomLayout);
-		mRotateLeft.setOnClickListener(this);
-		mRotateRight.setOnClickListener(this);
-		mCancel.setOnClickListener(this);
-		mSave.setOnClickListener(this);
-	}
+    private void initialization() {
+        mImageView = (CropImageView) findViewById(R.id.crop_imageView);
+        mRotateLeft = (ImageView) findViewById(R.id.rotateLeft);
+        mRotateRight = (ImageView) findViewById(R.id.rotateRight);
+        mCancel = (TextView) findViewById(R.id.discard);
+        mSave = (TextView) findViewById(R.id.save);
+        mCropLayoutBottom = (LinearLayout) findViewById(R.id.cropimage_bottomLayout);
+        mRotateLeft.setOnClickListener(this);
+        mRotateRight.setOnClickListener(this);
+        mCancel.setOnClickListener(this);
+        mSave.setOnClickListener(this);
+    }
 
-	@Override
-	public void onClick(View v) {
-		switch (v.getId()){
-			case R.id.discard:
-				setResult(RESULT_CANCELED);
-				finish();
-				break;
-			case R.id.save:
-				try {
-					onSaveClicked();
-				} catch (Exception e) {
-					finish();
-				}
-				break;
-			case R.id.rotateLeft:
-				mBitmap = Util.rotateImage(mBitmap, -90);
-				RotateBitmap rotateBitmap = new RotateBitmap(mBitmap);
-				mImageView.setImageRotateBitmapResetBase(rotateBitmap,
-						true);
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.discard:
+                setResult(RESULT_CANCELED);
+                finish();
+                break;
+            case R.id.save:
+                try {
+                    onSaveClicked();
+                } catch (Exception e) {
+                    finish();
+                }
+                break;
+            case R.id.rotateLeft:
+                mBitmap = Util.rotateImage(mBitmap, -90);
+                RotateBitmap rotateBitmap = new RotateBitmap(mBitmap);
+                mImageView.setImageRotateBitmapResetBase(rotateBitmap,
+                        true);
 //				mBitmap =RotateBitmap(mBitmap,-90);
 //				mImageView.setImageBitmap(mBitmap);
-				mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-				mRunFaceDetection.run();
-				break;
-			case R.id.rotateRight:
-				mBitmap = Util.rotateImage(mBitmap, 90);
-				RotateBitmap rotateBitmap1 = new RotateBitmap(mBitmap);
-				mImageView.setImageRotateBitmapResetBase(rotateBitmap1,
-						true);
+                mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                mRunFaceDetection.run();
+                break;
+            case R.id.rotateRight:
+                mBitmap = Util.rotateImage(mBitmap, 90);
+                RotateBitmap rotateBitmap1 = new RotateBitmap(mBitmap);
+                mImageView.setImageRotateBitmapResetBase(rotateBitmap1,
+                        true);
 //				mBitmap =RotateBitmap(mBitmap,90);
 //				mImageView.setImageBitmap(mBitmap);
-				mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-				mRunFaceDetection.run();
-				break;
-		}
-	}
+                mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                mRunFaceDetection.run();
+                break;
+        }
+    }
 
 //	public static Bitmap RotateBitmap(Bitmap source, float angle)
 //	{
@@ -236,173 +236,187 @@ public class CropImage extends MonitoredActivity implements View.OnClickListener
 //		return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
 //	}
 
-	private Uri getImageUri(String path) {
+    private Uri getImageUri(String path) {
 
-		return Uri.fromFile(new File(path));
-	}
+        return Uri.fromFile(new File(path));
+    }
 
-	private Bitmap getBitmap(String path) {
+    private Bitmap getBitmap(String path) {
 
-		Uri uri = getImageUri(path);
-		InputStream in = null;
-		try {
-			in = mContentResolver.openInputStream(uri);
+        Uri uri = getImageUri(path);
+        InputStream in = null;
+        try {
+            in = mContentResolver.openInputStream(uri);
 
-			// Decode image size
-			BitmapFactory.Options o = new BitmapFactory.Options();
-			o.inJustDecodeBounds = true;
+            // Decode image size
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
 
-			BitmapFactory.decodeStream(in, null, o);
-			in.close();
+            BitmapFactory.decodeStream(in, null, o);
+            in.close();
 
-			int scale = 1;
-			if (o.outHeight > IMAGE_MAX_SIZE || o.outWidth > IMAGE_MAX_SIZE) {
-				scale = (int) Math.pow(
-						2,
-						(int) Math.round(Math.log(IMAGE_MAX_SIZE
-								/ (double) Math.max(o.outHeight, o.outWidth))
-								/ Math.log(0.5)));
-			}
+            int scale = 1;
+            if (o.outHeight > IMAGE_MAX_SIZE || o.outWidth > IMAGE_MAX_SIZE) {
+                scale = (int) Math.pow(
+                        2,
+                        (int) Math.round(Math.log(IMAGE_MAX_SIZE
+                                / (double) Math.max(o.outHeight, o.outWidth))
+                                / Math.log(0.5)));
+            }
 
-			BitmapFactory.Options o2 = new BitmapFactory.Options();
-			o2.inSampleSize = scale;
-			in = mContentResolver.openInputStream(uri);
-			Bitmap b = BitmapFactory.decodeStream(in, null, o2);
-			in.close();
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inSampleSize = scale;
+            in = mContentResolver.openInputStream(uri);
+            Bitmap b = BitmapFactory.decodeStream(in, null, o2);
+            in.close();
 
-			return b;
-		} catch (FileNotFoundException e) {
-			Log.e(TAG, "file " + path + " not found");
-		} catch (IOException e) {
-			Log.e(TAG, "file " + path + " not found");
-		}
-		return null;
-	}
+            return b;
+        } catch (FileNotFoundException e) {
+            Log.e(TAG, "file " + path + " not found");
+        } catch (IOException e) {
+            Log.e(TAG, "file " + path + " not found");
+        }
+        return null;
+    }
 
-	private void startFaceDetection() {
+    private void startFaceDetection() {
 
-		if (isFinishing()) {
-			return;
-		}
-		ExifInterface ei = null;
-		try {
-			ei = new ExifInterface(mImagePath);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION,
-				ExifInterface.ORIENTATION_UNDEFINED);
+        if (isFinishing()) {
+            return;
+        }
+        ExifInterface ei = null;
+        try {
+            ei = new ExifInterface(mImagePath);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        int orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_UNDEFINED);
 
-		switch(orientation) {
-			case ExifInterface.ORIENTATION_ROTATE_90:
-				Constant.printMsg("siva check rotation.....90");
-				mBitmap = Util.rotateImage(mBitmap, 90);
-				RotateBitmap rotateBitmap = new RotateBitmap(mBitmap);
-				mImageView.setImageRotateBitmapResetBase(rotateBitmap, true);
-				mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-				mRunFaceDetection.run();
-				break;
-			case ExifInterface.ORIENTATION_ROTATE_180:
-				Constant.printMsg("siva check rotation.....180");
-				mBitmap = Util.rotateImage(mBitmap, 180);
-				RotateBitmap rotateBitmap1 = new RotateBitmap(mBitmap);
-				mImageView.setImageRotateBitmapResetBase(rotateBitmap1, true);
-				mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-				mRunFaceDetection.run();
-				break;
-			case ExifInterface.ORIENTATION_ROTATE_270:
-				Constant.printMsg("siva check rotation.....270");
-				mBitmap = Util.rotateImage(mBitmap, 270);
-				RotateBitmap rotateBitmap2 = new RotateBitmap(mBitmap);
-				mImageView.setImageRotateBitmapResetBase(rotateBitmap2, true);
-				mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
-				mRunFaceDetection.run();
-				break;
-			case ExifInterface.ORIENTATION_NORMAL:
-				Constant.printMsg("siva check rotation.....normal");
-				mImageView.setImageBitmapResetBase(mBitmap, true);
-			default:
-				Constant.printMsg("siva check rotation.....default");
-				mImageView.setImageBitmapResetBase(mBitmap, true);
-				break;
-		}
+        switch (orientation) {
+            case ExifInterface.ORIENTATION_ROTATE_90:
+                Constant.printMsg("siva check rotation.....90");
+                mBitmap = Util.rotateImage(mBitmap, 90);
+                RotateBitmap rotateBitmap = new RotateBitmap(mBitmap);
+                mImageView.setImageRotateBitmapResetBase(rotateBitmap, true);
+                mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                mRunFaceDetection.run();
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_180:
+                Constant.printMsg("siva check rotation.....180");
+                mBitmap = Util.rotateImage(mBitmap, 180);
+                RotateBitmap rotateBitmap1 = new RotateBitmap(mBitmap);
+                mImageView.setImageRotateBitmapResetBase(rotateBitmap1, true);
+                mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                mRunFaceDetection.run();
+                break;
+            case ExifInterface.ORIENTATION_ROTATE_270:
+                Constant.printMsg("siva check rotation.....270");
+                mBitmap = Util.rotateImage(mBitmap, 270);
+                RotateBitmap rotateBitmap2 = new RotateBitmap(mBitmap);
+                mImageView.setImageRotateBitmapResetBase(rotateBitmap2, true);
+                mImageView.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                mRunFaceDetection.run();
+                break;
+            case ExifInterface.ORIENTATION_NORMAL:
+                Constant.printMsg("siva check rotation.....normal");
+                mImageView.setImageBitmapResetBase(mBitmap, true);
+            default:
+                Constant.printMsg("siva check rotation.....default");
+                mImageView.setImageBitmapResetBase(mBitmap, true);
+                break;
+        }
 
 //		mImageView.setImageBitmapResetBase(mBitmap, true);
 
-		Util.startBackgroundJob(this, null, "Please wait\u2026",
-				new Runnable() {
-					public void run() {
+        Util.startBackgroundJob(this, null, "Please wait\u2026",
+                new Runnable() {
+                    public void run() {
 
-						final CountDownLatch latch = new CountDownLatch(1);
-						final Bitmap b = mBitmap;
-						mHandler.post(new Runnable() {
-							public void run() {
+                        final CountDownLatch latch = new CountDownLatch(1);
+                        final Bitmap b = mBitmap;
+                        mHandler.post(new Runnable() {
+                            public void run() {
 
-								if (b != mBitmap && b != null) {
-									mImageView.setImageBitmapResetBase(b, true);
-									mBitmap.recycle();
-									mBitmap = b;
-								}
-								if (mImageView.getScale() == 1F) {
-									mImageView.center(true, true);
-								}
-								latch.countDown();
-							}
-						});
-						try {
-							latch.await();
-						} catch (InterruptedException e) {
-							throw new RuntimeException(e);
-						}
-						mRunFaceDetection.run();
-					}
-				}, mHandler);
-	}
+                                if (b != mBitmap && b != null) {
+                                    mImageView.setImageBitmapResetBase(b, true);
+                                    mBitmap.recycle();
+                                    mBitmap = b;
+                                }
+                                if (mImageView.getScale() == 1F) {
+                                    mImageView.center(true, true);
+                                }
+                                latch.countDown();
+                            }
+                        });
+                        try {
+                            latch.await();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        mRunFaceDetection.run();
+                    }
+                }, mHandler);
+    }
 
 
     public static Bitmap croppedImage;
-	private void onSaveClicked() throws Exception {
-		// TODO this code needs to change to use the decode/crop/encode single
-		// step api so that we don't require that the whole (possibly large)
-		// bitmap doesn't have to be read into memory
-		if (mSaving)
-			return;
 
-		if (mCrop == null) {
+    private void onSaveClicked() throws Exception {
+        // TODO this code needs to change to use the decode/crop/encode single
+        // step api so that we don't require that the whole (possibly large)
+        // bitmap doesn't have to be read into memory
+        if (mSaving)
+            return;
 
-			return;
-		}
+        if (mCrop == null) {
 
-		mSaving = true;
+            return;
+        }
 
-		Rect r = mCrop.getCropRect();
+        mSaving = true;
 
-		int width = r.width();
-		int height = r.height();
+        Rect r = mCrop.getCropRect();
 
-		// If we are circle cropping, we want alpha channel, which is the
-		// third param here.
+        int width = r.width();
+        int height = r.height();
 
-		try {
+        // If we are circle cropping, we want alpha channel, which is the
+        // third param here.
 
-			croppedImage = Bitmap.createBitmap(width, height,
-					mCircleCrop ? Bitmap.Config.ARGB_8888
-							: Bitmap.Config.RGB_565);
-		} catch (Exception e) {
-			throw e;
-		}
-		if (croppedImage == null) {
+        Constant.printMsg("ajkshfskjafjkasf" + width + "     " + height);
 
-			return;
-		}
+        try {
+            if (width > 85) {
+                croppedImage = Bitmap.createBitmap(width, height,
+                        mCircleCrop ? Bitmap.Config.ARGB_8888
+                                : Bitmap.Config.RGB_565);
 
-		{
-			Canvas canvas = new Canvas(croppedImage);
-			Rect dstRect = new Rect(0, 0, width, height);
-			canvas.drawBitmap(mBitmap, r, dstRect, null);
-		}
+            }else {
+                croppedImage = Bitmap.createBitmap(85 , 85,
+                        mCircleCrop ? Bitmap.Config.ARGB_8888
+                                : Bitmap.Config.RGB_565);
 
-		if (mCircleCrop) {
+            }
+        } catch (Exception e) {
+            throw e;
+        }
+        if (croppedImage == null) {
+
+            return;
+        }
+
+        if (width > 85) {
+            Canvas canvas = new Canvas(croppedImage);
+            Rect dstRect = new Rect(0, 0, width, height);
+            canvas.drawBitmap(mBitmap, r, dstRect, null);
+        }else{
+            Canvas canvas = new Canvas(croppedImage);
+            Rect dstRect = new Rect(0, 0, 85, 85);
+            canvas.drawBitmap(mBitmap, r, dstRect, null);
+        }
+
+	/*	if (mCircleCrop) {
 
 			// OK, so what's all this about?
 			// Bitmaps are inherently rectangular but we want to return
@@ -416,12 +430,12 @@ public class CropImage extends MonitoredActivity implements View.OnClickListener
 			c.drawColor(0x00000000, PorterDuff.Mode.CLEAR);
 		}
 
-		/* If the output is required to a specific size then scale or fill */
-		if (mOutputX != 0 && mOutputY != 0) {
+		*//* If the output is required to a specific size then scale or fill *//*
+        if (mOutputX != 0 && mOutputY != 0) {
 
 			if (mScale) {
 
-				/* Scale the image to the required dimensions */
+				*//* Scale the image to the required dimensions *//*
 				Bitmap old = croppedImage;
 				croppedImage = Util.transform(new Matrix(), croppedImage,
 						mOutputX, mOutputY, mScaleUp);
@@ -431,11 +445,11 @@ public class CropImage extends MonitoredActivity implements View.OnClickListener
 				}
 			} else {
 
-				/*
+				*//*
 				 * Don't scale the image crop it to the size requested. Create
 				 * an new image with the cropped image in the center and the
 				 * extra space filled.
-				 */
+				 *//*
 
 				// Don't scale the image but instead fill it so it's the
 				// required dimension
@@ -449,378 +463,378 @@ public class CropImage extends MonitoredActivity implements View.OnClickListener
 				int dx = (srcRect.width() - dstRect.width()) / 2;
 				int dy = (srcRect.height() - dstRect.height()) / 2;
 
-				/* If the srcRect is too big, use the center part of it. */
+				*//* If the srcRect is too big, use the center part of it. *//*
 				srcRect.inset(Math.max(0, dx), Math.max(0, dy));
 
-				/* If the dstRect is too big, use the center part of it. */
+				*//* If the dstRect is too big, use the center part of it. *//*
 				dstRect.inset(Math.max(0, -dx), Math.max(0, -dy));
 
-				/* Draw the cropped bitmap in the center */
+				*//* Draw the cropped bitmap in the center *//*
 				canvas.drawBitmap(mBitmap, srcRect, dstRect, null);
 
-				/* Set the cropped bitmap as the new bitmap */
+				*//* Set the cropped bitmap as the new bitmap *//*
 				croppedImage.recycle();
 				croppedImage = b;
 			}
 		}
+*/
+        // Return the cropped image directly or save it to the specified URI.
+        Bundle myExtras = getIntent().getExtras();
+        if (myExtras != null
+                && (myExtras.getParcelable("data") != null || myExtras
+                .getBoolean(RETURN_DATA))) {
+
+            Constant.printMsg("sjdsdjas" + croppedImage);
+
+            Bundle extras = new Bundle();
+            extras.putParcelable(RETURN_DATA_AS_BITMAP, croppedImage);
+            Constant.printMsg("sjdsdjas2222" + croppedImage);
+            setResult(RESULT_OK, new Intent().putExtra("gh", "jk"));
+            Constant.printMsg("sjdsdjas3333" + croppedImage);
+            finish();
+        } else {
+            final Bitmap b = croppedImage;
+            Util.startBackgroundJob(this, null,
+                    getString(R.string.saving_image), new Runnable() {
+                        public void run() {
+
+                            saveOutput(b);
+                        }
+                    }, mHandler);
+        }
+    }
+
+    private void saveOutput(Bitmap croppedImage) {
+        Constant.printMsg("sjdsdjas111" + croppedImage);
+        if (mSaveUri != null) {
+            OutputStream outputStream = null;
+            try {
+                outputStream = mContentResolver.openOutputStream(mSaveUri);
+                if (outputStream != null) {
+                    croppedImage.compress(mOutputFormat, 90, outputStream);
+                }
+            } catch (IOException ex) {
+
+                Log.e(TAG, "Cannot open file: " + mSaveUri, ex);
+                setResult(RESULT_CANCELED);
+                finish();
+                return;
+            } finally {
+
+                Util.closeSilently(outputStream);
+            }
+
+            Log.d(TAG, "Save uri::" + mSaveUri.toString());
+            Log.d(TAG, "mImage path::" + mImagePath);
+            Bundle extras = new Bundle();
+            Intent intent = new Intent(mSaveUri.toString());
+            intent.putExtras(extras);
+            intent.putExtra(IMAGE_PATH, mImagePath);
+            intent.putExtra(ORIENTATION_IN_DEGREES,
+                    Util.getOrientationInDegree(this));
+            setResult(RESULT_OK, intent);
+        } else {
+
+            Log.e(TAG, "not defined image url");
+        }
+        croppedImage.recycle();
+        finish();
+    }
+
+    @Override
+    protected void onPause() {
+
+        super.onPause();
+        BitmapManager.instance().cancelThreadDecoding(mDecodingThreads);
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        super.onDestroy();
+
+        if (mBitmap != null) {
+
+            mBitmap.recycle();
+        }
+    }
+
+    Runnable mRunFaceDetection = new Runnable() {
+        @SuppressWarnings("hiding")
+        float mScale = 1F;
+        Matrix mImageMatrix;
+        FaceDetector.Face[] mFaces = new FaceDetector.Face[3];
+        int mNumFaces;
+
+        // For each face, we create a HightlightView for it.
+        private void handleFace(FaceDetector.Face f) {
+
+            PointF midPoint = new PointF();
+
+            int r = ((int) (f.eyesDistance() * mScale)) * 2;
+            f.getMidPoint(midPoint);
+            midPoint.x *= mScale;
+            midPoint.y *= mScale;
+
+            int midX = (int) midPoint.x;
+            int midY = (int) midPoint.y;
 
-		// Return the cropped image directly or save it to the specified URI.
-		Bundle myExtras = getIntent().getExtras();
-		if (myExtras != null
-				&& (myExtras.getParcelable("data") != null || myExtras
-						.getBoolean(RETURN_DATA))) {
-
-            Constant.printMsg("sjdsdjas"+croppedImage);
-
-			Bundle extras = new Bundle();
-			extras.putParcelable(RETURN_DATA_AS_BITMAP, croppedImage);
-            Constant.printMsg("sjdsdjas2222"+croppedImage);
-			setResult(RESULT_OK, new Intent().putExtra("gh","jk"));
-            Constant.printMsg("sjdsdjas3333"+croppedImage);
-			finish();
-		} else {
-			final Bitmap b = croppedImage;
-			Util.startBackgroundJob(this, null,
-					getString(R.string.saving_image), new Runnable() {
-						public void run() {
-
-							saveOutput(b);
-						}
-					}, mHandler);
-		}
-	}
-
-	private void saveOutput(Bitmap croppedImage) {
-        Constant.printMsg("sjdsdjas111"+croppedImage);
-		if (mSaveUri != null) {
-			OutputStream outputStream = null;
-			try {
-				outputStream = mContentResolver.openOutputStream(mSaveUri);
-				if (outputStream != null) {
-					croppedImage.compress(mOutputFormat, 90, outputStream);
-				}
-			} catch (IOException ex) {
-
-				Log.e(TAG, "Cannot open file: " + mSaveUri, ex);
-				setResult(RESULT_CANCELED);
-				finish();
-				return;
-			} finally {
-
-				Util.closeSilently(outputStream);
-			}
-
-			Log.d(TAG, "Save uri::" + mSaveUri.toString());
-			Log.d(TAG, "mImage path::" + mImagePath);
-			Bundle extras = new Bundle();
-			Intent intent = new Intent(mSaveUri.toString());
-			intent.putExtras(extras);
-			intent.putExtra(IMAGE_PATH, mImagePath);
-			intent.putExtra(ORIENTATION_IN_DEGREES,
-					Util.getOrientationInDegree(this));
-			setResult(RESULT_OK, intent);
-		} else {
-
-			Log.e(TAG, "not defined image url");
-		}
-		croppedImage.recycle();
-		finish();
-	}
-
-	@Override
-	protected void onPause() {
-
-		super.onPause();
-		BitmapManager.instance().cancelThreadDecoding(mDecodingThreads);
-	}
-
-	@Override
-	protected void onDestroy() {
-
-		super.onDestroy();
+            HighlightView hv = new HighlightView(mImageView);
 
-		if (mBitmap != null) {
+            int width = mBitmap.getWidth();
+            int height = mBitmap.getHeight();
 
-			mBitmap.recycle();
-		}
-	}
+            Rect imageRect = new Rect(0, 0, width, height);
 
-	Runnable mRunFaceDetection = new Runnable() {
-		@SuppressWarnings("hiding")
-		float mScale = 1F;
-		Matrix mImageMatrix;
-		FaceDetector.Face[] mFaces = new FaceDetector.Face[3];
-		int mNumFaces;
+            RectF faceRect = new RectF(midX, midY, midX, midY);
+            faceRect.inset(-r, -r);
+            if (faceRect.left < 0) {
+                faceRect.inset(-faceRect.left, -faceRect.left);
+            }
 
-		// For each face, we create a HightlightView for it.
-		private void handleFace(FaceDetector.Face f) {
+            if (faceRect.top < 0) {
+                faceRect.inset(-faceRect.top, -faceRect.top);
+            }
 
-			PointF midPoint = new PointF();
+            if (faceRect.right > imageRect.right) {
+                faceRect.inset(faceRect.right - imageRect.right, faceRect.right
+                        - imageRect.right);
+            }
 
-			int r = ((int) (f.eyesDistance() * mScale)) * 2;
-			f.getMidPoint(midPoint);
-			midPoint.x *= mScale;
-			midPoint.y *= mScale;
+            if (faceRect.bottom > imageRect.bottom) {
+                faceRect.inset(faceRect.bottom - imageRect.bottom,
+                        faceRect.bottom - imageRect.bottom);
+            }
 
-			int midX = (int) midPoint.x;
-			int midY = (int) midPoint.y;
+            hv.setup(mImageMatrix, imageRect, faceRect, mCircleCrop,
+                    mAspectX != 0 && mAspectY != 0);
 
-			HighlightView hv = new HighlightView(mImageView);
+            mImageView.add(hv);
+        }
 
-			int width = mBitmap.getWidth();
-			int height = mBitmap.getHeight();
+        // Create a default HightlightView if we found no face in the picture.
+        private void makeDefault() {
 
-			Rect imageRect = new Rect(0, 0, width, height);
+            HighlightView hv = new HighlightView(mImageView);
 
-			RectF faceRect = new RectF(midX, midY, midX, midY);
-			faceRect.inset(-r, -r);
-			if (faceRect.left < 0) {
-				faceRect.inset(-faceRect.left, -faceRect.left);
-			}
+            int width = mBitmap.getWidth();
+            int height = mBitmap.getHeight();
 
-			if (faceRect.top < 0) {
-				faceRect.inset(-faceRect.top, -faceRect.top);
-			}
+            Rect imageRect = new Rect(0, 0, width, height);
 
-			if (faceRect.right > imageRect.right) {
-				faceRect.inset(faceRect.right - imageRect.right, faceRect.right
-						- imageRect.right);
-			}
+            // make the default size about 4/5 of the width or height
+            int cropWidth = Math.min(width, height) * 4 / 5;
+            int cropHeight = cropWidth;
 
-			if (faceRect.bottom > imageRect.bottom) {
-				faceRect.inset(faceRect.bottom - imageRect.bottom,
-						faceRect.bottom - imageRect.bottom);
-			}
+            if (mAspectX != 0 && mAspectY != 0) {
 
-			hv.setup(mImageMatrix, imageRect, faceRect, mCircleCrop,
-					mAspectX != 0 && mAspectY != 0);
+                if (mAspectX > mAspectY) {
 
-			mImageView.add(hv);
-		}
+                    cropHeight = cropWidth * mAspectY / mAspectX;
+                } else {
 
-		// Create a default HightlightView if we found no face in the picture.
-		private void makeDefault() {
+                    cropWidth = cropHeight * mAspectX / mAspectY;
+                }
+            }
 
-			HighlightView hv = new HighlightView(mImageView);
+            int x = (width - cropWidth) / 2;
+            int y = (height - cropHeight) / 2;
 
-			int width = mBitmap.getWidth();
-			int height = mBitmap.getHeight();
+            RectF cropRect = new RectF(x, y, x + cropWidth, y + cropHeight);
+            hv.setup(mImageMatrix, imageRect, cropRect, mCircleCrop,
+                    mAspectX != 0 && mAspectY != 0);
 
-			Rect imageRect = new Rect(0, 0, width, height);
+            mImageView.mHighlightViews.clear(); // Thong added for rotate
 
-			// make the default size about 4/5 of the width or height
-			int cropWidth = Math.min(width, height) * 4 / 5;
-			int cropHeight = cropWidth;
+            mImageView.add(hv);
+        }
 
-			if (mAspectX != 0 && mAspectY != 0) {
+        // Scale the image down for faster face detection.
+        private Bitmap prepareBitmap() {
 
-				if (mAspectX > mAspectY) {
+            if (mBitmap == null) {
 
-					cropHeight = cropWidth * mAspectY / mAspectX;
-				} else {
+                return null;
+            }
 
-					cropWidth = cropHeight * mAspectX / mAspectY;
-				}
-			}
+            // 256 pixels wide is enough.
+            if (mBitmap.getWidth() > 256) {
 
-			int x = (width - cropWidth) / 2;
-			int y = (height - cropHeight) / 2;
+                mScale = 256.0F / mBitmap.getWidth();
+            }
+            Matrix matrix = new Matrix();
+            matrix.setScale(mScale, mScale);
+            return Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(),
+                    mBitmap.getHeight(), matrix, true);
+        }
 
-			RectF cropRect = new RectF(x, y, x + cropWidth, y + cropHeight);
-			hv.setup(mImageMatrix, imageRect, cropRect, mCircleCrop,
-					mAspectX != 0 && mAspectY != 0);
+        public void run() {
 
-			mImageView.mHighlightViews.clear(); // Thong added for rotate
+            mImageMatrix = mImageView.getImageMatrix();
+            Bitmap faceBitmap = prepareBitmap();
 
-			mImageView.add(hv);
-		}
+            mScale = 1.0F / mScale;
+            if (faceBitmap != null && mDoFaceDetection) {
+                FaceDetector detector = new FaceDetector(faceBitmap.getWidth(),
+                        faceBitmap.getHeight(), mFaces.length);
+                mNumFaces = detector.findFaces(faceBitmap, mFaces);
+            }
 
-		// Scale the image down for faster face detection.
-		private Bitmap prepareBitmap() {
+            if (faceBitmap != null && faceBitmap != mBitmap) {
+                faceBitmap.recycle();
+            }
 
-			if (mBitmap == null) {
+            mHandler.post(new Runnable() {
+                public void run() {
 
-				return null;
-			}
+                    mWaitingToPick = mNumFaces > 1;
+                    if (mNumFaces > 0) {
+                        for (int i = 0; i < mNumFaces; i++) {
+                            handleFace(mFaces[i]);
+                        }
+                    } else {
+                        makeDefault();
+                    }
+                    mImageView.invalidate();
+                    if (mImageView.mHighlightViews.size() == 1) {
+                        mCrop = mImageView.mHighlightViews.get(0);
+                        mCrop.setFocus(true);
+                    }
 
-			// 256 pixels wide is enough.
-			if (mBitmap.getWidth() > 256) {
+                    if (mNumFaces > 1) {
+                        Toast.makeText(CropImage.this, "Multi face crop help",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+    };
 
-				mScale = 256.0F / mBitmap.getWidth();
-			}
-			Matrix matrix = new Matrix();
-			matrix.setScale(mScale, mScale);
-			return Bitmap.createBitmap(mBitmap, 0, 0, mBitmap.getWidth(),
-					mBitmap.getHeight(), matrix, true);
-		}
+    public static final int NO_STORAGE_ERROR = -1;
+    public static final int CANNOT_STAT_ERROR = -2;
 
-		public void run() {
+    public static void showStorageToast(Activity activity) {
 
-			mImageMatrix = mImageView.getImageMatrix();
-			Bitmap faceBitmap = prepareBitmap();
+        showStorageToast(activity, calculatePicturesRemaining(activity));
+    }
 
-			mScale = 1.0F / mScale;
-			if (faceBitmap != null && mDoFaceDetection) {
-				FaceDetector detector = new FaceDetector(faceBitmap.getWidth(),
-						faceBitmap.getHeight(), mFaces.length);
-				mNumFaces = detector.findFaces(faceBitmap, mFaces);
-			}
+    public static void showStorageToast(Activity activity, int remaining) {
 
-			if (faceBitmap != null && faceBitmap != mBitmap) {
-				faceBitmap.recycle();
-			}
+        String noStorageText = null;
 
-			mHandler.post(new Runnable() {
-				public void run() {
+        if (remaining == NO_STORAGE_ERROR) {
 
-					mWaitingToPick = mNumFaces > 1;
-					if (mNumFaces > 0) {
-						for (int i = 0; i < mNumFaces; i++) {
-							handleFace(mFaces[i]);
-						}
-					} else {
-						makeDefault();
-					}
-					mImageView.invalidate();
-					if (mImageView.mHighlightViews.size() == 1) {
-						mCrop = mImageView.mHighlightViews.get(0);
-						mCrop.setFocus(true);
-					}
+            String state = Environment.getExternalStorageState();
+            if (state.equals(Environment.MEDIA_CHECKING)) {
 
-					if (mNumFaces > 1) {
-						Toast.makeText(CropImage.this, "Multi face crop help",
-								Toast.LENGTH_SHORT).show();
-					}
-				}
-			});
-		}
-	};
+                noStorageText = activity.getString(R.string.preparing_card);
+            } else {
 
-	public static final int NO_STORAGE_ERROR = -1;
-	public static final int CANNOT_STAT_ERROR = -2;
+                noStorageText = activity.getString(R.string.no_storage_card);
+            }
+        } else if (remaining < 1) {
 
-	public static void showStorageToast(Activity activity) {
+            noStorageText = activity.getString(R.string.not_enough_space);
+        }
 
-		showStorageToast(activity, calculatePicturesRemaining(activity));
-	}
+        if (noStorageText != null) {
 
-	public static void showStorageToast(Activity activity, int remaining) {
+            Toast.makeText(activity, noStorageText, Toast.LENGTH_SHORT).show();
+        }
+    }
 
-		String noStorageText = null;
+    public static int calculatePicturesRemaining(Activity activity) {
 
-		if (remaining == NO_STORAGE_ERROR) {
-
-			String state = Environment.getExternalStorageState();
-			if (state.equals(Environment.MEDIA_CHECKING)) {
-
-				noStorageText = activity.getString(R.string.preparing_card);
-			} else {
-
-				noStorageText = activity.getString(R.string.no_storage_card);
-			}
-		} else if (remaining < 1) {
-
-			noStorageText = activity.getString(R.string.not_enough_space);
-		}
-
-		if (noStorageText != null) {
-
-			Toast.makeText(activity, noStorageText, Toast.LENGTH_SHORT).show();
-		}
-	}
-
-	public static int calculatePicturesRemaining(Activity activity) {
-
-		try {
+        try {
 			/*
 			 * if (!ImageManager.hasStorage()) { return NO_STORAGE_ERROR; } else
 			 * {
 			 */
-			String storageDirectory = "";
-			String state = Environment.getExternalStorageState();
-			if (Environment.MEDIA_MOUNTED.equals(state)) {
-				storageDirectory = Environment.getExternalStorageDirectory()
-						.toString();
-			} else {
-				storageDirectory = activity.getFilesDir().toString();
-			}
-			StatFs stat = new StatFs(storageDirectory);
-			float remaining = ((float) stat.getAvailableBlocks() * (float) stat
-					.getBlockSize()) / 400000F;
-			return (int) remaining;
-			// }
-		} catch (Exception ex) {
-			// if we can't stat the filesystem then we don't know how many
-			// pictures are remaining. it might be zero but just leave it
-			// blank since we really don't know.
-			return CANNOT_STAT_ERROR;
-		}
-	}
+            String storageDirectory = "";
+            String state = Environment.getExternalStorageState();
+            if (Environment.MEDIA_MOUNTED.equals(state)) {
+                storageDirectory = Environment.getExternalStorageDirectory()
+                        .toString();
+            } else {
+                storageDirectory = activity.getFilesDir().toString();
+            }
+            StatFs stat = new StatFs(storageDirectory);
+            float remaining = ((float) stat.getAvailableBlocks() * (float) stat
+                    .getBlockSize()) / 400000F;
+            return (int) remaining;
+            // }
+        } catch (Exception ex) {
+            // if we can't stat the filesystem then we don't know how many
+            // pictures are remaining. it might be zero but just leave it
+            // blank since we really don't know.
+            return CANNOT_STAT_ERROR;
+        }
+    }
 
 
-	private void screenArrange() {
-		DisplayMetrics metrics = new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(metrics);
-		int height = metrics.heightPixels;
-		int width = metrics.widthPixels;
+    private void screenArrange() {
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        int height = metrics.heightPixels;
+        int width = metrics.widthPixels;
 
-		LinearLayout.LayoutParams imageParama = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.WRAP_CONTENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT);
-		imageParama.height=(int)(height*90.5/100);
-		imageParama.width=width*96/100;
-		imageParama.gravity=Gravity.CENTER;
-		imageParama.setMargins(width*2/100,height*1/100,width*2/100,height*1/100);
-		mImageView.setLayoutParams(imageParama);
+        LinearLayout.LayoutParams imageParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        imageParama.height = (int) (height * 90.5 / 100);
+        imageParama.width = width * 96 / 100;
+        imageParama.gravity = Gravity.CENTER;
+        imageParama.setMargins(width * 2 / 100, height * 1 / 100, width * 2 / 100, height * 1 / 100);
+        mImageView.setLayoutParams(imageParama);
 
 
-		LinearLayout.LayoutParams bottomLayoutParama = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.WRAP_CONTENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT);
-		bottomLayoutParama.height=(int)(height*6.5/100);
-		bottomLayoutParama.width=width;
-		bottomLayoutParama.gravity = Gravity.CENTER;
-		//bottomLayoutParama.topMargin = (int) (height * 1 / 100);
-		bottomLayoutParama.bottomMargin = (int) (height * 1 / 100);
-		mCropLayoutBottom.setLayoutParams(bottomLayoutParama);
-		mCropLayoutBottom.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams bottomLayoutParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        bottomLayoutParama.height = (int) (height * 6.5 / 100);
+        bottomLayoutParama.width = width;
+        bottomLayoutParama.gravity = Gravity.CENTER;
+        //bottomLayoutParama.topMargin = (int) (height * 1 / 100);
+        bottomLayoutParama.bottomMargin = (int) (height * 1 / 100);
+        mCropLayoutBottom.setLayoutParams(bottomLayoutParama);
+        mCropLayoutBottom.setGravity(Gravity.CENTER);
 
-		LinearLayout.LayoutParams cancelParama = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.WRAP_CONTENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT);
-		cancelParama.height=(int)(height*6.5/100);
-		cancelParama.width=width *22/100;
-		cancelParama.gravity = Gravity.CENTER;
-		cancelParama.leftMargin = (int) (width * 1 / 100);
-		mCancel.setLayoutParams(cancelParama);
-		mSave.setLayoutParams(cancelParama);
-		mCancel.setGravity(Gravity.CENTER);
-		mSave.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams cancelParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        cancelParama.height = (int) (height * 6.5 / 100);
+        cancelParama.width = width * 22 / 100;
+        cancelParama.gravity = Gravity.CENTER;
+        cancelParama.leftMargin = (int) (width * 1 / 100);
+        mCancel.setLayoutParams(cancelParama);
+        mSave.setLayoutParams(cancelParama);
+        mCancel.setGravity(Gravity.CENTER);
+        mSave.setGravity(Gravity.CENTER);
 
-		LinearLayout.LayoutParams rotateImageParama = new LinearLayout.LayoutParams(
-				LinearLayout.LayoutParams.WRAP_CONTENT,
-				LinearLayout.LayoutParams.WRAP_CONTENT);
-		rotateImageParama.height=(int)(height*6.5/100);
-		rotateImageParama.width=(int)(height*6.5/100);
-		rotateImageParama.gravity = Gravity.CENTER;
-		rotateImageParama.leftMargin = (int) (width * 1 / 100);
-		mRotateLeft.setLayoutParams(rotateImageParama);
-		mRotateLeft.setPadding(width*1/100,width*1/100,width*1/100,width*1/100);
-		mRotateRight.setLayoutParams(rotateImageParama);
-		mRotateRight.setPadding(width*1/100,width*1/100,width*1/100,width*1/100);
+        LinearLayout.LayoutParams rotateImageParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        rotateImageParama.height = (int) (height * 6.5 / 100);
+        rotateImageParama.width = (int) (height * 6.5 / 100);
+        rotateImageParama.gravity = Gravity.CENTER;
+        rotateImageParama.leftMargin = (int) (width * 1 / 100);
+        mRotateLeft.setLayoutParams(rotateImageParama);
+        mRotateLeft.setPadding(width * 1 / 100, width * 1 / 100, width * 1 / 100, width * 1 / 100);
+        mRotateRight.setLayoutParams(rotateImageParama);
+        mRotateRight.setPadding(width * 1 / 100, width * 1 / 100, width * 1 / 100, width * 1 / 100);
 
-		if (width >= 600) {
-			mCancel.setTextSize(18);
-			mSave.setTextSize(18);
-		} else if (width > 501 && width < 600) {
-			mCancel.setTextSize(17);
-			mSave.setTextSize(17);
-		} else if (width > 260 && width < 500) {
-			mCancel.setTextSize(16);
-			mSave.setTextSize(16);
-		} else if (width <= 260) {
-			mCancel.setTextSize(15);
-			mSave.setTextSize(15);
-		}
-	}
+        if (width >= 600) {
+            mCancel.setTextSize(18);
+            mSave.setTextSize(18);
+        } else if (width > 501 && width < 600) {
+            mCancel.setTextSize(17);
+            mSave.setTextSize(17);
+        } else if (width > 260 && width < 500) {
+            mCancel.setTextSize(16);
+            mSave.setTextSize(16);
+        } else if (width <= 260) {
+            mCancel.setTextSize(15);
+            mSave.setTextSize(15);
+        }
+    }
 }

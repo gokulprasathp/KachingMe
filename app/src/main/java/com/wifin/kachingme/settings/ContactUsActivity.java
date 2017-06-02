@@ -21,12 +21,15 @@ import com.wifin.kachingme.util.AlertManager;
 import com.wifin.kachingme.util.cropimage.CropImage;
 
 import a_vcard.android.util.Log;
+
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Bitmap.CompressFormat;
@@ -122,42 +125,46 @@ public class ContactUsActivity extends HeaderActivity {
 			}
 		});
 
-		mAddImg.setOnClickListener(new View.OnClickListener() {
-
+		mAddImg.setOnClickListener(new View.OnClickListener()
+        {
 			@Override
-			public void onClick(View v) {
+			public void onClick(View v)
+            {
 				// TODO Auto-generated method stub
 
-				final CharSequence[] options = { "Gallery" };
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE))
+                {
+                    final CharSequence[] options = { "Gallery" };
+                    AlertDialog.Builder builder = new AlertDialog.Builder(ContactUsActivity.this);
+                    builder.setTitle("Select Picture");
+                    builder.setItems(options, new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(DialogInterface dialog, int item) {
+                            if (options[item].equals("Gallery")) {
 
-				AlertDialog.Builder builder = new AlertDialog.Builder(
-						ContactUsActivity.this);
-				builder.setTitle("Select Picture");
-				builder.setItems(options,
-						new DialogInterface.OnClickListener() {
-							@Override
-							public void onClick(DialogInterface dialog, int item) {
-								if (options[item].equals("Gallery")) {
+                                Intent photoPickerIntent = new Intent(
+                                        Intent.ACTION_PICK);
+                                photoPickerIntent.setType("image/*");
+                                try {
+                                    startActivityForResult(
+                                            photoPickerIntent, 1);
+                                } catch (ActivityNotFoundException e) {
 
-									Intent photoPickerIntent = new Intent(
-											Intent.ACTION_PICK);
-									photoPickerIntent.setType("image/*");
-									try {
-										startActivityForResult(
-												photoPickerIntent, 1);
-									} catch (ActivityNotFoundException e) {
+                                }
 
-									}
+                            }
 
-								}
-
-							}
-						});
-				builder.show();
-
+                        }
+                    });
+                    builder.show();
+                }
+                else
+                {
+                    Constant.permissionRequest(ContactUsActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
 			}
 		});
-
 	}
 
 	protected String jSonFrom() {
@@ -225,18 +232,17 @@ public class ContactUsActivity extends HeaderActivity {
 				Toast.makeText(getApplicationContext(), "Network problem",
 						Toast.LENGTH_SHORT).show();
 			}
-
 		}
-
 	}
 
-	public static Context getContext() {
+	public static Context getContext()
+    {
 		// TODO Auto-generated method stub
 		return context;
 	}
 
-	private void screenArrangeMent() {
-
+	private void screenArrangeMent()
+    {
 		DisplayMetrics metrics = new DisplayMetrics();
 		getWindowManager().getDefaultDisplay().getMetrics(metrics);
 		height = metrics.heightPixels;
@@ -245,7 +251,6 @@ public class ContactUsActivity extends HeaderActivity {
 		LinearLayout.LayoutParams addImgLayoutParams = new LinearLayout.LayoutParams(
 				LinearLayout.LayoutParams.WRAP_CONTENT,
 				LinearLayout.LayoutParams.WRAP_CONTENT);
-
 		addImgLayoutParams.width = width * 90 / 100;
 		addImgLayoutParams.height = width * 15 / 100;
 		addImgLayoutParams.gravity = Gravity.CENTER;
@@ -295,8 +300,26 @@ public class ContactUsActivity extends HeaderActivity {
 			mProblemEdit.setTextSize(10);
 
 		}
-
 	}
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults)
+    {
+        switch (requestCode)
+        {
+            case 1004:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                {
+                    Constant.printMsg("Permission Granted");
+                }
+                else
+                {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode,

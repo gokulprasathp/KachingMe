@@ -138,8 +138,14 @@
         <activity
             android:name="com.wifin.kachingme.settings.Profile"
             android:configChanges="keyboardHidden|orientation|screenSize"
-            android:label="@string/profile"
-            android:screenOrientation="portrait" />
+            android:label="@string/profile_pic"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.ATTACH_DATA" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name="com.wifin.kachingme.settings.Status"
@@ -205,6 +211,7 @@
 
         <activity
             android:name="com.wifin.kachingme.chat.muc_chat.MUCTest"
+            android:hardwareAccelerated="false"
             android:configChanges="keyboardHidden|orientation|screenSize" />
 
         <activity
@@ -349,7 +356,8 @@
             android:name="com.wifin.kachingme.chat.broadcast_chat.BroadCastTest"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/new_broadcast"
-            android:screenOrientation="portrait" />
+            android:screenOrientation="portrait"
+            android:hardwareAccelerated="false"/>
 
         <activity
             android:name="com.wifin.kachingme.chat.broadcast_chat.Broadcast_info"
@@ -388,10 +396,10 @@
 
         <activity
             android:name="com.wifin.kachingme.chat.single_chat.ChatTest"
-            android:configChanges="keyboardHidden|orientation|screenSize"
             android:icon="@drawable/avtar"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateAlwaysVisible" />
+            android:hardwareAccelerated="false"
+            android:windowSoftInputMode="adjustPan|adjustResize" />
 
         <activity
             android:name="com.wifin.kachingme.redimer.NewAccount"
@@ -422,7 +430,33 @@
             android:name="com.wifin.kachingme.chat_home.SliderTesting"
             android:label=""
             android:screenOrientation="portrait"
-            android:theme="@style/SliderBaseTheme" />
+            android:theme="@style/SliderBaseTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="video/*" />
+            </intent-filter>
+            </activity>
 
         <!--for nymns Function-->
         <activity
@@ -690,6 +724,10 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/settings"
             android:screenOrientation="portrait" />
+
+        <activity android:name="com.wifin.kachingme.kaching_feature.auto_response.ResponseActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:screenOrientation="portrait"/>
 
         <activity
             android:name="de.duenndns.ssl.MemorizingActivity"

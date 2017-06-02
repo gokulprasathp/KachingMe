@@ -38,6 +38,7 @@ import com.wifin.kachingme.applications.KachingMeApplication;
 import com.wifin.kachingme.chat.broadcast_chat.BroadCastTest;
 import com.wifin.kachingme.chat.muc_chat.MUCTest;
 import com.wifin.kachingme.chat.single_chat.ChatTest;
+import com.wifin.kachingme.chat_home.HomeTabSwipe;
 import com.wifin.kachingme.chat_home.SliderTesting;
 import com.wifin.kachingme.database.Dbhelper;
 import com.wifin.kachingme.fragments.GroupChatList;
@@ -72,6 +73,8 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
     String strChatAndGroup;
     int mPosition;
     Bitmap mProfileIcon = null;
+
+
 
     public UserChatListAdapter(Context context, ArrayList<Chat_list_home_GetSet> chatList, boolean autoRequery, String strChat) {
         this.context = context;
@@ -196,7 +199,7 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
 
                 } else {
                     holder.imgChatUserProfile.setImageDrawable(context
-                            .getResources().getDrawable(R.drawable.contact_profile));
+                            .getResources().getDrawable(R.drawable.avtar));
                     Bitmap mTempIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher2);
                     mProfileIcon = mTempIcon;
 //                    if (strChatAndGroup.equalsIgnoreCase("chat")) {
@@ -247,15 +250,49 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
                 holder.tvChatTimeStamp.setText(chat_date);
             }
 
+
+
+
+
+
         } catch (Exception e) {
             // TODO: handle exception
         }
         // totalcount = 0;
 
         try {
+            int unread_count = 0;
             String status = chatList.get(position).getStatus10();
-            int unread_count = chatList.get(position).getUnseen_msg_count();
+
+            int un_rd1  = chatList.get(position).getUnseen_msg_count();
+            int un_rd2  = chatList.get(position).getUnseen_msg_count_grp();
+
+            if(un_rd1>un_rd2)
+            {
+                unread_count = un_rd1;
+            }else
+            {
+                unread_count = un_rd2;
+            }
+
+
             int image_status = chatList.get(position).getStatus();
+
+            Constant.printMsg("unread count....  " + unread_count+ "  ..." + chatList.get(position).getJidId());
+
+            if(unread_count>0)
+            {
+
+                holder.tvUnReadMsgCount.setVisibility(View.VISIBLE);
+                holder.tvUnReadMsgCount.setText(""+unread_count);
+
+
+
+//                HomeTabSwipe.totalChatCount.setText("20");
+            }else
+            {
+                holder.tvUnReadMsgCount.setVisibility(View.GONE);
+            }
 
             Constant.printMsg("Chat user 0" + status + " " + chatList.get(position).getData());
 
@@ -363,9 +400,11 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
                         if (s == '<') {
                             if (s1 == '-') {
                                 myMethod(text.toString().substring(2));
+                                holder.tvChatUserMsg.setPadding(-Constant.screenWidth * 2 / 100, 0, 0, Constant.screenWidth * 1 / 100);
                                 holder.tvChatUserMsg.setText(
                                         addClickablePart(Normallist),
                                         TextView.BufferType.SPANNABLE);
+                                Constant.printMsg("textagsljfasf  " + holder.tvChatUserMsg.getText().toString());
                             }
                             if (s1 == 'b' && s2 == '>') {
                                 holder.tvChatUserMsg.setText(text.toString()
@@ -407,6 +446,14 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
                                         + " BuxS accepted");
                                 holder.tvChatUserMsg
                                         .setTypeface(null, Color.BLACK);
+                            }else if (s1 == 'o' && s2 == '>') {
+                                String dazzle = text.toString().substring(3);
+                                String[] parts = dazzle.split("-");
+                                String part1 = parts[0];
+                                holder.tvChatUserMsg.setText(part1
+                                        + " ResP Message");
+                                holder.tvChatUserMsg
+                                        .setTypeface(null, Color.BLACK);
                             }
                         } else {
                             Spannable set_text = new Emoji(context)
@@ -432,6 +479,7 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
                     }
                 }
             }
+
 
 
             if (unread_count > 0) {
@@ -498,6 +546,8 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
 
                     }
                 }
+
+
                 holder.tvChatUserMsg.setTextColor(context.getResources()
                         .getColor(R.color.app_color_dark_gray));
             }
@@ -1092,9 +1142,9 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
 
     class ChatViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
         CardView cardChatList;
-        TextView tvChatUserName, tvChatUserMsg, tvChatTimeStamp;
+        TextView tvChatUserName, tvChatUserMsg, tvChatTimeStamp,tvUnReadMsgCount;
         ImageView imgChatUserProfile;
-        LinearLayout linearChatList, linearChatDetails, linearChatMsg;
+        LinearLayout linearChatList, linearChatDetails, linearChatMsg, linearChatTimeLayout;
         ImageView imgChatStatus;
         Bitmap bitmap;
         View mView;
@@ -1106,8 +1156,10 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
             tvChatUserName = (TextView) itemView.findViewById(R.id.tvChatUserName);
             tvChatUserMsg = (TextView) itemView.findViewById(R.id.tvChatUserMsg);
             tvChatTimeStamp = (TextView) itemView.findViewById(R.id.tvChatTimeStamp);
+            tvUnReadMsgCount = (TextView) itemView.findViewById(R.id.tvUnReadMsgCount);
             imgChatUserProfile = (ImageView) itemView.findViewById(R.id.imgChatUserProfile);
             linearChatList = (LinearLayout) itemView.findViewById(R.id.linearChatList);
+            linearChatTimeLayout = (LinearLayout) itemView.findViewById(R.id.tymestampLayout);
             linearChatDetails = (LinearLayout) itemView.findViewById(R.id.linearChatDetails);
             linearChatMsg = (LinearLayout) itemView.findViewById(R.id.linearChatMsg);
             imgChatStatus = (ImageView) itemView.findViewById(R.id.imgChatStatus);
@@ -1171,49 +1223,61 @@ public class UserChatListAdapter extends RecyclerView.Adapter<UserChatListAdapte
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             chatMsgParama.width = width * 52 / 100;
             chatMsgParama.height = (int) (height * (13.5 / 2) / 100);
+            chatMsgParama.gravity=Gravity.CENTER_VERTICAL| Gravity.CENTER_VERTICAL;
             linearChatMsg.setLayoutParams(chatMsgParama);
-            linearChatMsg.setGravity(Gravity.CENTER | Gravity.LEFT | Gravity.TOP);
+//            linearChatMsg.setGravity(Gravity.CENTER | Gravity.LEFT | Gravity.TOP);
 
             LinearLayout.LayoutParams statusImageParama = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            statusImageParama.width = width * 7 / 100;
-            statusImageParama.height = width * 7 / 100;
-            statusImageParama.gravity = Gravity.LEFT | Gravity.TOP;
+            statusImageParama.width = width * 5 / 100;
+            statusImageParama.height = width * 5 / 100;
+            statusImageParama.gravity = Gravity.CENTER_VERTICAL | Gravity.CENTER_VERTICAL;
             imgChatStatus.setLayoutParams(statusImageParama);
 
             LinearLayout.LayoutParams msgTextParama = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             msgTextParama.width = width * 45 / 100;
             msgTextParama.height = (int) (height * (13.5 / 2) / 100);
-            msgTextParama.gravity = Gravity.LEFT;
+            msgTextParama.gravity = Gravity.CENTER_VERTICAL| Gravity.CENTER_VERTICAL;
             tvChatUserMsg.setLayoutParams(msgTextParama);
-            tvChatUserMsg.setGravity(Gravity.CENTER | Gravity.LEFT | Gravity.TOP);
-            tvChatUserMsg.setPadding(width * 1 / 100, width * 1 / 100, 0, 0);
+//            tvChatUserMsg.setGravity(Gravity.CENTER | Gravity.LEFT | Gravity.TOP);
+            tvChatUserMsg.setPadding(width * 1 / 100, 0, 0, width * 1 / 100);
 
             LinearLayout.LayoutParams rightSecondsParama = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             rightSecondsParama.width = width * 25 / 100;
             rightSecondsParama.height = (int) (height * 13.5 / 100);
-            tvChatTimeStamp.setLayoutParams(rightSecondsParama);
-            tvChatTimeStamp.setGravity(Gravity.CENTER);
+            linearChatTimeLayout.setLayoutParams(rightSecondsParama);
+            linearChatTimeLayout.setGravity(Gravity.CENTER);
+
+            LinearLayout.LayoutParams rightSecondsParama1 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            rightSecondsParama1.width = width * 8 / 100;
+            rightSecondsParama1.height = width * 8 / 100;
+            tvUnReadMsgCount.setLayoutParams(rightSecondsParama1);
+            tvUnReadMsgCount.setGravity(Gravity.CENTER);
 
             if (width >= 600) {
                 tvChatUserName.setTextSize(20);
-                tvChatUserMsg.setTextSize(16);
+                tvChatUserMsg.setTextSize(17);
                 tvChatTimeStamp.setTextSize(16);
+                tvUnReadMsgCount.setTextSize(14);
             } else if (width > 501 && width < 600) {
                 tvChatUserName.setTextSize(19);
-                tvChatUserMsg.setTextSize(15);
+                tvChatUserMsg.setTextSize(16);
                 tvChatTimeStamp.setTextSize(15);
+                tvUnReadMsgCount.setTextSize(14);
             } else if (width > 260 && width < 500) {
 
                 tvChatUserName.setTextSize(18);
-                tvChatUserMsg.setTextSize(14);
+                tvChatUserMsg.setTextSize(15);
                 tvChatTimeStamp.setTextSize(14);
+                tvUnReadMsgCount.setTextSize(12);
             } else if (width <= 260) {
                 tvChatUserName.setTextSize(17);
-                tvChatUserMsg.setTextSize(13);
+                tvChatUserMsg.setTextSize(14);
                 tvChatTimeStamp.setTextSize(13);
+                tvUnReadMsgCount.setTextSize(11);
             }
         }
 

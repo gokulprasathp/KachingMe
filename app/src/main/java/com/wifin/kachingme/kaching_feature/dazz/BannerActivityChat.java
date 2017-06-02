@@ -151,7 +151,7 @@ public class BannerActivityChat extends Activity implements OnTouchListener,
 
 		printMessage = Value;
 		for (int i = 0; i < 50; i++) {
-			printMessage = Value + "     " + printMessage;
+			printMessage = Value + "  " + printMessage;
 		}
 		// inputTextColor = pref.getString("inputtextcolor", "#00FF00");
 		// backroundColor = pref.getString("backroundcolor", "#292929");

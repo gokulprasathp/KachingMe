@@ -68,6 +68,7 @@ public class UserChatList extends Fragment {
     public org.jivesoftware.smack.chat.Chat chat;
     Cursor cursor;
     DatabaseHelper dbAdapter;
+    int chatsCount = 0;
     SharedPreferences sp;
     Editor ed;
     Resources res;
@@ -92,7 +93,15 @@ public class UserChatList extends Fragment {
                 String[] val = {null};
                 ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat(), val);
 
-            } else if (intent.getAction().equals("group_list")
+            }
+            else if (intent.getAction().equals("Add_New_Contact")
+                    ) {
+                Constant.printMsg("Add_New_Contact");
+                String[] val = {null};
+                ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat(), val);
+
+
+            }else if (intent.getAction().equals("group_list")
                     ) {
                 Constant.printMsg("asdhashdasd");
                 String[] val = {null};
@@ -295,6 +304,14 @@ public class UserChatList extends Fragment {
             }
         });
 
+
+        adapter = new UserChatListAdapter(getActivity(), Constant.chatlist, false, "chat");
+        Constant.printMsg("siva called adpter called");
+        linearLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
+        recyclerViewChat.setLayoutManager(linearLayoutManager);
+        recyclerViewChat.setHasFixedSize(true);
+        recyclerViewChat.setAdapter(adapter);
+
         return v;
     }
 
@@ -418,6 +435,8 @@ public class UserChatList extends Fragment {
 
     @Override
     public void onResume() {
+
+        chatsCount = 0;
         String[] val = {null};
 //        mProfileImagesList = new ArrayList<Bitmap>();
         ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat(), val);
@@ -454,6 +473,7 @@ public class UserChatList extends Fragment {
         filter.addAction("lastseen_broadcast");
         filter.addAction("update_profile");
         filter.addAction("group_list");
+        filter.addAction("Add_New_Contact");
         filter.addAction(Constant.PROFILE_UPDATE);
         getActivity().registerReceiver(lastseen_event, filter);
         super.onStart();
@@ -692,7 +712,7 @@ public class UserChatList extends Fragment {
 
         @Override
         protected void onPreExecute() {
-
+            chatsCount = 0;
             super.onPreExecute();
         }
 
@@ -723,7 +743,16 @@ public class UserChatList extends Fragment {
                         if (cursor.getInt(14) == 0) {
                             Constant.chatlist.add(chatData);
                         }
+                        chatData.setUnseen_msg_count_grp(cursor.getInt(15));
+
+                        if(cursor.getInt(7)>0)
+                            chatsCount++;
+
                     } while (cursor.moveToNext());
+
+
+
+
                 }
 
 //                        Set<Chat_list_home_GetSet> s = new HashSet<Chat_list_home_GetSet>();
@@ -754,16 +783,12 @@ public class UserChatList extends Fragment {
                     if (Constant.chatlist.size() > 0) {
 
 
-
+//                        Constant.mChatCounts.set(0,String.valueOf(chatsCount));
+//                        SliderTesting.updateHedder();
                         Constant.printMsg("siva called adpter called " + Constant.chatlist.size());
 
 //                        mProfileImagesList = new ArrayList<Bitmap>();
-                        adapter = new UserChatListAdapter(getActivity(), Constant.chatlist, false, "chat");
-                        Constant.printMsg("siva called adpter called");
-                        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity().getBaseContext());
-                        recyclerViewChat.setLayoutManager(linearLayoutManager);
-                        recyclerViewChat.setHasFixedSize(true);
-                        recyclerViewChat.setAdapter(adapter);
+
                         adapter.notifyDataSetChanged();
                         UserChatList.mProfileImagesList = UserChatList.mTempProfileImagesList;
                     } else {
@@ -795,7 +820,7 @@ public class UserChatList extends Fragment {
 
         @Override
         protected void onPreExecute() {
-
+            chatsCount = 0;
             super.onPreExecute();
         }
 
@@ -823,6 +848,13 @@ public class UserChatList extends Fragment {
                         chatData.setInt11(cursor.getInt(11));
                         chatData.setInt12(cursor.getInt(12));
                         chatData.setInt13(cursor.getInt(13));
+
+
+                        if(cursor.getInt(7)>0)
+                            chatsCount++;
+
+                        chatData.setUnseen_msg_count_grp(cursor.getInt(15));
+
                         tempchatlist.add(chatData);
                     } while (cursor.moveToNext());
                 }
@@ -842,6 +874,11 @@ public class UserChatList extends Fragment {
             if (result != null) {
                 try {
                     if (tempchatlist.size() > 0) {
+
+//                        Constant.mChatCounts.set(0,String.valueOf(chatsCount));
+//                        SliderTesting.updateHedder();
+
+
 
                         Constant.chatlist.clear();
                         Constant.chatlist.addAll(tempchatlist);
@@ -918,6 +955,7 @@ public class UserChatList extends Fragment {
                         chatData.setInt11(cursor.getInt(11));
                         chatData.setInt12(cursor.getInt(12));
                         chatData.setInt13(cursor.getInt(13));
+                        chatData.setUnseen_msg_count_grp(cursor.getInt(15));
 //                        Constant.printMsg("size of userchat. int.........."+cursor.getInt(14));
 //                        if (cursor.getInt(14) == 0) {
                         Constant.chatlist.add(chatData);

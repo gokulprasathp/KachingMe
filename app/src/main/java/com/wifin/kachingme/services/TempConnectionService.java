@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -55,9 +56,11 @@ import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.roster.Roster.SubscriptionMode;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smack.util.dns.HostAddress;
 import org.jivesoftware.smackx.bookmarks.BookmarkManager;
 import org.jivesoftware.smackx.bookmarks.BookmarkedConference;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jivesoftware.smackx.muc.MucEnterConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
@@ -68,9 +71,15 @@ import org.jivesoftware.smackx.receipts.DeliveryReceipt;
 import org.jivesoftware.smackx.receipts.DeliveryReceiptManager;
 import org.jivesoftware.smackx.xevent.MessageEventManager;
 import org.jivesoftware.smackx.xroster.RosterExchangeManager;
+import org.jxmpp.jid.DomainBareJid;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -82,9 +91,14 @@ import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.Set;
 
+
+
 import javax.net.ssl.SSLContext;
 
 import de.duenndns.ssl.MemorizingTrustManager;
+
+import static org.jivesoftware.smack.filter.jidtype.AbstractJidTypeFilter.JidType.EntityBareJid;
+
 
 public class TempConnectionService extends Service implements
         ConnectionListener {
@@ -158,9 +172,17 @@ public class TempConnectionService extends Service implements
 
                 if (connection != null) {
                     if (connection.isConnected() == false)
-                        setConnection();
+                        try {
+                            setConnection();
+                        } catch (XmppStringprepException e) {
+                            e.printStackTrace();
+                        }
                 } else {
-                    setConnection();
+                    try {
+                        setConnection();
+                    } catch (XmppStringprepException e) {
+                        e.printStackTrace();
+                    }
                 }
 
             }
@@ -176,17 +198,43 @@ public class TempConnectionService extends Service implements
         return null;
     }
 
-    public void setConnection() {
+    public void setConnection() throws XmppStringprepException {
+
+        dbadapter = KachingMeApplication.getDatabaseAdapter();
+        ArrayList<LoginGetSet> mCredentialList = new ArrayList<LoginGetSet>();
+        mCredentialList = dbadapter.getLogin();
+        String userName = null;
+        String PassWord= null;
+        if (mCredentialList.size() > 0) {
+
+            userName = mCredentialList.get(0).getUserName();
+            PassWord = mCredentialList.get(0).getPassword();
+
+        }
 
         context = this;
 
-        XMPPTCPConnectionConfiguration.Builder configBuilder = XMPPTCPConnectionConfiguration
-                .builder();
-        // configBuilder.setUsernameAndPassword("username", "password");
-        configBuilder.setResource("Messnger");
-        configBuilder.setServiceName(KachingMeConfig.CHAT_HOST);
+        DomainBareJid domainBareJid = JidCreate.domainBareFrom(KachingMeConfig.CHAT_HOST) ;
+        XMPPTCPConnectionConfiguration.Builder configBuilder=
+                XMPPTCPConnectionConfiguration.builder();
+        configBuilder.setServiceName(domainBareJid);
+        try {
+            configBuilder.setHostAddress(InetAddress.getByName(KachingMeConfig.CHAT_SERVER));
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        configBuilder.setUsernameAndPassword(userName, PassWord);
         configBuilder.setPort(KachingMeConfig.CHAT_PORT);
-        configBuilder.setHost(KachingMeConfig.CHAT_SERVER);
+        configBuilder.setResource("Messnger");
+
+//        XMPPTCPConnectionConfiguration.Builder configBuilder = XMPPTCPConnectionConfiguration
+//                .builder();
+//        // configBuilder.setUsernameAndPassword("username", "password");
+//        configBuilder.setResource("Messnger");
+//        configBuilder.setUsernameAndPassword(userName,PassWord);
+//        configBuilder.setXmppDomain((DomainBareJid)JidCreate.bareFrom(KachingMeConfig.CHAT_HOST));
+//        configBuilder.setPort(KachingMeConfig.CHAT_PORT);
+//        configBuilder.setHost(KachingMeConfig.CHAT_SERVER);
         configBuilder.setSendPresence(true);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
@@ -238,8 +286,11 @@ public class TempConnectionService extends Service implements
         // if(RestartNifyService.isOnline(NiftyService.this))
         try {
             // Constant.printMsg("DDDDDDDDDDDD" + connection.isConnected());
+//            if(connection!=null)
+//            Constant.printMsg("DDDDDDDDDZZZZZZ" + connection.isConnected()+"  "+connection.isAuthenticated());
 
-            connection.connect();
+
+            connection.connect().login();
 
             mReconnectionManager = ReconnectionManager
                     .getInstanceFor(connection);
@@ -251,12 +302,14 @@ public class TempConnectionService extends Service implements
             Constant.printMsg("DDDDDDDDDDDD" + connection.isConnected()
                     + "        " + connection.isAuthenticated());
 
-        } catch (SmackException e) {
-            // TODO Auto-generated catch block
+        } catch (SmackException.ConnectionException e) {
+            Constant.printMsg("DDDDDDDDDDDD2" + e.toString());
 
-            Constant.printMsg("DDDDDDDDDDDD1" + e.toString());
-
-            e.printStackTrace();
+//            Constant.printMsg("DDDDDDDDDDDD1222" + e.getLocalizedMessage().toString()+ " " + e.getMessage().toString()+ " " + e.getCause().toString());
+//            for (HostAddress obj : e)
+//            {
+//                Constant.printMsg("DDDDDDDDDDDD1" + obj.toString());
+//            }
         } catch (IOException e) {
             // TODO Auto-generated catch block
 
@@ -268,7 +321,7 @@ public class TempConnectionService extends Service implements
             e.printStackTrace();
         } catch (Exception e) {
             Constant.printMsg("DDDDDDDDDDDD4" + e.toString());
-            // TODO: handle exception
+
         }
 
         try {
@@ -318,6 +371,18 @@ public class TempConnectionService extends Service implements
 
 
         commonListeners();
+
+        Constant.printMsg("DDDDDONE Resend " + connection.isAuthenticated());
+
+        if (connection.isAuthenticated()) {
+            new ResendMessageAsync(this).executeOnExecutor(AsyncTask.SERIAL_EXECUTOR);
+
+            if (Utils.isActivityIsFront(context, ChatTest.class.getCanonicalName().toString())) {
+                Intent login_broadcast;
+                login_broadcast = new Intent("remove_subtitle");
+                context.sendBroadcast(login_broadcast);
+            }
+        }
 
         Constant.printMsg("DDDDDONE 0111");
 
@@ -397,7 +462,7 @@ public class TempConnectionService extends Service implements
         PrivacyListManager.getInstanceFor(connection);
         //
         // Log.d("NiftyService", " Presence Roster Request Listener Added");
-        Roster.setDefaultSubscriptionMode(Roster.SubscriptionMode.accept_all);
+        Roster.setDefaultSubscriptionMode(SubscriptionMode.accept_all);
         roster = Roster.getInstanceFor(connection);
         roster.setSubscriptionMode(SubscriptionMode.accept_all);
         roster.addRosterListener(new RosterListener(context));
@@ -427,15 +492,8 @@ public class TempConnectionService extends Service implements
 
         authenticationProcess();
 
-        if (connection.isAuthenticated()) {
-            new ResendMessageAsync(this).execute();
 
-            if (Utils.isActivityIsFront(context, ChatTest.class.getCanonicalName().toString())) {
-                Intent login_broadcast;
-                login_broadcast = new Intent("remove_subtitle");
-                context.sendBroadcast(login_broadcast);
-            }
-        }
+
 
     }
 
@@ -494,9 +552,9 @@ public class TempConnectionService extends Service implements
                             + PassWord + "---"
                             + "Messnger");
 
-                    connection.login(userName,
-                            PassWord,
-                            "Messnger");
+//                    connection.login(userName,
+//                            PassWord,
+//                            "Messnger");
 
 //                    if (Constant.mIsLogin) {
 //                        Constant.mIsLogin = false;
@@ -527,12 +585,12 @@ public class TempConnectionService extends Service implements
                         String[] mData = String.valueOf(
                                 mFinalPendingDeliveryAckMessege.get(i)).split(
                                 "#");
-                        if(mData.length>=2) {
+                        if (mData.length >= 2) {
                             String Messegeid = mData[0];
                             String Messegejid = mData[1];
 
                             final Message ack = new Message(Messegejid,
-                                    com.wifin.kachingme.util.Constant.STATUS_DISPLAYED);
+                                    Constant.STATUS_DISPLAYED);
 
                             ack.addExtension(new DeliveryReceipt(Messegeid));
 
@@ -555,17 +613,11 @@ public class TempConnectionService extends Service implements
                     final Set mFinalPendingDeliveryAckMessegeSet = new HashSet();
                     mFinalPendingDeliveryAckMessegeSet
                             .addAll(mFinalPendingDeliveryAckMessege);
-                    SharedPreferences.Editor prefsEditor = myPrefs.edit();
+                    Editor prefsEditor = myPrefs.edit();
                     prefsEditor.putStringSet("pending_delivery_msg",
                             mFinalPendingDeliveryAckMessegeSet);
                     prefsEditor.commit();
 
-                } catch (XMPPException e) {
-                    // TODO Auto-generated catch block
-                    Constant.printMsg("DDDDDONE login " + e.toString());
-                } catch (SmackException e) {
-                    // TODO Auto-generated catch block
-                    Constant.printMsg("DDDDDONE login " + e.toString());
                 } catch (Exception e) {
                     // TODO Auto-generated catch block
                     Constant.printMsg("DDDDDONE login " + e.toString());
@@ -597,12 +649,7 @@ public class TempConnectionService extends Service implements
                 .addReceiptReceivedListener(new RecieptRecievedListener(
                         context));
 
-        MUC_MANAGER = MultiUserChatManager.getInstanceFor(connection);
-        MUC_MANAGER.addInvitationListener(new MUC_InvitationListener(
-                context, context));
-        // MUC items
 
-        muc_messageListener = new MUC_MessageListener(context, context);
 
         chatmanager = ChatManager.getInstanceFor(connection);
         chatmanager.addChatListener(mChatCreatedListener);
@@ -618,14 +665,27 @@ public class TempConnectionService extends Service implements
         // drm.addReceiptReceivedListener(new
         // RecieptRecievedListener(context));
 
-        addListeners();
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(3000);
+                     addListeners();
+                } catch (InterruptedException e) {
+
+                }
+            }
+        }).start();
+
     }
 
     public void addListeners() {
 
         try {
 
-            login_attempt = true;
+
+                login_attempt = true;
             /*
              * ConfigureProviderManager cp = new ConfigureProviderManager();
 			 * cp.configureProviderManager();
@@ -688,20 +748,23 @@ public class TempConnectionService extends Service implements
                 RoomInfo room_info = null;
                 try {
 
-                    if (bookmarkedConference.getJid().length() > 0) {
+                    if (bookmarkedConference.getJid().toString().length() > 0) {
                         // Create group in local database when re logging in device
-                        if (!dbadapter.isjidExist(bookmarkedConference.getJid())) {
+                        if (!dbadapter.isjidExist(bookmarkedConference.getJid().toString())) {
 
                             Constant.printMsg("CCCC login grp + " + bookmarkedConference.getJid());
 
                             new MUC_ListenerMethods(context)
-                                    .setJoinRoom(bookmarkedConference.getJid(), null);
+                                    .setJoinRoom(bookmarkedConference.getJid().toString(), null);
+
+                            continue;
                         }
 
                         room_info = MUC_MANAGER.getRoomInfo(bookmarkedConference
                                 .getJid());
                     }
                 } catch (Exception e) {
+
                     // ACRA.getErrorReporter().handleException(e);
                 }
                 if (room_info != null) {
@@ -717,7 +780,7 @@ public class TempConnectionService extends Service implements
                         // long now = new Date().getTime();
                         // if (last != 0) {
                         // m = (now - last) / 1000;
-                        // }
+                         // }
 //                        Log.d("MMM", "Last Refresh time::" + last + " m::"
 //                                + bookmarkedConference.getNickname() + "  "
 //                                + new Date());
@@ -731,21 +794,26 @@ public class TempConnectionService extends Service implements
                         muc = MultiUserChatManager
                                 .getInstanceFor(connection)
                                 .getMultiUserChat(bookmarkedConference.getJid());
-                        // muc = new MultiUserChat(connection,
-                        // bookmarkedConference.getJid());
-                        Date date = new GregorianCalendar(2024, Calendar.FEBRUARY, 11).getTime();
+
                         muc.addMessageListener(muc_messageListener);
                         muc.addSubjectUpdatedListener(new MUC_SubjectChangeListener(
                                 context));
-//                        DiscussionHistory history = new DiscussionHistory();
-//                        history.setSince(date);
-                        DiscussionHistory history = new DiscussionHistory();
-                        history.setSince(Utils.getBookmarkDate(last));
+
+                        MucEnterConfiguration.Builder build =  muc.getEnterConfigurationBuilder(Resourcepart.from(dbadapter.getLogin().get(0).getUserName()
+                                + KachingMeApplication.getHost()));
+
+                        build.requestHistorySince(Utils.getBookmarkDate(last));
+                        build.timeoutAfter(6000000L);
+
+                        MucEnterConfiguration musOb =  build.build();
 
                         if (!muc.isJoined()) {
-                            muc.join(dbadapter.getLogin().get(0).getUserName()
-                                            + KachingMeApplication.getHost(), null,
-                                    history, 6000000L);
+                            muc.join(musOb);
+
+                            Constant.printMsg("RRRRR temp Conn 1111"
+                                    + bookmarkedConference.getJid() + "hhhhhhhh"
+                                    + dbadapter.getLogin().get(0).getUserName()
+                                    + KachingMeApplication.getHost());
                         }
                         Constant.printMsg("RRRRR temp Conn "
                                 + bookmarkedConference.getJid() + "hhhhhhhh"
@@ -758,7 +826,7 @@ public class TempConnectionService extends Service implements
                         e.printStackTrace();
                     }
                 } else {
-                    rm_bm.add(bookmarkedConference.getJid());
+                    rm_bm.add(bookmarkedConference.getJid().toString());
                 }
 
                 Constant.printMsg("Bookmarked Room:"
@@ -807,12 +875,20 @@ public class TempConnectionService extends Service implements
                     muc.addMessageListener(muc_messageListener);
                     muc.addSubjectUpdatedListener(new MUC_SubjectChangeListener(
                             context));
-                    DiscussionHistory history = new DiscussionHistory();
-                    // history.setMaxStanzas(10);
-                    history.setSince(Utils.getBookmarkDate(bookmarkedConference
-                            .getNickname()));
 
-                    muc.join(bookmarkedConference.getJid());
+
+
+                    MucEnterConfiguration.Builder build =  muc.getEnterConfigurationBuilder(Resourcepart.from(dbadapter.getLogin().get(0).getUserName()
+                            + KachingMeApplication.getHost()));
+
+                    build.requestHistorySince(Utils.getBookmarkDate(bookmarkedConference
+                            .getNickname().toString()));
+                    build.timeoutAfter(6000000L);
+
+                    MucEnterConfiguration musOb =  build.build();
+
+
+                    muc.join(musOb);
 
                     // muc.join(bookmarkedConference.getJid());
 
@@ -995,12 +1071,20 @@ public class TempConnectionService extends Service implements
         mPongListener = new StanzaListener() {
 
             @Override
-            public void processPacket(Stanza packet) {
+            public void processStanza(Stanza packet) throws SmackException.NotConnectedException, InterruptedException {
                 if (packet == null)
                     return;
 
                 gotServerPong(packet.getStanzaId());
             }
+
+//            @Override
+//            public void processPacket(Stanza packet) {
+//                if (packet == null)
+//                    return;
+//
+//                gotServerPong(packet.getStanzaId());
+//            }
 
         };
 
@@ -1040,6 +1124,8 @@ public class TempConnectionService extends Service implements
         try {
             connection.sendStanza(ping);
         } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
 

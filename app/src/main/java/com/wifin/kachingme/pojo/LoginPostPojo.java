@@ -11,6 +11,15 @@ public class LoginPostPojo {
     private String latitude;
     private String imei;
     private String notificationToken;
+    private String activityNo;
+
+    public String getActivityNo() {
+        return activityNo;
+    }
+
+    public void setActivityNo(String activityNo) {
+        this.activityNo = activityNo;
+    }
 
     public String getNotificationToken() {
         return notificationToken;

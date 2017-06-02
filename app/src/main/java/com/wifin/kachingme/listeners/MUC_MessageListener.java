@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Looper;
+import android.support.v4.app.NotificationCompat;
 
 import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
@@ -40,6 +41,9 @@ import org.jivesoftware.smackx.chatstates.packet.ChatStateExtension;
 import org.jivesoftware.smackx.delay.packet.DelayInformation;
 import org.jivesoftware.smackx.jiveproperties.JivePropertiesManager;
 import org.jivesoftware.smackx.receipts.DeliveryReceipt;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Part;
+import org.jxmpp.jid.parts.Resourcepart;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -61,6 +65,7 @@ public class MUC_MessageListener implements MessageListener {
     Editor editor;
     int message_id = 0;
     String remote_jid = null;
+
     String remote_mem = null;
 
     public MUC_MessageListener(Context con, Context service) {
@@ -90,7 +95,7 @@ public class MUC_MessageListener implements MessageListener {
             {
                 if(message.getBody().equalsIgnoreCase("delivered"))
                 {
-                    deliveredNotification(message.getFrom(), message.getStanzaId());
+                    deliveredNotification(message.getFrom().toString(), message.getStanzaId());
                     return;
                 }
             }
@@ -134,8 +139,8 @@ public class MUC_MessageListener implements MessageListener {
                     bm1 = BookmarkManager
                             .getBookmarkManager(TempConnectionService.connection);
 
-                    bm1.addBookmarkedConference(remote_jid, remote_jid, true,
-                            Bookmarked_time, "");
+                    bm1.addBookmarkedConference(remote_jid, JidCreate.entityBareFrom(remote_jid), true,
+                           Resourcepart.from(Bookmarked_time), "");
 
 
                 } catch (Exception e1) {
@@ -194,14 +199,14 @@ public class MUC_MessageListener implements MessageListener {
                                 remote_jid,
                                 JivePropertiesManager.getProperties(message)
                                         .get("Removed_member").toString());
-                        int unseen_msg = dbadapter.getunseen_msg(remote_jid);
+//                        int unseen_msg = dbadapter.getunseen_msg(remote_jid);
                         int msg_id = dbadapter.getLastMsgid(remote_jid);
 
                         Log.d(TAG, "Last Message ID::" + msg_id
                                 + " Inserted row id::" + l);
 
-                        dbadapter.setUpdateContact_unseen_msg(remote_jid,
-                                unseen_msg);
+//                        dbadapter.setUpdateContact_unseen_msg(remote_jid,
+//                                unseen_msg);
                         if (dbadapter.isExistinChatList(remote_jid)) {
                             long l1 = dbadapter.setUpdateChat_lits(remote_jid,
                                     msg_id);
@@ -223,7 +228,7 @@ public class MUC_MessageListener implements MessageListener {
                             try {
                                 BookmarkManager bm = BookmarkManager
                                         .getBookmarkManager(connection);
-                                bm.removeBookmarkedConference(remote_jid);
+                                bm.removeBookmarkedConference(JidCreate.entityBareFrom(remote_jid));
                             } catch (Exception e) {
                                 // ACRA.getErrorReporter().handleException(e);
                                 e.printStackTrace();
@@ -324,15 +329,25 @@ public class MUC_MessageListener implements MessageListener {
                             group_getset.setGjid(remote_jid);
                             group_getset.setJid(JivePropertiesManager
                                     .getProperties(message).get("Added_member")
-                                    .toString());
+                                     .toString());
 
                             if (!remote_mem.equals(dbadapter.getLogin().get(0).getUserName()+ KachingMeApplication.getHost()))
                                 dbadapter.addGroupMembers(group_getset);
 
                             int unseen_msg = dbadapter.getunseen_msg(remote_jid);
                             int msg_id = dbadapter.getLastMsgid(remote_jid);
-                            dbadapter.setUpdateContact_unseen_msg(remote_jid,
-                                    unseen_msg);
+                            try {
+                                if (remote_jid != null) {
+                                    if (Utils.isActivityIsFront(context, MUCTest.class.getCanonicalName().toString()) && remote_jid.equalsIgnoreCase(MUCTest.jid)) {
+
+                                    } else {
+                                        dbadapter.setUpdateContact_unseen_msg(remote_jid,
+                                                unseen_msg);
+                                    }
+                                }
+                            } catch (Exception e) {
+
+                            }
                             if (dbadapter.isExistinChatList(remote_jid)) {
                                 dbadapter.setUpdateChat_lits(remote_jid, msg_id);
                             } else {
@@ -464,6 +479,8 @@ public class MUC_MessageListener implements MessageListener {
                     editor.commit();
                 } else if (message_id == 8) {
 
+                    String url = message.getBody();
+
                     MessageGetSet msg = new MessageGetSet();
                     msg.setData("");
                     msg.setKey_from_me(0);
@@ -490,8 +507,7 @@ public class MUC_MessageListener implements MessageListener {
                     AsyncHttpClient client = new AsyncHttpClient();
                     String[] allowedContentTypes = new String[]{"image/png",
                             "image/jpeg"};
-                    client.get(KachingMeConfig.UPLOAD_GROUP_ICON_FOLDER_JPEG_PHP
-                                    + remote_jid.split("@")[0] + ".jpeg",
+                    client.get(url,
                             new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
                                 @Override
@@ -797,6 +813,11 @@ public class MUC_MessageListener implements MessageListener {
 
                             if (isMUCFront && remote_jid.equalsIgnoreCase(MUCTest.jid)) {
                                 MUCTest.msg_list.add(msg);
+                                MUCTest.mPositionKey_muc.add(msg.getKey_id());
+
+
+                                Constant.printMsg("HHHHHH called muc_MsgListener:::::::::::11112222"
+                                        );
 
                                 Intent login_broadcast = new Intent("update_left");
                                 login_broadcast.putExtra("position", "" + (MUCTest.msg_list.size() - 1));
@@ -920,8 +941,10 @@ public class MUC_MessageListener implements MessageListener {
                 if (message.hasExtension(DelayInformation.NAMESPACE))
                     return;
 
-                if (!message.getBody().equalsIgnoreCase(Constant.TYPING_STATUS_GROUP) && !message.getBody().equalsIgnoreCase(Constant.TYPING_STATUS_RECORDING))
-                    return;
+
+
+//                if (!message.getBody().equalsIgnoreCase(Constant.TYPING_STATUS_GROUP) && !message.getBody().equalsIgnoreCase(Constant.TYPING_STATUS_RECORDING))
+//                    return;
 
                 String jid = message.getFrom().toString().split("/")[1];
                 String jid_grp = message.getFrom().toString().split("/")[0];
@@ -937,10 +960,13 @@ public class MUC_MessageListener implements MessageListener {
                     return;
 
 
+                String typingString = message.getBody().split(",")[0];
+                String typingJid = message.getBody().split(",")[1];
+
                 // Checking slider testing in front
                 if (Utils.isActivityIsFront(context, SliderTesting.class.getCanonicalName().toString()) && jid_grp != null) {
 
-                    if (message.getBody().equalsIgnoreCase(Constant.TYPING_STATUS_GROUP)) {
+                    if (typingString.equalsIgnoreCase(Constant.TYPING_STATUS_GROUP)) {
 
 
                         Intent login_broadcast = new Intent("lastseen_broadcast");
@@ -948,7 +974,7 @@ public class MUC_MessageListener implements MessageListener {
                         login_broadcast.putExtra("type", "typing");
                         context.sendBroadcast(login_broadcast);
 
-                    } else if (message.getBody().equalsIgnoreCase(Constant.TYPING_STATUS_RECORDING)) {
+                    } else if (typingString.equalsIgnoreCase(Constant.TYPING_STATUS_RECORDING)) {
 
                         Intent login_broadcast = new Intent("lastseen_broadcast");
                         login_broadcast.putExtra("from", "" + jid_grp);
@@ -956,21 +982,23 @@ public class MUC_MessageListener implements MessageListener {
                         context.sendBroadcast(login_broadcast);
 
                     }
-                } else if (Utils.isActivityIsFront(context, MUCTest.class.getCanonicalName().toString()) && jid_grp != null) {//Checking muc group match
+                } else if (Utils.isActivityIsFront(context, MUCTest.class.getCanonicalName().toString()) && typingJid != null) {//Checking muc group match
                     if (jid_grp.equalsIgnoreCase(MUCTest.jid)) {
-                        if (message.getBody().equalsIgnoreCase(Constant.TYPING_STATUS_GROUP)) {
+
+
+                        if (typingString.equalsIgnoreCase(Constant.TYPING_STATUS_GROUP)) {
 
 
                             Intent login_broadcast = new Intent("start_typing");
-                            login_broadcast.putExtra("jid", "" + jid);
+                            login_broadcast.putExtra("jid", "" + typingJid);
                             login_broadcast.putExtra("jid_grp", "" + jid_grp);
                             login_broadcast.putExtra("type", "" + Constant.TYPING_STATUS_GROUP);
                             context.sendBroadcast(login_broadcast);
 
-                        } else if (message.getBody().equalsIgnoreCase(Constant.TYPING_STATUS_RECORDING)) {
+                        } else if (typingString.equalsIgnoreCase(Constant.TYPING_STATUS_RECORDING)) {
 
                             Intent login_broadcast = new Intent("start_typing");
-                            login_broadcast.putExtra("jid", "" + jid);
+                            login_broadcast.putExtra("jid", "" + typingJid);
                             login_broadcast.putExtra("jid_grp", "" + jid_grp);
                             login_broadcast.putExtra("type", "" + Constant.TYPING_STATUS_RECORDING);
                             context.sendBroadcast(login_broadcast);

@@ -1,5 +1,6 @@
 package com.wifin.kachingme.chat.muc_chat;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -14,6 +15,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -69,6 +71,7 @@ import android.view.View.OnKeyListener;
 import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.view.Window;
+import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -114,6 +117,7 @@ import com.wifin.kachingme.chat.chat_common_classes.ContactView_Normal;
 import com.wifin.kachingme.chat.chat_common_classes.LocationShare;
 import com.wifin.kachingme.chat.chat_common_classes.SendContact;
 import com.wifin.kachingme.chat.chat_common_classes.SongList;
+import com.wifin.kachingme.chat.single_chat.ChatTest;
 import com.wifin.kachingme.chat_home.SliderTesting;
 import com.wifin.kachingme.database.DatabaseHelper;
 import com.wifin.kachingme.database.Dbhelper;
@@ -165,13 +169,14 @@ import com.wifin.kachingme.util.Utils;
 import com.wifin.kachingme.util.KachingMeConfig;
 import com.wifin.kachingme.util.cropimage.Util;
 
-import org.acra.ACRAConstants;
+//import org.acra.ACRAConstants;
 import org.apache.http.Header;
 import org.jivesoftware.smack.AbstractXMPPConnection;
 import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.packet.Message.Type;
 import org.jivesoftware.smack.packet.Presence;
+import org.jivesoftware.smack.packet.StandardExtensionElement;
 import org.jivesoftware.smack.roster.Roster;
 import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.bookmarks.BookmarkManager;
@@ -181,6 +186,7 @@ import org.jivesoftware.smackx.iqlast.LastActivityManager;
 import org.jivesoftware.smackx.iqlast.packet.LastActivity;
 import org.jivesoftware.smackx.jiveproperties.JivePropertiesManager;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
+import org.jivesoftware.smackx.muc.MucEnterConfiguration;
 import org.jivesoftware.smackx.muc.MultiUserChat;
 import org.jivesoftware.smackx.muc.MultiUserChatManager;
 import org.jivesoftware.smackx.muc.RoomInfo;
@@ -190,6 +196,9 @@ import org.jivesoftware.smackx.xevent.MessageEventManager;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.jxmpp.jid.impl.JidCreate;
+import org.jxmpp.jid.parts.Resourcepart;
+import org.jxmpp.stringprep.XmppStringprepException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -214,15 +223,13 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import a_vcard.android.provider.Contacts;
+
 public class MUCTest extends AppCompatActivity implements
         EmojiconGridFragment.OnEmojiconClickedListener,
         EmojiconFragmentGroup.OnEmojiconBackspaceClickedListener, OnItemClickListenerInterface {
 
-
-
-    public MUCTest mucTest;
     public boolean bClick;
-    Bitmap unscaledBitmapRight;
     boolean is_auto_dowload_image = false, is_auto_dowload_video = false,
             is_auto_dowload_audio = false, is_auto_dowload_files = false;
     ArrayList<String> mself_destruct_list = new ArrayList<String>();
@@ -238,9 +245,11 @@ public class MUCTest extends AppCompatActivity implements
     String numberContactSend = null;
     int mBtnClick = 0;
     Boolean is_you;
-    int k =0;
+    int k = 0;
     LinearLayout mRightChatLayout;
     FrameLayout mRightTipLayout;
+
+    public static Activity mMUC_TestActivity;
     //   Context context;
 
     String MEDIA_UPLOAD_URL = "";
@@ -249,15 +258,15 @@ public class MUCTest extends AppCompatActivity implements
     ArrayList Nemelist = new ArrayList();
     ArrayList Meaninglist = new ArrayList();
     SpannableStringBuilder ssb;
-    String mReplace, mRemove;
+    String mRemove;
     ArrayList<MediaPlayer> list = new ArrayList<MediaPlayer>();
     public static HashMap<String, AsyncHttpClient> mAsyncUpload_Image = new HashMap<String, AsyncHttpClient>();
-    public static HashMap<String,AsyncHttpClient> mAsyncUpload_Audio = new HashMap<String, AsyncHttpClient>();
-    public static HashMap<String,AsyncHttpClient> mAsyncUpload_Video = new HashMap<String, AsyncHttpClient>();
+    public static HashMap<String, AsyncHttpClient> mAsyncUpload_Audio = new HashMap<String, AsyncHttpClient>();
+    public static HashMap<String, AsyncHttpClient> mAsyncUpload_Video = new HashMap<String, AsyncHttpClient>();
     Handler seekHandler = new Handler();
     Runnable run;
     long bites = 0;
-    int mTextSizeVariation=0;
+    int mTextSizeVariation = 0;
     public static String selectedWord_backTemp = "";
     //
     int font_size = 0;
@@ -273,9 +282,8 @@ public class MUCTest extends AppCompatActivity implements
     private SparseBooleanArray mSelectedItemsIds;
     private List<String> replacePosition = new ArrayList<String>();
     LinearLayout mContactLayout;
-    HashMap<String , Integer> colorMap = new HashMap<String , Integer>();
+    HashMap<String, Integer> colorMap = new HashMap<String, Integer>();
     AlertDialog.Builder mDeleteAlert;
-
 
     //Notification texts
     TextView mNotificationText;
@@ -285,7 +293,6 @@ public class MUCTest extends AppCompatActivity implements
     TextView mRightSenderTimeText;
     ImageView mRightTickMark;
     public static TextView mRightDestTime;
-
 
     //Right Image
     ImageView mRightImageChat;
@@ -324,19 +331,16 @@ public class MUCTest extends AppCompatActivity implements
     TextView mRightAudioTextTime;
     ImageView mRightAudioTickMark;
 
-
     // Left Textview..
     EmojiconTextView mLeftTextview;
     TextView mLeftSenderTimeText;
     EmojiconTextView mLeftTextProfile;
-
 
     //Left Image
     ImageView mLeftImageChat;
     TextView mLeftImageTextTime;
     ImageView mLeftImageChatDownload;
     ProgressBar mLeftImagetProgressBar;
-
 
     //Left Video
     ImageView mLeftVideoChat;
@@ -353,7 +357,6 @@ public class MUCTest extends AppCompatActivity implements
     EmojiconTextView mLeftContactTextView;
     TextView mLeftContactTextTime;
 
-
     // Left Audio
     Button mLeftAudioBtnPlay;
     Button mLeftAudioBtnCancel;
@@ -367,6 +370,7 @@ public class MUCTest extends AppCompatActivity implements
 
     LinearLayout mDynamicView;
     ScrollView mScrollView;
+    public static List<String> mPositionKey_muc = new ArrayList<String>();
 
     String mstatus = "1";
     ArrayList<String> mSeenList = new ArrayList<String>();
@@ -379,9 +383,9 @@ public class MUCTest extends AppCompatActivity implements
     public static MessageEventManager messageEventManager = TempConnectionService.messageEventManager;
     public static MultiUserChat muc = TempConnectionService.muc;
     public static boolean menuclick = false;
-    public static String jid="";
-    BroadcastReceiver lastseen_event = new BroadcastReceiver() {
+    public static String jid = "";
 
+    BroadcastReceiver lastseen_event = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
 
@@ -404,12 +408,12 @@ public class MUCTest extends AppCompatActivity implements
 
                     //  Update_Advacegroup();
                 }
-            }else if (intent.getAction().equals("MUC_delivary_notification")) {
+            } else if (intent.getAction().equals("MUC_delivary_notification")) {
 
                 Constant.printMsg("MUC Broadcast MUC_delivary_notification");
                 ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
 
-            }  else if (intent.getAction().equals("start_typing")) {
+            } else if (intent.getAction().equals("start_typing")) {
 
                 Constant.printMsg("MUC Broadcast start_typing "
                         + dbAdapter.getLogin().get(0).getUserName()
@@ -430,27 +434,50 @@ public class MUCTest extends AppCompatActivity implements
                         }
 
                         try {
-
                             if (!jid2.equalsIgnoreCase(dbAdapter.getLogin()
                                     .get(0).getUserName()
                                     + KachingMeApplication.getHost())) {
 
                                 ContactsGetSet contact = dbAdapter
                                         .getContact(jid2);
-                                Constant.printMsg("MUC Broadcast start_typing"
-                                        + contact.getDisplay_name()
+
+
+                                String name  = contact.getDisplay_name();
+                                Constant.printMsg("MUC Broadcast start_typing  111000 "
+                                        + name
                                         + "  nUMBER : "
                                         + contact.getNumber()
                                         + "  jID " + jid2);
-                                if (contact.getDisplay_name() != null) {
+                                if (name!= null) {
+
+                                    String name_string = null;
+                                    if(contact.getDisplay_name().length()>15)
+                                    {
+                                        name_string = (contact
+                                                .getDisplay_name()+ type).substring(0,15);
+                                    }else
+                                        name_string = contact
+                                                .getDisplay_name()+type;
+
 
                                     txt_sub_title.setVisibility(View.VISIBLE);
-                                    txt_sub_title.setText(contact
-                                            .getDisplay_name() + type);
+
+                                    txt_sub_title.setText(name_string);
+
+
                                 } else if (contact.getNumber() != null) {
+
+                                    String name_string = null;
+                                    if(contact.getNumber().length()>15)
+                                    {
+                                        name_string = (contact
+                                                .getNumber()+ type).substring(0,15);
+                                    }else
+                                        name_string = contact
+                                                .getNumber()+type;
+
                                     txt_sub_title.setVisibility(View.VISIBLE);
-                                    txt_sub_title.setText(contact.getNumber()
-                                            + type);
+                                    txt_sub_title.setText(name_string);
                                 } else {
                                     txt_sub_title.setVisibility(View.VISIBLE);
                                     txt_sub_title.setText(jid2.toString().split("@")[0]
@@ -467,7 +494,7 @@ public class MUCTest extends AppCompatActivity implements
                     }
                 }
 
-            }else if (intent.getAction().equals("update_tick")) {
+            } else if (intent.getAction().equals("update_tick")) {
 
                 Constant.printMsg("MUC Broadcast ..update tick..");
 
@@ -482,18 +509,69 @@ public class MUCTest extends AppCompatActivity implements
                 try {
 
 
-                mRightTickMark = (ImageView) findViewById(Integer.valueOf(postion) + 600000);
+                    mRightTickMark = (ImageView) findViewById(Integer.valueOf(postion) + 600000);
 
-                if (status.equalsIgnoreCase("delivered")) {
-                    mRightTickMark.setImageResource(R.drawable.receipt_from_target);
-                } else if (status.equalsIgnoreCase("displayed")) {
-                    mRightTickMark.setImageResource(R.drawable.receipt_read);
-                } else if (status.equalsIgnoreCase("failed")) {
-                    mRightTickMark.setImageResource(R.drawable.message_unsent);
-                } else if (status.equalsIgnoreCase("server")) {
-                    mRightTickMark.setImageResource(R.drawable.receipt_from_server);
+                    if (status.equalsIgnoreCase("delivered")) {
+                        mRightTickMark.setImageResource(R.drawable.receipt_from_target);
+                    } else if (status.equalsIgnoreCase("displayed")) {
+                        mRightTickMark.setImageResource(R.drawable.receipt_read);
+                    } else if (status.equalsIgnoreCase("failed")) {
+                        mRightTickMark.setImageResource(R.drawable.message_unsent);
+                    } else if (status.equalsIgnoreCase("server")) {
+                        mRightTickMark.setImageResource(R.drawable.receipt_from_server);
+                    }
+                } catch (Exception e) {
+
                 }
-                }catch (Exception e){
+            } else if (intent.getAction().equals("download_set_audio")) {
+                try {
+                    int j = intent.getIntExtra("key", -1);
+                    String media_name = intent.getStringExtra("media_name");
+                    String result = intent.getStringExtra("result");
+
+                    Constant.printMsg("Download audio setttt " + j + " " + media_name);
+
+                    if (result.equalsIgnoreCase("success"))
+                        if (j != -1) {
+                            set_audio_download(j, media_name);
+                        } else if (result.equalsIgnoreCase("fail")) {
+                            Toast.makeText(context, "Something went wrong. Try again", Toast.LENGTH_SHORT).show();
+                        }
+                } catch (Exception e) {
+
+                }
+            } else if (intent.getAction().equals("download_set_video")) {
+                try {
+                    int j = intent.getIntExtra("key", -1);
+                    String media_name = intent.getStringExtra("media_name");
+                    String result = intent.getStringExtra("result");
+
+                    Constant.printMsg("Download video setttt " + j + " " + media_name);
+
+                    if (result.equalsIgnoreCase("success"))
+                        if (j != -1) {
+                            set_video_download(j, media_name);
+                        } else if (result.equalsIgnoreCase("fail")) {
+                            Toast.makeText(context, "Something went wrong. Try again", Toast.LENGTH_SHORT).show();
+                        }
+                } catch (Exception e) {
+
+                }
+            } else if (intent.getAction().equals("download_set_image")) {
+                try {
+                    int j = intent.getIntExtra("key", -1);
+                    String media_name = intent.getStringExtra("media_name");
+                    String result = intent.getStringExtra("result");
+
+                    Constant.printMsg("Download image setttt " + j + " " + media_name);
+
+                    if (result.equalsIgnoreCase("success"))
+                        if (j != -1) {
+                            set_Download_Image(j, media_name);
+                        } else if (result.equalsIgnoreCase("fail")) {
+                            Toast.makeText(context, "Something went wrong. Try again", Toast.LENGTH_SHORT).show();
+                        }
+                } catch (Exception e) {
 
                 }
             } else if (intent.getAction().equals("update_left")) {
@@ -507,7 +585,7 @@ public class MUCTest extends AppCompatActivity implements
 
                     intializationElements(2);
 
-                    k = msg_list.size()-1;
+                    k = msg_list.size() - 1;
 
                     if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 0) {
 
@@ -518,8 +596,7 @@ public class MUCTest extends AppCompatActivity implements
 
                         leftImageChat();
                         setLeftImage();
-                    }
-                    else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 2) {
+                    } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 2) {
 
                         leftVideoChat();
                         setLeftVideo();
@@ -529,13 +606,13 @@ public class MUCTest extends AppCompatActivity implements
                         leftContactChat();
                         setLeftContact();
 
-                    }else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 3) {
+                    } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 3) {
 
                         //Audio
                         leftAudioChat();
                         setLeftAudio_Old();
 
-                    }  else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 4) {
+                    } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 4) {
 
                         //Location
                         leftImageChat();
@@ -545,17 +622,17 @@ public class MUCTest extends AppCompatActivity implements
                     mRightTipLayout.requestFocus();
                     edt_msg.requestFocus();
 
-                }catch (Exception e){
+                } catch (Exception e) {
 
                 }
-                k=k+1;
+                k = k + 1;
 
-            }else if (intent.getAction().equals("muc_fetch_chat")) {
+            } else if (intent.getAction().equals("muc_fetch_chat")) {
 
                 Constant.printMsg("MUC Broadcast ..muc_fetch_chat..");
 
                 ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
-            }else if (intent.getAction().equals(
+            } else if (intent.getAction().equals(
                     Constant.BROADCAST_UPDATE_GROUP_ICON)) {
 
                 Constant.printMsg("MUC Broadcast ..update grp icon..");
@@ -571,7 +648,6 @@ public class MUCTest extends AppCompatActivity implements
             } else if (intent.getAction().equals("lastseen_broadcast")) {
 
                 Constant.printMsg("MUC Broadcast ..lastseen_broadcast.");
-
 
                 String name = null;
                 String jid_loc = intent.getStringExtra("from");
@@ -610,56 +686,52 @@ public class MUCTest extends AppCompatActivity implements
 
         }
     };
+
     public static Boolean IS_Front = false;
     public static String home_title;
-    public static Handler mMyhandler = null;
-    public static boolean isTyping = true;
-    public static Handler handlerThread = new Handler(Looper.getMainLooper());
     public static Handler handler = new Handler(Looper.getMainLooper());
     public static boolean mIsThreadRunning = false;
     public static boolean isFetchChatReady = false;
-    // MUC_Chat_Adapter adapter;
     static DatabaseHelper dbAdapter;
     private Timer timer;
     static LinearLayout ll_chat, mDownArrowLayout;
     static LinearLayout ll_no_longer_participant;
-    // MessageEventManager messageEventManager;
     static String TAG = MUCTest.class.getSimpleName();
-    public LocationResult locationResult = new LocationResult() {
-
-        @Override
-        public void gotLocation(Location location) {
-            // TODO Auto-generated method stub
-
-            // Toast.makeText(getApplicationContext(), "Got Location",
-            // Toast.LENGTH_LONG).show();
-
-            try {
-                double Longitude = location.getLongitude();
-                double Latitude = location.getLatitude();
-                Log.d(TAG, "Current LON::" + Longitude + " LAT::" + Latitude);
-
-                Editor prefsEditor = KachingMeApplication
-                        .getsharedpreferences_Editor();
-                prefsEditor.putString(Constant.CURRENT_LOG, Longitude + "");
-                prefsEditor.putString(Constant.CURRENT_LAT, Latitude + "");
-                prefsEditor.commit();
-                // Constant.printMsg("SHARE PREFERENCE ME PUT KAR DIYA.");
-            } catch (Exception e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-        }
-    };
-    DownloadProgressListener listener = new DownloadProgressListener() {
-        @Override
-        public void onProgress(long bytesDownloaded, long bytesExpected) {
-            // Update progress dialog with the latest progress.
-            int progress = (int) (bytesDownloaded * 100 / bytesExpected);
-            Log.d(TAG, String.format("Loading progress: %d percent", progress));
-            barProgressDialog.setProgress(progress);
-        }
-    };
+    //    public LocationResult locationResult = new LocationResult() {
+//
+//        @Override
+//        public void gotLocation(Location location) {
+//            // TODO Auto-generated method stub
+//
+//            // Toast.makeText(getApplicationContext(), "Got Location",
+//            // Toast.LENGTH_LONG).show();
+//
+//            try {
+//                double Longitude = location.getLongitude();
+//                double Latitude = location.getLatitude();
+//                Log.d(TAG, "Current LON::" + Longitude + " LAT::" + Latitude);
+//
+//                Editor prefsEditor = KachingMeApplication
+//                        .getsharedpreferences_Editor();
+//                prefsEditor.putString(Constant.CURRENT_LOG, Longitude + "");
+//                prefsEditor.putString(Constant.CURRENT_LAT, Latitude + "");
+//                prefsEditor.commit();
+//                // Constant.printMsg("SHARE PREFERENCE ME PUT KAR DIYA.");
+//            } catch (Exception e) {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
+//        }
+//    };
+//    DownloadProgressListener listener = new DownloadProgressListener() {
+//        @Override
+//        public void onProgress(long bytesDownloaded, long bytesExpected) {
+//            // Update progress dialog with the latest progress.
+//            int progress = (int) (bytesDownloaded * 100 / bytesExpected);
+//            Log.d(TAG, String.format("Loading progress: %d percent", progress));
+//            barProgressDialog.setProgress(progress);
+//        }
+//    };
     // Runnable AsyncConnection = new Runnable() {
     //
     // @Override
@@ -698,29 +770,28 @@ public class MUCTest extends AppCompatActivity implements
     //
     // };
     static Boolean IS_TYPED = true;
-    private final Runnable updatTitle = new Runnable() {
-        public void run() {
-            try {
-
-                Constant.printMsg("HandlerThread");
-
-                connect();
-
-                // handlerThread.postDelayed(updatTitle, 3000);
-            } catch (Exception e) {
-                // Constant.printMsg("HHHHHH" + e.toString());
-            }
-        }
-    };
+    //    private final Runnable updatTitle = new Runnable() {
+//        public void run() {
+//            try {
+//
+//                Constant.printMsg("HandlerThread");
+//
+//                connect();
+//
+//                // handlerThread.postDelayed(updatTitle, 3000);
+//            } catch (Exception e) {
+//                // Constant.printMsg("HHHHHH" + e.toString());
+//            }
+//        }
+//    };
     public Resources res;
-    public List<GroupParticipantGetSet> mGroupMembersList = new ArrayList<GroupParticipantGetSet>();
     public long editNo = 0;
     //Menu option
     LinearLayout mChatOptionMenuHedderLayout, mChatOptionMenuViewcontactLayout, mChatOptionMenuBlockLayout, mChatOptionMenuCallLayout, mChatOptionMenuLockchatLayout, mChatOptionMenuClearchatLayout;
     ImageView mChatOptionMenuViewcontactImg, mChatOptionMenuBlockImg, mChatOptionMenuCallImg, mChatOptionMenuLockchatImg, mChatOptionMenuClearchatImg;
     TextView mChatOptionMenuViewcontactTxt, mChatOptionMenuBlockTxt, mChatOptionMenuCallTxt, mChatOptionMenuLockchatTxt, mChatOptionMenuClearchatTxt;
     //Attachment Icon menu window
-    LinearLayout mchatHeadBackLayout, mChatMenuHedderLayout, mChatMenuGalleryLayout, mChatMenuShootLayout, mChatmenuVideoLayout, mChatMenuLocationLayout, mChatMenuContactLayout, mChatMenuAudioLayout,mSliderMenuLayout;
+    LinearLayout mchatHeadBackLayout, mChatMenuHedderLayout, mChatMenuGalleryLayout, mChatMenuShootLayout, mChatmenuVideoLayout, mChatMenuLocationLayout, mChatMenuContactLayout, mChatMenuAudioLayout, mSliderMenuLayout;
     ImageView mChatMenuGalleryImg, mChatMenuShootImg, mChatMenuVideoImg, mChatMenuLocationImg, mChatMenuContactImg, mChatMenuAudioImg;
     TextView mChatMenuGalleryTxt, mChatMenuShootTxt, mChatMenuVideoTxt, mChatMenuLocationTxt, mChatMenuContactTxt, mChatMenuAudioTxt;
     // public AbstractXMPPConnection connection;
@@ -735,7 +806,7 @@ public class MUCTest extends AppCompatActivity implements
     ImageView btn_emo;
     EditText edt_msg;
     ListView list_option, listMeaning;
-    public static  RecyclerView listview;
+    public static RecyclerView listview;
     // GridView gridview_emo;
     String status = "", subject = "";
     LinearLayout btn_title_layout;
@@ -752,11 +823,10 @@ public class MUCTest extends AppCompatActivity implements
     SharedPreferences sharedPrefs1, pref, sp1;
     Boolean create = true;
     LinearLayout ll_phone;
-    LinearLayout ll_text_message;
     LinearLayout ll_main;
     MediaRecorder myRecorder;
     Boolean is_started = false, is_text = true;
-    public static  ArrayList<MessageGetSet> msg_list = new ArrayList<MessageGetSet>();
+    public static ArrayList<MessageGetSet> msg_list = new ArrayList<MessageGetSet>();
     String msg_ids = null, title;
     byte[] avatar = null;
     LinearLayout emoji_frag, zlay;
@@ -794,7 +864,7 @@ public class MUCTest extends AppCompatActivity implements
     int i = 0;
     // public boolean istxtListner = false;
     int height = 0, width = 0;
-//    MyLocation myLocation = new MyLocation();
+    //    MyLocation myLocation = new MyLocation();
     ArrayList<String> meaningList = new ArrayList<String>();
     ArrayList mFinalNyms = new ArrayList();
     ArrayList mFinalNymsMeaning = new ArrayList();
@@ -803,7 +873,7 @@ public class MUCTest extends AppCompatActivity implements
     Integer timeInMillisec = 0;
     // Chat Hedder Views
     ImageView mChatHedderBackImg, mChatHedderProfileImg,
-            mChatHedderAttachmentImg, mChatHedderMenuImg, mToolTipImg,mChatHedderCopyImg;
+            mChatHedderAttachmentImg, mChatHedderMenuImg, mToolTipImg, mChatHedderCopyImg;
 
     // Runnable temp = new Runnable() {
     //
@@ -834,7 +904,7 @@ public class MUCTest extends AppCompatActivity implements
     //
     // };
     TextView mChatHedderUserTxt, mChatHedderUserStatusTxt;
-    LinearLayout mChatHedderLayout, mChatHedderTextLayout,mChatHedderCopyLayout, mChatHedderAttachmentLayout, mChatHedderMenuLayout;
+    LinearLayout mChatHedderLayout, mChatHedderTextLayout, mChatHedderCopyLayout, mChatHedderAttachmentLayout, mChatHedderMenuLayout;
     boolean mMenuVisible = false;
     boolean mContactMenuVisible = false;
     // public void presence_typing() {
@@ -1034,7 +1104,7 @@ public class MUCTest extends AppCompatActivity implements
     private NetworkSharedPreference mNewtSharPref;
     private boolean isLeftPlayAudio = false;
     private boolean is_startrec = false;
-    ArrayList<Integer> mOnLongSelectedPostions=new ArrayList<Integer>();
+    ArrayList<Integer> mOnLongSelectedPostions = new ArrayList<Integer>();
     private boolean mIsLogClick = false;
 
     public static void checkGroupMember() {
@@ -1064,15 +1134,37 @@ public class MUCTest extends AppCompatActivity implements
             Constant.mZzle = false;
             Constant.mBazzle = false;
             Constant.mKons = false;
+            Window window = getWindow();
+
+
+            if (ChatTest.chatTestActivity != null)
+                ChatTest.chatTestActivity.finish();
+
+
+            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
             super.onCreate(savedInstanceState);
             setContentView(R.layout.chat_muc);
 
             mParentActivity = this;
+            mMUC_TestActivity = this;
+
 
             mIntVariable();
             mScreenArrangement();
 
+            if (Constant.singleImagUri != null) {
+                handleSendImage(Constant.singleImagUri);
+            }
 
+            if (Constant.singleVideoUri != null) {
+                handleSendSingleVideo(Constant.singleVideoUri);
+            }
+
+            if (Constant.multipleImageUri.size() != 0) {
+                handleSendMultipleImages();
+
+                Constant.printMsg("Selected Image Size ::: " + Constant.multipleImageUri.size());
+            }
 
             pref = PreferenceManager
                     .getDefaultSharedPreferences(getApplicationContext());
@@ -1094,10 +1186,10 @@ public class MUCTest extends AppCompatActivity implements
             ll_phone = (LinearLayout) findViewById(R.id.ll_name);
             ll_chat = (LinearLayout) findViewById(R.id.ll_chat);
             ll_no_longer_participant = (LinearLayout) findViewById(R.id.ll_no_group_member);
-            ll_text_message = (LinearLayout) findViewById(R.id.ll_text);
             ll_main = (LinearLayout) findViewById(R.id.ll_main);
             listMeaning = (ListView) findViewById(R.id.mnglist);
             emoji_frag = (LinearLayout) findViewById(R.id.emoji_frag);
+
 
 //		zbtn = (Button) findViewById(R.id.zzle_btn);
 //		zlay = (LinearLayout) findViewById(R.id.zzle_layout);
@@ -1111,15 +1203,15 @@ public class MUCTest extends AppCompatActivity implements
 //                    locationResult);
             edt_msg.setBackgroundColor(Color.TRANSPARENT);
 
-            shake = AnimationUtils.loadAnimation(this, R.anim.shakeanim);
-            mMove = AnimationUtils.loadAnimation(getApplicationContext(),
-                    R.anim.reverse);
+//            shake = AnimationUtils.loadAnimation(this, R.anim.shakeanim);
+//            mMove = AnimationUtils.loadAnimation(getApplicationContext(),
+//                    R.anim.reverse);
 
-            DisplayMetrics metrics = new DisplayMetrics();
-            getWindowManager().getDefaultDisplay().getMetrics(metrics);
-            Constant.screenHeight = metrics.heightPixels;
-            Constant.screenWidth = metrics.widthPixels;
-            db = new Dbhelper(getApplicationContext());
+//            DisplayMetrics metrics = new DisplayMetrics();
+//            getWindowManager().getDefaultDisplay().getMetrics(metrics);
+//            Constant.screenHeight = metrics.heightPixels;
+//            Constant.screenWidth = metrics.widthPixels;
+//            db = new Dbhelper(getApplicationContext());
 
             sharedPrefs1 = PreferenceManager.getDefaultSharedPreferences(this);
             sp1 = PreferenceManager.getDefaultSharedPreferences(this);
@@ -1135,48 +1227,56 @@ public class MUCTest extends AppCompatActivity implements
             NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
             notificationManager.cancelAll();
             if (KachingMeApplication.getsharedpreferences().contains("wallpaper")) {
-                // File f = new File(KachingMeApplication.getsharedpreferences()
-                // .getString("wallpaper", null));
-                //
-                // img_chat_background.setImageURI(Uri.fromFile(f));
-
                 Constant.wallType = sp1.getString("wallpaper_type", "");
                 Constant.printMsg("type of wallpaper   " + Constant.wallType);
 
                 if (Constant.wallType.equalsIgnoreCase("file")) {
-                    File f = new File(KachingMeApplication.getsharedpreferences()
-                            .getString("wallpaper", null));
-                    //                img_chat_background1.setVisibility(View.VISIBLE);
-                    //                img_chat_background1.setImageURI(Uri.fromFile(f));
+                    File f = new File(KachingMeApplication.getsharedpreferences().getString("wallpaper", null));
+                    Drawable d = Drawable.createFromPath(f.getAbsolutePath());
+                    getWindow().setBackgroundDrawable(d);
+                    img_chat_background1.setVisibility(View.GONE);
                     img_chat_background.setVisibility(View.GONE);
-
                 } else {
-
-                    String wall = KachingMeApplication.getsharedpreferences()
-                            .getString("wallpaper", "");
-                    // Constant.printMsg("wallll   " + wall);
-                    //                img_chat_background1.setVisibility(View.GONE);
+                    img_chat_background1.setVisibility(View.GONE);
                     img_chat_background.setVisibility(View.VISIBLE);
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
 
-                    File f = new File(KachingMeApplication.getsharedpreferences()
-                            .getString("wallpaper", null));
+                    File f = new File(KachingMeApplication.getsharedpreferences().getString("wallpaper", null));
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
 
                     Constant.printMsg("paththththth ::::: >>>>>>> " + f);
-
                     String pathName = f.getAbsolutePath();
-                    Toast.makeText(getApplicationContext(), "" + pathName,
-                            Toast.LENGTH_LONG).show();
                     Constant.gifimage = pathName;
                     img_chat_background = (GIFView) findViewById(R.id.img_chat_background);
                 }
-
+            } else {
+                getWindow().setBackgroundDrawableResource(R.drawable.bg);
             }
 
             res = getResources();
 //		getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 //		getSupportActionBar().setDisplayShowHomeEnabled(true);
+
+            MEDIA_UPLOAD_URL = KachingMeConfig.UPLOAD_MEDIA;
+            mNetworkSharPref = new NetworkSharedPreference(mParentActivity);
+
+            db = new Dbhelper(mParentActivity);
+
+            is_auto_dowload_image = sharedPrefs.getBoolean(
+                    "media_auto_download_images", false);
+            is_auto_dowload_video = sharedPrefs.getBoolean(
+                    "media_auto_download_videos", false);
+            is_auto_dowload_audio = sharedPrefs.getBoolean(
+                    "media_auto_download_audio", false);
+            is_auto_dowload_files = sharedPrefs.getBoolean(
+                    "media_auto_download_files", false);
+
+
+            new File(Constant.local_image_dir).mkdirs();
+            new File(Constant.local_video_dir).mkdirs();
+            new File(Constant.local_audio_dir).mkdirs();
+            new File(Constant.local_files_dir).mkdirs();
+            mSelectedItemsIds = new SparseBooleanArray();
 
             Bundle bundle = getIntent().getExtras();
             if (bundle != null) {
@@ -1189,7 +1289,7 @@ public class MUCTest extends AppCompatActivity implements
                             .getInstanceFor(TempConnectionService.connection);
 
                     MultiUserChat multiUserChat = multiUserChatManager
-                            .getMultiUserChat(jid);
+                            .getMultiUserChat(JidCreate.entityBareFrom(jid));
 
                     muc = multiUserChat;
                 } catch (Exception e) {
@@ -1202,8 +1302,7 @@ public class MUCTest extends AppCompatActivity implements
 
                 //			getSupportActionBar().setTitle(bundle.getString("name"));
                 subject = bundle.getString("name");
-                if(subject!=null)
-                {
+                if (subject != null) {
                     if (subject.length() > 15) {
                         home_title = subject.substring(0, 15) + "...";
                     } else {
@@ -1252,31 +1351,31 @@ public class MUCTest extends AppCompatActivity implements
             // start
 //        new MyAsync1().execute();
 
-            if(Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification")){
+            if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification")) {
 
-                if(Constant.mReciverAvathor!=null){
+                if (Constant.mReciverAvathor != null) {
 
-                    ProfileRoundImg  mSenderImage=new ProfileRoundImg(Constant.mReciverAvathor);
+                    ProfileRoundImg mSenderImage = new ProfileRoundImg(Constant.mReciverAvathor);
                     img_chat_avatar.setImageDrawable(mSenderImage);
 
-                }else{
-                    Bitmap  bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
+                } else {
+                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                     ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                     img_chat_avatar.setImageDrawable(mSenderImage);
                 }
 
 
-            }else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("group")) {
-                System.out.println("GHGHGYHGYGHTY"+GroupChatList.mProfileImagesList+"     "+GroupChatList.mPosition);
+            } else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("group")) {
+                System.out.println("GHGHGYHGYGHTY" + GroupChatList.mProfileImagesList + "     " + GroupChatList.mPosition);
                 try {
                     if (GroupChatList.mProfileImagesList.size() > 0) {
                         //  mSenderRoundImage.setImageBitmap(UserChatList.mProfileImagesList.get(UserChatList.mPosition));
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(GroupChatList.mProfileImagesList.get(GroupChatList.mPosition));
                         img_chat_avatar.setImageDrawable(mSenderImage);
 
-                    }else{
+                    } else {
 
-                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,Util.getBitmapOptions());
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                         img_chat_avatar.setImageDrawable(mSenderImage);
                     }
@@ -1284,14 +1383,14 @@ public class MUCTest extends AppCompatActivity implements
 
                 }
 
-            }else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("chat")) {
+            } else if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("chat")) {
 
 
                 try {
                     if (UserChatList.mProfileImagesList.size() > 0) {
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(UserChatList.mProfileImagesList.get(UserChatList.mPosition));
                         img_chat_avatar.setImageDrawable(mSenderImage);
-                    }else{
+                    } else {
                         Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2);
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                         img_chat_avatar.setImageDrawable(mSenderImage);
@@ -1303,18 +1402,16 @@ public class MUCTest extends AppCompatActivity implements
             }
 
 
-
-
             // end
-            if (Connectivity.isConnected(mParentActivity)) {
-
-                // new getKeyword().execute();
-
-            }
+//            if (Connectivity.isConnected(mParentActivity)) {
+//
+//                // new getKeyword().execute();
+//
+//            }
             mDynamicView.setOnTouchListener(new OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    downArrowClickAction();
+                   // downArrowClickAction();
                     topMenuHideFunction();
                     return false;
                 }
@@ -1430,10 +1527,13 @@ public class MUCTest extends AppCompatActivity implements
                                 AlertDialog alert = mDeleteAlert.create();
                                 alert.show();
 
-                            }
-                            else{
+                            } else {
+                                ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                                        .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                                                0);
 
                                 if (mMenuVisible == false) {
+
 
                                     mChatHedderMenuLayout.setBackgroundColor(Color
                                             .parseColor("#00000000"));
@@ -1506,7 +1606,7 @@ public class MUCTest extends AppCompatActivity implements
 //                        mOnLongSelectedPostions.clear();
 //                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
 //                        mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
-
+                        Constant.FromMUC_Chat = true;
                         Intent intent = new Intent(mParentActivity, SliderTesting.class);
                         Log.i("Forword", "Message IDS " + msg_ids);
                         intent.putExtra("msg_ids", msg_ids);
@@ -1514,8 +1614,11 @@ public class MUCTest extends AppCompatActivity implements
                         startActivityForResult(intent, 11);
 
 
-                    }
-                    else{
+                    } else {
+
+                        ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                                .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                                        0);
 
                         String query = "select status from " + Dbhelper.TABLE_LOCK
                                 + " where jid = '" + jid + "'";
@@ -1585,7 +1688,7 @@ public class MUCTest extends AppCompatActivity implements
 
                 @Override
                 public void onClick(View v) {
-                    
+
                     Constant.printMsg("sent_msg_count message count::");
                     int sent_msg_count = pref.getInt("sent_msg_count", 0);
                     Constant.printMsg("sent_msg_count msg count from slide show is::"
@@ -1595,7 +1698,7 @@ public class MUCTest extends AppCompatActivity implements
                             + sent_msg_count);
                     update_sent_count(sent_msg_count);
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
-                    if(mPopup){
+                    if (mPopup) {
                         downArrowClickAction();
                     }
                     mParseString = "";
@@ -1610,7 +1713,12 @@ public class MUCTest extends AppCompatActivity implements
                         // sendMessage(edt_msg.getText().toString());
 
                     } else {
-                        voice_dialog();
+                        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO)) {
+                            Constant.printMsg("Permission Granted");
+                            voice_dialog();
+                        } else {
+                            Constant.permissionRequest(MUCTest.this, Manifest.permission.RECORD_AUDIO, Constant.PERMISSION_CODE_MISCEL);
+                        }
 
                     }
 
@@ -1655,16 +1763,30 @@ public class MUCTest extends AppCompatActivity implements
                 public void onClick(View v) {
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
                     topMenuHideFunction();
-                    if(mPopup){
+                    if (mPopup) {
                         downArrowClickAction();
                     }
                     if (emoji_frag.getVisibility() == View.VISIBLE) {
+                        FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT);
+                        mScrollViewParams.topMargin = height * 8 / 100;
+                        mScrollViewParams.bottomMargin = (height * 11 / 100);
+                        mScrollView.setLayoutParams(mScrollViewParams);
                         emoji_frag.setVisibility(View.GONE);
                         btn_emo.setImageResource(R.drawable.emoji_btn_normal);
                         ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
                                 .toggleSoftInput(InputMethodManager.SHOW_FORCED,
                                         InputMethodManager.HIDE_IMPLICIT_ONLY);
+
                     } else {
+
+                        FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                                LinearLayout.LayoutParams.MATCH_PARENT,
+                                LinearLayout.LayoutParams.MATCH_PARENT);
+                        mScrollViewParams.topMargin = height * 8 / 100;
+                        mScrollViewParams.bottomMargin = (height * 45 / 100);
+                        mScrollView.setLayoutParams(mScrollViewParams);
                         emoji_frag.setVisibility(View.VISIBLE);
                         btn_emo.setImageResource(R.drawable.ic_action_hardware_keyboard);
                         ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
@@ -1682,10 +1804,33 @@ public class MUCTest extends AppCompatActivity implements
                 public boolean onTouch(View v, MotionEvent event) {
                     topMenuHideFunction();
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
-                    if(mPopup){
-                        downArrowClickAction();
+//                    if(mPopup){
+//                        downArrowClickAction();
+//                    }
+                    v.setFocusable(true);
+                    v.setFocusableInTouchMode(true);
+                    FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                            LinearLayout.LayoutParams.MATCH_PARENT,
+                            LinearLayout.LayoutParams.MATCH_PARENT);
+                    mScrollViewParams.topMargin = height * 8 / 100;
+                    mScrollViewParams.bottomMargin = (height * 11 / 100);
+                    mScrollView.setLayoutParams(mScrollViewParams);
+
+                    if (emoji_frag.getVisibility() == View.VISIBLE) {
+                        emoji_frag.setVisibility(View.GONE);
+                        btn_emo.setImageResource(R.drawable.emoji_btn_normal);
+
                     }
-                    edt_msg.setInputType(InputType.TYPE_CLASS_TEXT);
+//                    if (is_enter_is_send) {
+//
+//                        edt_msg.setInputType(1 | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+//
+//                    } else {
+
+                    edt_msg.setInputType(InputType.TYPE_CLASS_TEXT
+                            | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+
+//                    }
                     edt_msg.onTouchEvent(event); // call native handler
                     return true; // consume touch even
                 }
@@ -1700,13 +1845,46 @@ public class MUCTest extends AppCompatActivity implements
                             && (keyCode == KeyEvent.KEYCODE_ENTER)) {
                         // Perform action on key press
                         if (is_enter_is_send) {
-                            if (edt_msg.getText().length() == 0)
-                            {
+                            if (edt_msg.getText().length() == 0) {
                                 Toast.makeText(getApplicationContext(), "Enter Message to Send", Toast.LENGTH_SHORT).show();
-                            }
-                            else
-                            {
-                                sendMessage(edt_msg.getText().toString());
+                            } else {
+                                Constant.printMsg("sent_msg_count message count::");
+                                int sent_msg_count = pref.getInt("sent_msg_count", 0);
+                                Constant.printMsg("sent_msg_count msg count from slide show is::"
+                                        + sent_msg_count);
+                                sent_msg_count = sent_msg_count + 1;
+                                Constant.printMsg("sent_msg_count msg countafter added is::"
+                                        + sent_msg_count);
+                                update_sent_count(sent_msg_count);
+                                // mDownArrow.setImageResource(R.drawable.rt_arrow);
+                                if (mPopup) {
+                                    downArrowClickAction();
+                                }
+                                mParseString = "";
+                                if (!edt_msg.getText().toString().trim().equals("")) {
+
+                                    nynm_Send_Msg();
+
+                                    selectedtext.clear();
+
+                                    nymcount = 0;
+
+                                    // sendMessage(edt_msg.getText().toString());
+
+                                } else {
+                                    if (Constant.checkPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO)) {
+                                        Constant.printMsg("Permission Granted");
+                                        voice_dialog();
+                                    } else {
+                                        Constant.permissionRequest(MUCTest.this, Manifest.permission.RECORD_AUDIO, Constant.PERMISSION_CODE_MISCEL);
+                                    }
+
+                                }
+
+                                mFinalNyms = new ArrayList();
+                                mFinalNymsMeaning = new ArrayList();
+                                mFinalNymsMeaningLength = new ArrayList();
+                                editNo = 0;
                             }
                         }
                         return true;
@@ -1811,16 +1989,16 @@ public class MUCTest extends AppCompatActivity implements
                     Constant.printMsg("Selected word is back: "
                             + selectedWord_back + "  ");
 
-                    if(mTextSizeVariation<=edt_msg.getText().toString().length()){
+                    if (mTextSizeVariation <= edt_msg.getText().toString().length()) {
 
-                        selectedWord_backTemp="";
+                        selectedWord_backTemp = "";
 
-                    }else if(s.length()>0){
+                    } else if (s.length() > 0) {
 
                         try {
-                            if(selectedWord_backTemp.length()>0){
-                                selectedWord_back=selectedWord_backTemp;
-                                selectedWord_backTemp="";
+                            if (selectedWord_backTemp.length() > 0) {
+                                selectedWord_back = selectedWord_backTemp;
+                                selectedWord_backTemp = "";
                             }
 
                             if (selectedWord_back != "") {
@@ -1839,13 +2017,13 @@ public class MUCTest extends AppCompatActivity implements
                                 // String edtText = edt_msg.getText().toString();
                                 // edt_msg.setText(edtText.replace(selectedWord_back,""));
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
 
                         }
 
                     }
 
-                    mTextSizeVariation=s.length();
+                    mTextSizeVariation = s.length();
 
                 }
             });
@@ -2285,7 +2463,7 @@ public class MUCTest extends AppCompatActivity implements
             }
 
 		/*if (int_group_type > 0
-				|| (int_group_type == 1 && group_admin.equals(KachingMeApplication
+                || (int_group_type == 1 && group_admin.equals(KachingMeApplication
 						.getUserID() + KachingMeApplication.getHost()))) {
 			txt_topic.setVisibility(View.VISIBLE);
 			// listview.setVisibility(View.GONE);
@@ -2308,47 +2486,112 @@ public class MUCTest extends AppCompatActivity implements
                     Log.i("Chat Foerword Message", "Message ID::"
                             + msg_id[i]);
 
-                    try{
-                  MessageGetSet msg = dbAdapter
-                            .getMessages_by_msg_id(msg_id[i]);
-                    // ////////*Text MEssage*////////////
+                    try {
+                        MessageGetSet msg = dbAdapter
+                                .getMessages_by_msg_id(msg_id[i]);
+                        // ////////*Text MEssage*////////////
 
-                    if(msg!=null) {
-                        if (msg.getMedia_wa_type().equals("0")) {
-                            sendMessage(msg.getData());
-                        }
-                        // ////////*Images Message*////////////
-                        else if (msg.getMedia_wa_type().equals("1")) {
+                        if (msg != null) {
+                            if (msg.getMedia_wa_type().equals("0")) {
+                                sendMessage(msg.getData());
+                            }
+                            // ////////*Images Message*////////////
+                            else if (msg.getMedia_wa_type().equals("1")) {
 
-                            sendImage(msg);
-                        }
-                        // ////////*Videos Message*////////////
-                        else if (msg.getMedia_wa_type().equals("2")) {
-                            Forword_Video(msg);
-                        }
-                        // ////////*Audios Message*////////////
-                        else if (msg.getMedia_wa_type().equals("3")) {
-                            Forword_Audio(msg);
-                        }
-                        // ////////*Location Message*////////////
-                        else if (msg.getMedia_wa_type().equals("4")) {
-                            send_Location("" + msg.getLatitude(),
-                                    "" + msg.getLongitude(), msg.getRow_data());
-                        }
-                        // ////////*Contacts Message*////////////
-                        else if (msg.getMedia_wa_type().equals("5")) {
-                            send_Contact(msg.getRow_data(), msg.getData(),
-                                    msg.getMedia_name());
-                        }
-                        // ////////*FILE Message*////////////
-                        else if (msg.getMedia_wa_type().equals("6")) {
-                            FORWORD_FILE(msg);
-                        } else if (msg.getMedia_wa_type().equals("12")) {
 
-                            sendImage(msg);
+                                try {
+                                    File file = null;
+                                    file = new File(Constant.local_image_dir
+                                            + msg.getMedia_name());
+
+                                    if (file != null) {
+                                        if (file.exists()) {
+                                            msg.setStatus(3);
+                                            msg.setNeeds_push(1);
+                                            msg.setMedia_url(null);
+                                            isFirstTime = false;
+                                            sendImage(msg);
+                                        } else {
+                                            Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (Exception e) {
+                                    Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                                }
+                            }
+                            // ////////*Videos Message*////////////
+                            else if (msg.getMedia_wa_type().equals("2")) {
+
+
+                                try {
+                                    File file = null;
+                                    file = new File(Constant.local_video_dir
+                                            + msg.getMedia_name());
+
+                                    if (file != null) {
+                                        if (file.exists()) {
+                                            msg.setStatus(3);
+                                            msg.setNeeds_push(1);
+                                            msg.setMedia_url(null);
+                                            isFirstTime = false;
+                                            Forword_Video(msg);
+                                        } else {
+                                            Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (Exception e) {
+                                    Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                                }
+                            }
+                            // ////////*Audios Message*////////////
+                            else if (msg.getMedia_wa_type().equals("3")) {
+
+
+                                try {
+                                    File file = null;
+                                    file = new File(Constant.local_audio_dir
+                                            + msg.getMedia_name());
+
+                                    if (file != null) {
+                                        if (file.exists()) {
+                                            msg.setStatus(3);
+                                            msg.setNeeds_push(1);
+                                            msg.setMedia_url(null);
+                                            isFirstTime = false;
+                                            Forword_Audio(msg);
+                                        } else {
+                                            Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                        }
+                                    } else {
+                                        Toast.makeText(mParentActivity, "No media file found", Toast.LENGTH_SHORT).show();
+                                    }
+                                } catch (Exception e) {
+                                    Constant.printMsg("Forward messggg " + bundle.getString("msg_ids"));
+                                }
+                            }
+                            // ////////*Location Message*////////////
+                            else if (msg.getMedia_wa_type().equals("4")) {
+                                send_Location("" + msg.getLatitude(),
+                                        "" + msg.getLongitude(), msg.getRow_data());
+                            }
+                            // ////////*Contacts Message*////////////
+                            else if (msg.getMedia_wa_type().equals("5")) {
+                                send_Contact(msg.getRow_data(), msg.getData(),
+                                        msg.getMedia_name());
+                            }
+                            // ////////*FILE Message*////////////
+                            else if (msg.getMedia_wa_type().equals("6")) {
+                                FORWORD_FILE(msg);
+                            } else if (msg.getMedia_wa_type().equals("12")) {
+
+                                sendImage(msg);
+                            }
                         }
-                    }
-                    }catch (Exception e){
+                    } catch (Exception e) {
 
                     }
 
@@ -2361,7 +2604,8 @@ public class MUCTest extends AppCompatActivity implements
             notifManager.cancelAll();
             NotificationHandler.Instance().resetCounter();
 
-            new FetchChat().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+//            new FetchChat().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
 
             // handlerThread.post(syncTyping);
 
@@ -2440,7 +2684,7 @@ public class MUCTest extends AppCompatActivity implements
                 for (int j = 0; j < ChatDictionary.mDictionaryList.size(); j += MUCTest.NYNM_REQUEST_CODE) {
                     if (words1[i]
                             .equalsIgnoreCase(ChatDictionary.mDictionaryList
-                                    .get(j).toString())&& !(txt.charAt(txt.length()-1)==' ')) {
+                                    .get(j).toString()) && !(txt.charAt(txt.length() - 1) == ' ')) {
                         String finalstring = ChatDictionary.mDictionaryMeaningList
                                 .get(j).toString();
                         String[] splMeaning = finalstring.split(",");
@@ -2528,7 +2772,7 @@ public class MUCTest extends AppCompatActivity implements
                                         .setVisibility(View.GONE);
                                 mParentActivity.listview
                                         .setVisibility(View.VISIBLE);
-                                selectedWord_backTemp=msg + editNo;
+                                selectedWord_backTemp = msg + editNo;
                                 Constant.printMsg("SSSSSSSSSSSSSSSSSSS"
                                         + edt_msg.getText().toString());
 
@@ -2668,7 +2912,7 @@ public class MUCTest extends AppCompatActivity implements
     public void sendGroupAnswer(String ans) {
 
         try {
-            Message msg = new Message(jid, Type.groupchat);
+            Message msg = new Message(JidCreate.from(jid), Type.groupchat);
             msg.setPacketID("" + new Date().getTime());
             msg.setBody(Utils.EncryptMessage(ans));
             JivePropertiesManager.addProperty(msg, "ID", 6);
@@ -2719,7 +2963,7 @@ public class MUCTest extends AppCompatActivity implements
         getMenuInflater().inflate(R.menu.muc_chat_menu, menu);
 
 		/*
-		 * int api= Integer.valueOf(android.os.Build.VERSION.SDK);
+         * int api= Integer.valueOf(android.os.Build.VERSION.SDK);
 		 *
 		 * //Log.d(TAG,"ANDROID API::"+api);
 		 *
@@ -2749,7 +2993,7 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 	/*
-	 * messageEventManager.addMessageEventNotificationListener(new
+     * messageEventManager.addMessageEventNotificationListener(new
 	 * MessageEventNotificationListener() { public void
 	 * deliveredNotification(String from, String packetID) {
 	 * //Constant.printMsg("The message has been delivered (" + from + ", " +
@@ -2787,10 +3031,9 @@ public class MUCTest extends AppCompatActivity implements
 		 */
 
         try {
-            for(int i=0; i<list.size(); i++)
-            {
+            for (int i = 0; i < list.size(); i++) {
                 MediaPlayer player = list.get(i);
-                if(player!=null) {
+                if (player != null) {
 
                     player.stop();
                     player.release();
@@ -2802,7 +3045,23 @@ public class MUCTest extends AppCompatActivity implements
 
         }
 
-        if (mIsLogClick) {
+        if (mIsLogClick || emoji_frag.isShown()) {
+
+            emoji_frag.setVisibility(View.GONE);
+            // btn_emo.setImageResource(R.drawable.smiling36);
+            btn_emo.setImageResource(R.drawable.emoji_btn_normal);
+
+            FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.MATCH_PARENT);
+            mScrollViewParams.topMargin = height * 8 / 100;
+            mScrollViewParams.bottomMargin = (height * 11 / 100);
+            mScrollView.setLayoutParams(mScrollViewParams);
+
+            ((InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE))
+                    .hideSoftInputFromWindow(edt_msg.getWindowToken(),
+                            0);
+
             try {
                 for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
 
@@ -2847,6 +3106,8 @@ public class MUCTest extends AppCompatActivity implements
                 mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
 
                 mChatHedderCopyLayout.setVisibility(View.GONE);
+                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
             } catch (Exception e) {
 
             }
@@ -2854,248 +3115,217 @@ public class MUCTest extends AppCompatActivity implements
         } else {
 
             try {
-            unregisterReceiver(lastseen_event);
-            handler.removeCallbacks(AsyncConnection);
+                unregisterReceiver(lastseen_event);
+                handler.removeCallbacks(AsyncConnection);
 
-            if (cursor != null) {
-                  cursor.close();
+                if (cursor != null) {
+                    cursor.close();
                 }
 
-            if (emoji_frag.getVisibility() == View.VISIBLE) {
-                emoji_frag.setVisibility(View.GONE);
-                btn_emo.setImageResource(R.drawable.emoji_btn_normal);
-            } else if (KachingMeApplication.getIS_FROM_NOTIFICATION()) {
-                KachingMeApplication.setIS_FROM_NOTIFICATION(false);
-                // Intent upIntent = NavUtils.getParentActivityIntent(this);
-                //
-                // TaskStackBuilder.create(this)
-                // .addNextIntentWithParentStack(upIntent).startActivities();
-                Constant.FromMUC_Chat = true;
+                if (emoji_frag.getVisibility() == View.VISIBLE) {
+                    emoji_frag.setVisibility(View.GONE);
+                    btn_emo.setImageResource(R.drawable.emoji_btn_normal);
+                } else if (KachingMeApplication.getIS_FROM_NOTIFICATION()) {
+                    KachingMeApplication.setIS_FROM_NOTIFICATION(false);
+                    // Intent upIntent = NavUtils.getParentActivityIntent(this);
+                    //
+                    // TaskStackBuilder.create(this)
+                    // .addNextIntentWithParentStack(upIntent).startActivities();
+                    Constant.FromMUC_Chat = true;
 //                Intent intent = new Intent(mParentActivity, SliderTesting.class);
 //                startActivity(intent);
 //                finish();
-                // KachingMeApplication.setIS_FROM_NOTIFICATION(false);
-                // Intent upIntent = NavUtils.getParentActivityIntent(this);
-                // // upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                // TaskStackBuilder.create(this)
-                // .addNextIntentWithParentStack(upIntent).startActivities();
-                //
-                // Intent intent = new Intent(MUC_Chat.this, SliderTesting.class);
-                // startActivity(intent);
-                // finish();
-            } else {
-                // super.onBackPressed();
-
-                if (Constant.fromChat == true) {
-//                    Intent intent = new Intent(mParentActivity, SliderTesting.class);
-//                    startActivity(intent);
-//                    finish();
+                    // KachingMeApplication.setIS_FROM_NOTIFICATION(false);
+                    // Intent upIntent = NavUtils.getParentActivityIntent(this);
+                    // // upIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                    // TaskStackBuilder.create(this)
+                    // .addNextIntentWithParentStack(upIntent).startActivities();
+                    //
+                    // Intent intent = new Intent(MUC_Chat.this, SliderTesting.class);
+                    // startActivity(intent);
+                    // finish();
                 } else {
-                    Constant.FromMUC_Chat = true;
+                    // super.onBackPressed();
+
+                    if (Constant.fromChat == true) {
 //                    Intent intent = new Intent(mParentActivity, SliderTesting.class);
 //                    startActivity(intent);
 //                    finish();
+                    } else {
+                        Constant.FromMUC_Chat = true;
+//                    Intent intent = new Intent(mParentActivity, SliderTesting.class);
+//                    startActivity(intent);
+//                    finish();
+                    }
+
                 }
 
-            }
-
-            }catch (Exception e){
+            } catch (Exception e) {
                 super.onBackPressed();
             }
-            if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification")) {
+            if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("notification") || msg_ids != null) {
                 Intent intent = new Intent(mParentActivity, SliderTesting.class);
                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                 intent.putExtra("SliderIntent", "SliderTesting");
                 startActivity(intent);
                 finish();
+            } else {
+                super.onBackPressed();
+
             }
-            super.onBackPressed();
 
         }
 
     }
 
     @Override
-         public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item) {
+        Intent intent;
 
-             Intent intent;
-             switch (item.getItemId()) {
-                 case android.R.id.home:
+        switch (item.getItemId()) {
+            case android.R.id.home:
 
-                     onBackPressed();
-                     return true;
+                onBackPressed();
+                return true;
 
-                 case R.id.menu_muc_menu:
-                     intent = new Intent(this, MUC_Info.class);
-                     intent.putExtra("jid", jid);
-                     intent.putExtra("subject", subject);
-                     intent.putExtra("avatar", avatar);
-                     startActivity(intent);
-                     break;
+            case R.id.menu_muc_menu:
+                intent = new Intent(this, MUC_Info.class);
+                intent.putExtra("jid", jid);
+                intent.putExtra("subject", subject);
+                intent.putExtra("avatar", avatar);
+                startActivity(intent);
+                break;
 
-             /*
-              * case R.id.menu_muc_menu_opm: intent=new Intent(this,MUC_Info.class);
-              * intent.putExtra("jid",jid); intent.putExtra("subject",subject);
-              * startActivity(intent); break;
-              */
+            case R.id.menu_capture:
 
-             /*
-              * case R.id.menu_image: image_picker(11); break;
-              *
-              * case R.id.menu_videos: image_picker(22); break;
-              */
+                selectImage();
 
-                 case R.id.menu_capture:
+                break;
 
-                     selectImage();
+            case R.id.audio_file:
 
-                     break;
-                 case R.id.audio_file:
+                // Intent intent2 = new Intent(Intent.ACTION_GET_CONTENT);
+                // intent2.setType("audio/*");
+                // startActivityForResult(intent2, RESULT_CODE_AUDIO);
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.mFromGroupAudio = true;
+                    startActivity(new Intent(this, SongList.class));
+                } else {
+                    Constant.permissionRequest(this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
 
-                     // Intent intent2 = new Intent(Intent.ACTION_GET_CONTENT);
-                     // intent2.setType("audio/*");
-                     // startActivityForResult(intent2, RESULT_CODE_AUDIO);
-                     Constant.mFromGroupAudio = true;
-                     startActivity(new Intent(this, SongList.class));
+                break;
 
-                     break;
-                 case R.id.clear_chat:
-                     AlertDialog.Builder b = new AlertDialog.Builder(mParentActivity);
-                     b.setMessage("Are you sure you want to clear this chat ?")
-                             .setCancelable(false);
-                     b.setPositiveButton(getResources().getString(R.string.cancel),
-                             new DialogInterface.OnClickListener() {
-                                 public void onClick(DialogInterface dialog, int id) {
-                                     dialog.cancel();
+            case R.id.clear_chat:
 
-                                 }
-                             });
-                     b.setNegativeButton(getResources().getString(R.string.Ok),
-                             new DialogInterface.OnClickListener() {
-                                 public void onClick(DialogInterface dialog, int id) {
-                                     dialog.cancel();
+                AlertDialog.Builder b = new AlertDialog.Builder(mParentActivity);
+                b.setMessage("Are you sure you want to clear this chat ?")
+                        .setCancelable(false);
+                b.setPositiveButton(getResources().getString(R.string.cancel),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
 
-                                     dbAdapter.setGroupDeleteMessages(jid);
-                                     int msg_id = dbAdapter.getLastMsgid(jid);
-                                     dbAdapter.setUpdateChat_lits(jid, msg_id);
-     //                                clearGroupHistory(jid);
-                                     ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
-                                 }
-                             });
+                            }
+                        });
+                b.setNegativeButton(getResources().getString(R.string.Ok),
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int id) {
+                                dialog.cancel();
 
-                     AlertDialog alert = b.create();
-                     alert.show();
+                                dbAdapter.setGroupDeleteMessages(jid);
+                                int msg_id = dbAdapter.getLastMsgid(jid);
+                                dbAdapter.setUpdateChat_lits(jid, msg_id);
+                                //                                clearGroupHistory(jid);
+                                ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
+                            }
+                        });
 
-                     break;
+                AlertDialog alert = b.create();
+                alert.show();
 
-                 case R.id.menu_image:
-                     // image_picker(1);
-                     // create Intent to take a picture and return control to the calling
-                     // application
-                     intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                break;
 
-                     fileUri = Utils.getOutputMediaFileUri(1);
-                     // create a file to save the image
-                     intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-                     // file name
+            case R.id.menu_image:
+                // image_picker(1);
+                // create Intent to take a picture and return control to the calling
+                // application
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.CAMERA)) {
+                    intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                     // start the image capture Intent
-                     startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+                    fileUri = Utils.getOutputMediaFileUri(1);
+                    // create a file to save the image
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+                    // file name
 
-                     break;
-                 case R.id.menu_videos:
-                     // image_picker(2);
-                     intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+                    // start the image capture Intent
+                    startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+                } else {
+                    Constant.permissionRequest(this, Manifest.permission.CAMERA, Constant.PERMISSION_CODE_MISCEL);
+                }
 
-                     fileUri = Utils.getOutputMediaFileUri(2); // create a file to save
-                     // the video
-                     intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-                     // file name
-                     intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0.8); // set the
-                     // video
-                     // image
-                     // quality
-                     // to high
-                     intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 26214400);
-                     // start the Video Capture Intent
-                     startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+                break;
 
-                     break;
-                 case R.id.menu_location:
-                     intent = new Intent(this, LocationShare.class);
-                     startActivityForResult(intent, 44);
-                     break;
+            case R.id.menu_videos:
 
-                 case R.id.menu_contact:
-                     intent = new Intent(Intent.ACTION_PICK,
-                             ContactsContract.Contacts.CONTENT_URI);
-                     startActivityForResult(intent, 55);
-                     break;
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.CAMERA)) {
+                    intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
 
-                 case R.id.menu_file:
-                     intent = new Intent(getBaseContext(), FileDialog.class);
-                     intent.putExtra(FileDialog.START_PATH, "/mnt");
-                     // can user select directories or not
-                     intent.putExtra(FileDialog.CAN_SELECT_DIR, false);
-                     intent.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
-                     // alternatively you can set file filter
-                     intent.putExtra(FileDialog.FORMAT_FILTER, new String[]{"ade",
-                             "adp", "bat", "chm", "cmd", "com", "cpl", "exe", "hta",
-                             "ins", "isp", "jse", "lib", "lnk", "mde", "msc", "msp",
-                             "mst", "pif", "scr", "sct", "shb", "sys", "vb", "vbe",
-                             "vbs", "vxd", "wsc", "wsf", "wsh"});
-                     startActivityForResult(intent, 77);
-                     break;
-                 // case R.id.menu_google_drive_file:
-                 // openGoogleDriveFiles();
-                 // break;
-             /*
-              * case R.id.menu_karaoke: Intent intentka = new Intent(MUC_Chat.this,
-              * KaraokeMainGroup.class); startActivity(intentka); break;
-              */
-                 case R.id.menu_muc_lock_chat:
-                     Log.d(TAG, "Menu Title::" + item.getTitle() + " Lock resource::"
-                             + res.getString(R.string.lock_chat).toString());
-                     if (item.getTitle().toString() == res.getString(R.string.lock_chat)
-                             .toString()) {
-                         lock_input(txt_title.getText().toString(), jid, true);
-                     } else {
-                         lock_input(txt_title.getText().toString(), jid, false);
-                     }
-                     break;
-                 default:
-                     break;
-                 // case R.id.menu_zzle:
-                 // menuclick = false;
-                 //
-                 // if (!edt_msg.getText().toString().trim().equals("")) {
-                 // menuclick = true;
-                 // Constant.bux = sharedPrefs.getLong("buxvalue", 0);
-                 //
-                 // Long buxval = Constant.bux + Constant.zzlepoints;
-                 // Constant.bux = buxval;
-                 //
-                 // Editor e = sharedPrefs.edit();
-                 // e.putLong("buxvalue", buxval);
-                 // e.commit();
-                 //
-                 // sendMessage("<z>" + edt_msg.getText().toString());
-                 // } else {
-                 // Alert();
-                 //
-                 // }
+                    fileUri = Utils.getOutputMediaFileUri(2); // create a file to save
+                    // the video
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+                    // file name
+                    intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0.8); // set the
+                    // video
+                    // image
+                    // quality
+                    // to high
+                    intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 26214400);
+                    // start the Video Capture Intent
+                    startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+                } else {
+                    Constant.permissionRequest(this, Manifest.permission.CAMERA, Constant.PERMISSION_CODE_MISCEL);
+                }
 
-                 // break;
+                break;
 
-             }
+            case R.id.menu_location:
+                locationShare();
+                break;
 
-             return super.onOptionsItemSelected(item);
-         }
+            case R.id.menu_contact:
+                contactShare();
+                break;
 
-    /**
-     * For sending the messages
-     */
-    public void mSendMsg() {
+            case R.id.menu_file:
+                intent = new Intent(getBaseContext(), FileDialog.class);
+                intent.putExtra(FileDialog.START_PATH, "/mnt");
+                // can user select directories or not
+                intent.putExtra(FileDialog.CAN_SELECT_DIR, false);
+                intent.putExtra(FileDialog.SELECTION_MODE, SelectionMode.MODE_OPEN);
+                // alternatively you can set file filter
+                intent.putExtra(FileDialog.FORMAT_FILTER, new String[]{"ade",
+                        "adp", "bat", "chm", "cmd", "com", "cpl", "exe", "hta",
+                        "ins", "isp", "jse", "lib", "lnk", "mde", "msc", "msp",
+                        "mst", "pif", "scr", "sct", "shb", "sys", "vb", "vbe",
+                        "vbs", "vxd", "wsc", "wsf", "wsh"});
+                startActivityForResult(intent, 77);
+                break;
+
+            case R.id.menu_muc_lock_chat:
+                Log.d(TAG, "Menu Title::" + item.getTitle() + " Lock resource::"
+                        + res.getString(R.string.lock_chat).toString());
+                if (item.getTitle().toString() == res.getString(R.string.lock_chat)
+                        .toString()) {
+                    lock_input(txt_title.getText().toString(), jid, true);
+                } else {
+                    lock_input(txt_title.getText().toString(), jid, false);
+                }
+                break;
+            default:
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -3117,7 +3347,7 @@ public class MUCTest extends AppCompatActivity implements
 
                 Constant.printMsg("QQQQQQQ" + splited[i]);
 
-                if (containsCaseInsensitive(splited[i],mFinalNyms)) {
+                if (containsCaseInsensitive(splited[i], mFinalNyms)) {
 
                     Constant.printMsg("QQQQQQQ1111" + splited[i]);
 
@@ -3424,10 +3654,14 @@ public class MUCTest extends AppCompatActivity implements
     }
 
     @Override
+    protected void onStart() {
+        ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
+        super.onStart();
+
+    }
+
+    @Override
     protected void onResume() {
-
-        super.onResume();
-
 
         mAttachKachingFeatures();
 
@@ -3440,7 +3674,9 @@ public class MUCTest extends AppCompatActivity implements
 
         IS_Front = true;
         updateReadMessages();
-
+//        if (ChatDictionary.mDictionaryList.size() == 0) {
+        fetchNymFrom();
+//        }
         handler.postDelayed(AsyncConnection, 0);
         // handler.postDelayed(AsyncConnection, 0);
 
@@ -3485,24 +3721,27 @@ public class MUCTest extends AppCompatActivity implements
         filter.addAction("chat");
         filter.addAction("MUC_delivary_notification");
         filter.addAction("muc_fetch_chat");
+        filter.addAction("download_set_video");
+        filter.addAction("download_set_image");
+        filter.addAction("download_set_audio");
         filter.addAction("start_typing");
         filter.addAction("update_tick");
         filter.addAction("update_left");
 
         registerReceiver(lastseen_event, filter);
-        if(Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("info")){
+        if (Constant.FROM_CHAT_SCREEN.equalsIgnoreCase("info")) {
 
-            if(Constant.mGroupInfoProfile!=null){
+            if (Constant.mGroupInfoProfile != null) {
 
-                ProfileRoundImg  mSenderImage=new ProfileRoundImg(Constant.mGroupInfoProfile);
+                ProfileRoundImg mSenderImage = new ProfileRoundImg(Constant.mGroupInfoProfile);
                 img_chat_avatar.setImageDrawable(mSenderImage);
 
-            }else{
-                Bitmap  bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
+            } else {
+                Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                 ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                 img_chat_avatar.setImageDrawable(mSenderImage);
             }
-            Constant.FROM_CHAT_SCREEN="";
+            Constant.FROM_CHAT_SCREEN = "";
 
         }
         try {
@@ -3510,6 +3749,8 @@ public class MUCTest extends AppCompatActivity implements
         } catch (Exception e) {
             e.printStackTrace();
         }
+        super.onResume();
+
     }
 
     @Override
@@ -3524,7 +3765,7 @@ public class MUCTest extends AppCompatActivity implements
 
             IS_Front = false;
             // doUnbindService();
-            handlerThread.removeCallbacks(updatTitle);
+            // handlerThread.removeCallbacks(updatTitle);
             handler.removeCallbacks(AsyncConnection);
             // handlerThread.removeCallbacks(syncTyping);
         } catch (Exception e) {
@@ -3662,7 +3903,7 @@ public class MUCTest extends AppCompatActivity implements
 
         IS_Recorded = true;
 
-        if(timer!=null)
+        if (timer != null)
             timer.cancel();
 
         if (Constant.isModeDebug)
@@ -3675,10 +3916,9 @@ public class MUCTest extends AppCompatActivity implements
         }
 
         try {
-            for(int i=0; i<list.size(); i++)
-            {
+            for (int i = 0; i < list.size(); i++) {
                 MediaPlayer player = list.get(i);
-                if(player!=null) {
+                if (player != null) {
 
                     player.stop();
                     player.release();
@@ -3794,7 +4034,7 @@ public class MUCTest extends AppCompatActivity implements
         NotificationHandler.Instance().resetCounter();
 
 
-    //    ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
+        //    ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
         Constant.printMsg("Aaa  came to restart MUC");
         super.onRestart();
     }
@@ -3855,11 +4095,10 @@ public class MUCTest extends AppCompatActivity implements
                                         true);
                     }
                 }
-            } else
-            {
+            } else {
 
             }
-                // add or remove selection for current list item
+            // add or remove selection for current list item
 //                onListItemSelect(position);
         } catch (Resources.NotFoundException e) {
 
@@ -3903,9 +4142,9 @@ public class MUCTest extends AppCompatActivity implements
             msggetset.setRemote_resource(KachingMeApplication.getUserID()
                     + KachingMeApplication.getHost());
             msggetset.setIs_sec_chat(1);
-            long l =   dbAdapter.setInsertMessages(msggetset);
+            long l = dbAdapter.setInsertMessages(msggetset);
 
-            msggetset.set_id((int)l);
+            msggetset.set_id((int) l);
 
 
            /* if (dbAdapter.isExistinChatList_chat(jid, 0)) {
@@ -3915,7 +4154,7 @@ public class MUCTest extends AppCompatActivity implements
             }*/
 
 
-         //   dbAdapter.setInsertChat_list(jid, (int)l);
+            //   dbAdapter.setInsertChat_list(jid, (int)l);
             edt_msg.setText("");
             Constant.printMsg("MUC_Cha Is joined..3 " + msggetset.toString());
             // Get size in double to update msg network usage
@@ -3930,6 +4169,7 @@ public class MUCTest extends AppCompatActivity implements
             }
 
             msg_list.add(msggetset);
+            mPositionKey_muc.add(msggetset.getKey_id());
 
             intializationElements(1);
             rightTextChat();
@@ -3939,7 +4179,6 @@ public class MUCTest extends AppCompatActivity implements
             mRightTipLayout.requestFocus();
             edt_msg.setText("");
             edt_msg.requestFocus();
-
 
 
 //
@@ -3962,7 +4201,7 @@ public class MUCTest extends AppCompatActivity implements
                                         KachingMeApplication.getjid());
 
                         Log.d("MUC_Chat", "Is joined..6a");
-                        Message msg = new Message(jid, Type.groupchat);
+                        Message msg = new Message(JidCreate.from(jid), Type.groupchat);
                         Log.d("MUC_Chat", "Is joined..6b");
                         msg.setStanzaId(msg_id);
                         Log.d("MUC_Chat", "Is joined..6c");
@@ -4012,7 +4251,6 @@ public class MUCTest extends AppCompatActivity implements
             }
 
 
-
         } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
             Constant.printMsg("Aaa Exception in send msg 2 :" + e.toString());
         }
@@ -4030,7 +4268,7 @@ public class MUCTest extends AppCompatActivity implements
     public void sendNotification(String jid) {
         MessageEventManager messageeventmanager = TempConnectionService.messageEventManager;
         try {
-            messageeventmanager.sendComposingNotification(jid,
+            messageeventmanager.sendComposingNotification(JidCreate.from(jid),
                     Constant.TYPING_STATUS_GROUP);
         } catch (Exception e) {
             // TODO Auto-generated catch block
@@ -4068,8 +4306,8 @@ public class MUCTest extends AppCompatActivity implements
         try {
             myRecorder = new MediaRecorder();
             myRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
-            myRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+            myRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+            myRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
 
             boolean success = (new File(Constant.local_audio_dir)).mkdirs();
             final Dialog dialog = new Dialog(this);
@@ -4087,192 +4325,144 @@ public class MUCTest extends AppCompatActivity implements
             is_started = false;
             is_startrec = true;
 
-            if (!success)
-            {
+            if (!success) {
                 Log.e("directory not created", "directory not created");
             }
             final String file_path = Constant.local_audio_dir + System.currentTimeMillis() + ".amr";
 
             myRecorder.setOutputFile(file_path);
 
-            try
-            {
+            try {
                 myRecorder.prepare();
-            }
-            catch (IllegalStateException e1)
-            {
+            } catch (IllegalStateException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
-            }
-            catch (IOException e1)
-            {
+            } catch (IOException e1) {
                 // TODO Auto-generated catch block
                 e1.printStackTrace();
             }
 
-            btn_record.setOnLongClickListener(new OnLongClickListener()
-            {
+            btn_record.setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
-                public boolean onLongClick(View v)
-                {
-                    Log.e("Record", "Long Pressed");
+                public boolean onLongClick(View v) {
+                    Constant.printMsg("kfsfsfslkdflksdf");
+                    try {
+                        presence_recording();
+                        myRecorder.start();
+                    } catch (Exception e) {
+                        // ACRA.getErrorReporter().handleException(e);
+                        e.printStackTrace();
+                    }
+
+                    ch.setBase(SystemClock.elapsedRealtime());
+                    Log.e("Record", "Action Up");
+                    btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_record));
                     ch.start();
+                    is_startrec = false;
+                    // ch.start();
                     return true;
                 }
             });
 
-            btn_record.setOnTouchListener(new OnTouchListener()
-            {
+            btn_record.setOnTouchListener(new OnTouchListener() {
                 @Override
-                public boolean onTouch(View v, MotionEvent event)
-                {
+                public boolean onTouch(View v, MotionEvent event) {
                     // TODO Auto-generated method stub
-                    if (event.getAction() == MotionEvent.ACTION_DOWN)
-                    {
-                        if (!is_started)
-                        {
-                            Log.e("Chat Action Up 1 ", is_started + "\n" + is_startrec);
+                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                        if (!is_started) {
 
-                            try
-                            {
-                                myRecorder.start();
-
-                                IS_Recorded = false;
-                            }
-                            catch (Exception e)
-                            {
-                                // ACRA.getErrorReporter().handleException(e);
-                                e.printStackTrace();
-                            }
-
-
-
-                            ch.setBase(SystemClock.elapsedRealtime());
-                            Log.e("Record", "Action Up");
-                            Log.e("Chat Action Up 2 ", is_started + "\n" + is_startrec);
-                            btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_record));
-                            ch.start();
                             is_started = true;
-                            is_startrec = false;
+
+                            //  return false;
                         }
-                    }
-                    else if (event.getAction() == MotionEvent.ACTION_UP)
-                    {
+                    } else if (event.getAction() == MotionEvent.ACTION_UP) {
+                        if (!is_startrec) {
+                            try {
+                                Log.e("Record", "Action Down");
+                                Log.e("Action Down", "Down" + is_startrec);
 
-                        IS_Recorded = true;
-                        if (!is_startrec)
-                        {
+                                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_send));
 
-                            if(timer!=null)
-                                timer.cancel();
-
-
-                            Log.e("Record", "Action Down");
-
-                            Log.e("Action Down", "Down" + is_startrec);
-
-                            btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_send));
-
-                            ch.stop();
-
-
-
-                            String chrono_text = ch.getText().toString();
-
-                            if (chrono_text.equalsIgnoreCase("00:00"))
-                            {
                                 ch.stop();
-                                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
-                                Toast.makeText(getApplicationContext(), "Hold To Record", Toast.LENGTH_LONG).show();
-                                is_startrec = true;
-                                is_started = true;
-                            }
+                                timer.cancel();
+                                String chrono_text = ch.getText().toString();
 
-                            try
-                            {
-                                if (myRecorder != null)
-                                {
-                                    myRecorder.stop();
-                                    myRecorder.release();
-                                    myRecorder = null;
-                                }
-
-                                File f = new File(file_path);
-                                String File_name = f.getName();
-                                int size = (int) f.length();
-                                int mediaDuration = 0;
-
-                                MediaPlayer mediaAudioPlayer = new MediaPlayer();
-                                mediaAudioPlayer.setDataSource(file_path);
-                                mediaAudioPlayer.prepare();
-                                mediaDuration = mediaAudioPlayer.getDuration();
-
-                                is_startrec = false;
-                                is_started = false;
-
-                                Log.e("Chat Test Duration", mediaDuration + "\n" + size + "\n" + File_name);
-                            }
-                            catch (IllegalStateException e)
-                            {
-                                Log.e("Chat Test Illegal", is_started + "\n" + is_startrec + "\n" + e.toString());
-
-                                e.printStackTrace();
-
-                                if (is_startrec)
-                                {
-                                    is_started = false;
-                                    is_startrec = false;
-                                    Log.e("Illegal Status 1", is_started + "\n" + is_startrec);
-                                }
-                                else
-                                {
+                                if (chrono_text.equalsIgnoreCase("00:00")) {
+                                    ch.stop();
+                                    btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
+                                    Toast.makeText(getApplicationContext(), "Hold To Record", Toast.LENGTH_LONG).show();
+                                    is_startrec = true;
                                     is_started = true;
-                                    is_startrec = false;
-                                    Log.e("Illegal Status 2", is_started + "\n" + is_startrec);
                                 }
+                                try {
+                                    if (myRecorder != null) {
+                                        myRecorder.stop();
+                                        myRecorder.release();
+                                        myRecorder = null;
+                                    }
+
+                                    File f = new File(file_path);
+                                    String File_name = f.getName();
+                                    int size = (int) f.length();
+                                    int mediaDuration = 0;
+
+                                    MediaPlayer mediaAudioPlayer = new MediaPlayer();
+                                    mediaAudioPlayer.setDataSource(file_path);
+                                    mediaAudioPlayer.prepare();
+                                    mediaDuration = mediaAudioPlayer.getDuration();
+
+                                    is_startrec = false;
+                                    is_started = false;
+
+                                    Log.e("Chat Test Duration", mediaDuration + "\n" + size + "\n" + File_name);
+                                } catch (IllegalStateException e) {
+                                    Log.e("Chat Test Illegal", is_started + "\n" + is_startrec + "\n" + e.toString());
+
+                                    e.printStackTrace();
+
+                                    if (is_startrec) {
+                                        is_started = false;
+                                        is_startrec = false;
+                                        Log.e("Illegal Status", is_started + "\n" + is_startrec);
+                                    } else {
+                                        is_started = true;
+                                        is_startrec = false;
+                                        Log.e("Illegal Status", is_started + "\n" + is_startrec);
+                                    }
+                                } catch (RuntimeException e) {
+                                    Log.e("Chat Test Runtime", is_started + "\n" + is_startrec + "\n" + e.toString());
+                                    e.printStackTrace();
+                                    btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
+                                    is_startrec = true;
+                                    is_started = false;
+                                } catch (IOException e) {
+                                    Log.e("Chat Test", e.toString());
+                                    e.printStackTrace();
+                                }
+                            } catch (Exception e) {
                             }
-                            catch (RuntimeException e)
-                            {
-                                Log.e("Chat Test Runtime", is_started + "\n" + is_startrec + "\n" + e.toString());
-                                e.printStackTrace();
-                                btn_record.setImageDrawable(getResources().getDrawable(R.drawable.btn_hold_talk));
-                                is_startrec = true;
-                                is_started = false;
-                                Log.e("Chat Test Runtime 1", is_started + "\n" + is_startrec + "\n" + e.toString());
-                            }
-                            catch (IOException e)
-                            {
-                                Log.e("Chat Test", e.toString());
-                                e.printStackTrace();
-                            }
+
                         }
                     }
-                    return true;
+                    return false;
                 }
             });
 
-            btn_cancel.setOnClickListener(new OnClickListener()
-            {
+            btn_cancel.setOnClickListener(new OnClickListener() {
                 @Override
-                public void onClick(View v)
-                {
+                public void onClick(View v) {
                     dialog.dismiss();
                 }
             });
 
-            btn_send.setOnClickListener(new OnClickListener()
-            {
+            btn_send.setOnClickListener(new OnClickListener() {
                 @Override
-                public void onClick(View v)
-                {
+                public void onClick(View v) {
                     Constant.printMsg(is_startrec + "Start Rec");
 
-                    if (is_startrec)
-                    {
+                    if (is_startrec) {
                         Toast.makeText(getApplicationContext(), "No Audio File Found..!!", Toast.LENGTH_LONG).show();
-                    }
-                    else
-                    {
+                    } else {
                         File f = new File(file_path);
                         String File_name = f.getName();
                         int size = (int) f.length();
@@ -4366,32 +4556,28 @@ public class MUCTest extends AppCompatActivity implements
                                     Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
 
-        if (requestCode == Constants.REQUEST_CODE && resultCode == RESULT_OK && imageReturnedIntent != null)
-        {
+        if (requestCode == Constants.REQUEST_CODE && resultCode == RESULT_OK && imageReturnedIntent != null) {
             Constant.mSelectedImage = new ArrayList();
 
             ArrayList<Image> images = imageReturnedIntent.getParcelableArrayListExtra(Constants.INTENT_EXTRA_IMAGES);
 
             StringBuffer stringBuffer = new StringBuffer();
 
-            for (int i = 0, l = images.size(); i < l; i++)
-            {
+            for (int i = 0, l = images.size(); i < l; i++) {
                 stringBuffer.append(images.get(i).path + "|");
 
                 Constant.mSelectedImage.add(images.get(i).path);
             }
             Constant.mImagepath = stringBuffer.toString();
 
-            if (resultCode == RESULT_OK)
-            {
+            if (resultCode == RESULT_OK) {
                 imagesPathList = new ArrayList<>();
 
                 String[] imagesPath = Constant.mImagepath.split("\\|");
 
                 System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath);
 
-                for (int i = 0; i < imagesPath.length; i++)
-                {
+                for (int i = 0; i < imagesPath.length; i++) {
                     System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath[i]);
 
                     imagesPathList.add(imagesPath[i]);
@@ -4404,35 +4590,25 @@ public class MUCTest extends AppCompatActivity implements
 
                     length = length / 1024;
 
-                    if (length > 16384)
-                    {
+                    if (length > 16384) {
                         new AlertManager().showAlertDialog(this, getResources().getString(R.string.imagesize_must_be_smaller), true);
-                    }
-                    else
-                    {
-                        Thread t = new Thread(new Runnable()
-                        {
+                    } else {
+                        Thread t = new Thread(new Runnable() {
                             @Override
-                            public synchronized void run()
-                            {
+                            public synchronized void run() {
                                 // TODO Auto-generated method stub
 
-                                try
-                                {
-                                    for (int i = 0; i < Constant.mSelectedImage.size(); i++)
-                                    {
+                                try {
+                                    for (int i = 0; i < Constant.mSelectedImage.size(); i++) {
                                         Constant.printMsg("IIIIIIIII");
 
                                         Constant.printMsg("test path sender::::::::::::: " + Constant.mSelectedImage.get(i) + "   " + i);
 
-                                        synchronized (this)
-                                        {
+                                        synchronized (this) {
                                             uploadFile(String.valueOf(Constant.mSelectedImage.get(i)), true);
                                         }
                                     }
-                                }
-                                catch (Exception e)
-                                {
+                                } catch (Exception e) {
                                     // TODO Auto-generated catch block
                                     e.printStackTrace();
                                 }
@@ -4536,9 +4712,6 @@ public class MUCTest extends AppCompatActivity implements
                 if (resultCode == Activity.RESULT_OK) {
 
 
-
-
-
                     Uri contactData = imageReturnedIntent.getData();
                     Cursor phones = managedQuery(contactData, null, null, null,
                             null);
@@ -4561,15 +4734,14 @@ public class MUCTest extends AppCompatActivity implements
                                 new String[]{id_data}, null);
                         while (pCur.moveToNext()) {
                             numberContactSend = pCur.getString(pCur.getColumnIndex("data1"));
-                            if(numberContactSend!=null)
-                            {
+                            if (numberContactSend != null) {
 
-                                numberContactSend = numberContactSend.replaceAll("\\p{P}","");
-                                numberContactSend = numberContactSend.replaceAll(" ","");
-                                numberContactSend = numberContactSend.replaceAll("-","");
+                                numberContactSend = numberContactSend.replaceAll("\\p{P}", "");
+                                numberContactSend = numberContactSend.replaceAll(" ", "");
+                                numberContactSend = numberContactSend.replaceAll("-", "");
                             }
 
-                            Constant.printMsg("Diliiip " + numberContactSend );
+                            Constant.printMsg("Diliiip " + numberContactSend);
                         }
                         pCur.close();
                     }
@@ -4811,7 +4983,7 @@ public class MUCTest extends AppCompatActivity implements
 
             String strMyImagePath = null;
             Bitmap scaledBitmap = null;
-            String urlString = "";
+            //  String urlString = "";
             if (is_image) {
 
                 try {
@@ -4821,7 +4993,7 @@ public class MUCTest extends AppCompatActivity implements
                     ByteArrayOutputStream outstream_thumb = new ByteArrayOutputStream();
 
 
-                    Bitmap thumb_bitmap =  new CompressImage().compressImage(strURL, file_path, 13);
+                    Bitmap thumb_bitmap = new CompressImage().compressImage(strURL, file_path, 13);
                     thumb_bitmap.compress(Bitmap.CompressFormat.JPEG, 80,
                             outstream_thumb);
                     thumb = outstream_thumb.toByteArray();
@@ -4833,7 +5005,7 @@ public class MUCTest extends AppCompatActivity implements
                     }
 
                     file_path = Constant.local_image_dir + File_name;
-                    new CompressImage().compressImage(strURL, file_path,1);
+                    new CompressImage().compressImage(strURL, file_path, 1);
 //                    FileOutputStream stream = new FileOutputStream(file_path);
 //
 //                    byteArray = outstream.toByteArray();
@@ -4848,11 +5020,11 @@ public class MUCTest extends AppCompatActivity implements
                     e.printStackTrace();
                 }
 
-                urlString = KachingMeConfig.UPLOAD_MEDIA_PHP;
+                //    urlString = KachingMeConfig.UPLOAD_MEDIA_PHP;
 
             } else {
                 file_path = strURL;
-                urlString = KachingMeConfig.UPLOAD_MEDIA_PHP;
+                //  urlString = KachingMeConfig.UPLOAD_MEDIA_PHP;
                 Bitmap video_thumb = ThumbnailUtils.createVideoThumbnail(file_path,
                         MediaStore.Images.Thumbnails.MINI_KIND);
 
@@ -4870,7 +5042,6 @@ public class MUCTest extends AppCompatActivity implements
                     retriever.setDataSource(this, Uri.fromFile(f));
                     String duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
                     timeInMillisec = Integer.parseInt(duration);
-
 
 
                     try {
@@ -4918,8 +5089,8 @@ public class MUCTest extends AppCompatActivity implements
             msggetset.setRemote_resource(KachingMeApplication.getUserID()
                     + KachingMeApplication.getHost());
             msggetset.setIs_sec_chat(1);
-            long idvalue=dbAdapter.setInsertMessages(msggetset);
-            msggetset.set_id((int)idvalue);
+            long idvalue = dbAdapter.setInsertMessages(msggetset);
+            msggetset.set_id((int) idvalue);
 
             // Get size in double to update media network usage
             try {
@@ -5154,7 +5325,14 @@ public class MUCTest extends AppCompatActivity implements
             msggetset.setKey_remote_jid(jid);
             msggetset.setNeeds_push(1);
             msggetset.setSend_timestamp(new Date().getTime());
-            msggetset.setStatus(3);
+            if (Connectivity.isOnline(mParentActivity) && Connectivity.isTempConnection()) {
+                msggetset.setStatus(2);
+
+            } else {
+                msggetset.setStatus(3);
+
+            }
+
             msggetset.setTimestamp(new Date().getTime());
             msggetset.setThumb_image(null);
             msggetset.setLatitude(Double.parseDouble(lat));
@@ -5180,9 +5358,14 @@ public class MUCTest extends AppCompatActivity implements
                 dbAdapter.setInsertChat_list(jid, msg_id);
             }
 
-            Message msg = new Message(jid, Type.groupchat);
+            Message msg = null;
+            try {
+                msg = new Message(JidCreate.from(jid), Type.groupchat);
+            } catch (XmppStringprepException e) {
+                e.printStackTrace();
+            }
             JivePropertiesManager.addProperty(msg, "msg_type", 4);
-            msg.setPacketID("" + packet_id);
+            msg.setStanzaId("" + packet_id);
             msg.setBody("");
             JivePropertiesManager.addProperty(msg, "media_type", 4);
             JivePropertiesManager.addProperty(msg, "thumb_image",
@@ -5209,6 +5392,7 @@ public class MUCTest extends AppCompatActivity implements
             }
 
             msg_list.add(msggetset);
+            mPositionKey_muc.add(msggetset.getKey_id());
 
 
             mParentActivity.runOnUiThread(new Runnable() {
@@ -5225,9 +5409,9 @@ public class MUCTest extends AppCompatActivity implements
                 }
             });
 
-            ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
+            // ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
 
-            SendWeb_Group.Add_Message_on_web(mParentActivity, msggetset);
+            //  SendWeb_Group.Add_Message_on_web(mParentActivity, msggetset);
         } catch (NumberFormatException e) {
 
         }
@@ -5247,11 +5431,17 @@ public class MUCTest extends AppCompatActivity implements
         msggetset.setKey_remote_jid(jid);
         msggetset.setNeeds_push(1);
         msggetset.setSend_timestamp(new Date().getTime());
-        msggetset.setStatus(3);
+        if (Connectivity.isOnline(mParentActivity) && Connectivity.isTempConnection()) {
+            msggetset.setStatus(2);
+
+        } else {
+            msggetset.setStatus(3);
+
+        }
         msggetset.setTimestamp(new Date().getTime());
         msggetset.setThumb_image(null);
 
-        msggetset.setMedia_name(name+","+numberContactSend);
+        msggetset.setMedia_name(name + "," + numberContactSend);
 
         msggetset.setMedia_wa_type("" + 5);
 
@@ -5292,7 +5482,7 @@ public class MUCTest extends AppCompatActivity implements
             public void run() {
                 try {
 
-                    Message msg = new Message(jid, Type.groupchat);
+                    Message msg = new Message(JidCreate.from(jid), Type.groupchat);
                     JivePropertiesManager.addProperty(msg, "msg_type", 4);
                     msg.setPacketID("" + packet_id);
                     msg.setBody(Utils.EncryptMessage(vcard));
@@ -5305,7 +5495,7 @@ public class MUCTest extends AppCompatActivity implements
                                 avatar);
                     }
 
-                    JivePropertiesManager.addProperty(msg, "media_name", name+","+numberContactSend);
+                    JivePropertiesManager.addProperty(msg, "media_name", name + "," + numberContactSend);
 
                     DeliveryReceiptRequest.addTo(msg);
                     try {
@@ -5327,7 +5517,7 @@ public class MUCTest extends AppCompatActivity implements
         thread.start();
         ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
 
-        SendWeb_Group.Add_Message_on_web(mParentActivity, msggetset);
+        // SendWeb_Group.Add_Message_on_web(mParentActivity, msggetset);
     }
 
     // //////////////////////************** SEND
@@ -5380,7 +5570,9 @@ public class MUCTest extends AppCompatActivity implements
             msggetset.setMedia_size(size);
 
             msggetset.setIs_sec_chat(1);
-            dbAdapter.setInsertMessages(msggetset);
+            long id = dbAdapter.setInsertMessages(msggetset);
+
+            msggetset.set_id((int) id);
 
             // Get size in bytes to update media network usage
             try {
@@ -5405,13 +5597,17 @@ public class MUCTest extends AppCompatActivity implements
             }
 
             msg_list.add(msggetset);
+            mPositionKey_muc.add(msggetset.getKey_id());
 
             mParentActivity.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    intializationElements(1);
-                    rightAudioChat();
-                    setRightAudio_Old();
+                    if (!Constant.karaoke && !Constant.songlist) {
+                        intializationElements(1);
+
+                        rightAudioChat();
+                        setRightAudio_Old();
+                    }
                     k = k + 1;
 
                     mRightTipLayout.requestFocus();
@@ -5420,9 +5616,9 @@ public class MUCTest extends AppCompatActivity implements
                 }
             });
 
-            Intent login_broadcast = new Intent("chat");
-            login_broadcast.putExtra("jid", "" + jid);
-            sendBroadcast(login_broadcast);
+//            Intent login_broadcast = new Intent("chat");
+//            login_broadcast.putExtra("jid", "" + jid);
+//            sendBroadcast(login_broadcast);
         } catch (Exception e) {
 
         }
@@ -5815,110 +6011,104 @@ public class MUCTest extends AppCompatActivity implements
             // db.close();
         }
         return status_lock;
-
     }
 
     private void selectImage() {
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            try {
+                final Dialog dialog = new Dialog(this);
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.gallery_popup);
+                dialog.setCancelable(true);
 
-        try {
-            final Dialog dialog = new Dialog(this);
-            dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-            dialog.setContentView(R.layout.gallery_popup);
-            dialog.setCancelable(true);
+                TextView mGalleryText = (TextView) dialog.findViewById(R.id.gallery_text);
+                TextView mPhotoText = (TextView) dialog.findViewById(R.id.photo_text);
+                TextView mVideoText = (TextView) dialog.findViewById(R.id.video_text);
 
-            TextView mGalleryText = (TextView) dialog.findViewById(R.id.gallery_text);
-            TextView mPhotoText = (TextView) dialog.findViewById(R.id.photo_text);
-            TextView mVideoText = (TextView) dialog
-                    .findViewById(R.id.video_text);
+                LinearLayout mGalleryLayout = (LinearLayout) dialog.findViewById(R.id.header_layout);
+                LinearLayout mSelectionLayout = (LinearLayout) dialog.findViewById(R.id.selection_layout);
 
-            LinearLayout mGalleryLayout = (LinearLayout) dialog.findViewById(R.id.header_layout);
-            LinearLayout mSelectionLayout = (LinearLayout) dialog.findViewById(R.id.selection_layout);
+                LinearLayout.LayoutParams galleryLayoutParams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                galleryLayoutParams.width = width * 60 / 100;
+                galleryLayoutParams.height = height * 5 / 100;
+                galleryLayoutParams.gravity = Gravity.CENTER;
+                mGalleryLayout.setLayoutParams(galleryLayoutParams);
 
+                LinearLayout.LayoutParams text_layout = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                text_layout.width = width * 60 / 100;
+                text_layout.height = width * 21 / 100;
+                text_layout.gravity = Gravity.CENTER;
+                mSelectionLayout.setLayoutParams(text_layout);
 
-            LinearLayout.LayoutParams galleryLayoutParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            galleryLayoutParams.width = width * 60 / 100;
-            galleryLayoutParams.height = height * 5 / 100;
-            galleryLayoutParams.gravity = Gravity.CENTER;
-            mGalleryLayout.setLayoutParams(galleryLayoutParams);
+                LinearLayout.LayoutParams textparams = new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                textparams.width = width * 60 / 100;
+                textparams.leftMargin = width * 5 / 100;
+                textparams.height = width * 10 / 100;
+                textparams.gravity = Gravity.CENTER;
+                mPhotoText.setLayoutParams(textparams);
+                mVideoText.setLayoutParams(textparams);
+                mGalleryText.setLayoutParams(textparams);
+                mGalleryText.setGravity(Gravity.CENTER | Gravity.LEFT);
+                mGalleryText.setLeft(width * 5 / 100);
+                mVideoText.setGravity(Gravity.CENTER | Gravity.LEFT);
+                mPhotoText.setGravity(Gravity.CENTER | Gravity.LEFT);
+                Constant.typeFace(this, mGalleryText);
+                Constant.typeFace(this, mVideoText);
+                Constant.typeFace(this, mPhotoText);
 
+                if (width >= 600) {
 
-            LinearLayout.LayoutParams text_layout = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            text_layout.width = width * 60 / 100;
-            text_layout.height = width * 21 / 100;
-            text_layout.gravity = Gravity.CENTER;
-            mSelectionLayout.setLayoutParams(text_layout);
+                    mGalleryText.setTextSize(17);
+                    mPhotoText.setTextSize(17);
+                    mVideoText.setTextSize(17);
 
+                } else if (width > 501 && width < 600) {
 
-            LinearLayout.LayoutParams textparams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            textparams.width = width * 60 / 100;
-            textparams.leftMargin = width * 5 / 100;
-            textparams.height = width * 10 / 100;
-            textparams.gravity = Gravity.CENTER;
-            mPhotoText.setLayoutParams(textparams);
-            mVideoText.setLayoutParams(textparams);
-            mGalleryText.setLayoutParams(textparams);
-            mGalleryText.setGravity(Gravity.CENTER | Gravity.LEFT);
-            mGalleryText.setLeft(width * 5 / 100);
-            mVideoText.setGravity(Gravity.CENTER | Gravity.LEFT);
-            mPhotoText.setGravity(Gravity.CENTER | Gravity.LEFT);
-            Constant.typeFace(this, mGalleryText);
-            Constant.typeFace(this, mVideoText);
-            Constant.typeFace(this, mPhotoText);
+                    mGalleryText.setTextSize(16);
+                    mPhotoText.setTextSize(16);
+                    mVideoText.setTextSize(16);
 
+                } else if (width > 260 && width < 500) {
 
-            if (width >= 600) {
+                    mGalleryText.setTextSize(15);
+                    mPhotoText.setTextSize(15);
+                    mVideoText.setTextSize(15);
 
-                mGalleryText.setTextSize(17);
-                mPhotoText.setTextSize(17);
-                mVideoText.setTextSize(17);
+                } else if (width <= 260) {
 
-            } else if (width > 501 && width < 600) {
+                    mGalleryText.setTextSize(14);
+                    mPhotoText.setTextSize(14);
+                    mVideoText.setTextSize(14);
 
-                mGalleryText.setTextSize(16);
-                mPhotoText.setTextSize(16);
-                mVideoText.setTextSize(16);
+                }
 
-            } else if (width > 260 && width < 500) {
-
-                mGalleryText.setTextSize(15);
-                mPhotoText.setTextSize(15);
-                mVideoText.setTextSize(15);
-
-            } else if (width <= 260) {
-
-                mGalleryText.setTextSize(14);
-                mPhotoText.setTextSize(14);
-                mVideoText.setTextSize(14);
+                mPhotoText.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        image_picker(11);
+                    }
+                });
+                mVideoText.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                        image_picker(22);
+                    }
+                });
+                dialog.show();
+            } catch (Exception e) {
 
             }
-
-
-            mPhotoText.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dialog.dismiss();
-                    image_picker(11);
-                }
-            });
-            mVideoText.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    dialog.dismiss();
-                    image_picker(22);
-                }
-            });
-            dialog.show();
-        } catch (Exception e) {
-
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
         }
-
-
     }
 
     public void Show_Self_desc_time(int selected) {
@@ -6044,7 +6234,7 @@ public class MUCTest extends AppCompatActivity implements
                     public void onClick(DialogInterface dialog, int which) {
                         // TODO Auto-generated method stub
 
-                        if(mPopup){
+                        if (mPopup) {
                             downArrowClickAction();
                         }
                         System.out
@@ -6209,7 +6399,7 @@ public class MUCTest extends AppCompatActivity implements
                         // create packet
                         Message statusPacket = new Message();
                         // set body to null
-                        statusPacket.setBody(statusTyping);
+                        statusPacket.setBody(statusTyping + "," + KachingMeApplication.getjid());
                         // set packet type to group chat
                         statusPacket.setType(Type.groupchat);
                         // set subject to null
@@ -6217,7 +6407,7 @@ public class MUCTest extends AppCompatActivity implements
                         // set to the group name
                         // statusPacket.setTo(muc.getRoom());
                         // set from my current jis example : me@domain.com
-                        statusPacket.setFrom(frm);
+                        statusPacket.setFrom(JidCreate.from(frm));
                         // get the chat state extension and pass our state
                         JivePropertiesManager
                                 .addProperty(statusPacket, "ID", 5);
@@ -6233,8 +6423,12 @@ public class MUCTest extends AppCompatActivity implements
                                 statusPacket, true, true, true, true);
                         // get the connection and send the packet
 
-                        Constant.printMsg("jasdasjdas"+statusPacket.toXML());
-                        muc.sendMessage(statusPacket);
+                        Constant.printMsg("jasdasjdas" + statusPacket.toXML());
+                        try {
+                            muc.sendMessage(statusPacket);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
 
                         try {
                             Thread.sleep(2000);
@@ -6252,6 +6446,8 @@ public class MUCTest extends AppCompatActivity implements
 
                         Constant.printMsg("MUC Typing");
                     } catch (NotConnectedException e) {
+                        e.printStackTrace();
+                    } catch (XmppStringprepException e) {
                         e.printStackTrace();
                     }
                 }
@@ -6319,7 +6515,7 @@ public class MUCTest extends AppCompatActivity implements
         try {
 
             room_info = TempConnectionService.MUC_MANAGER
-                    .getRoomInfo(bookmarkedConference);
+                    .getRoomInfo(JidCreate.entityBareFrom(bookmarkedConference));
         } catch (Exception e) {
             // ACRA.getErrorReporter().handleException(e);
         }
@@ -6345,23 +6541,28 @@ public class MUCTest extends AppCompatActivity implements
 //                        Utils.getBookmarkTime(), "");
 
                 muc = MultiUserChatManager.getInstanceFor(connection)
-                        .getMultiUserChat(bookmarkedConference);
+                        .getMultiUserChat(JidCreate.entityBareFrom(bookmarkedConference));
                 // muc = new MultiUserChat(connection,
                 // bookmarkedConference.getJid());
 
                 muc.addMessageListener(TempConnectionService.muc_messageListener);
                 muc.addSubjectUpdatedListener(new MUC_SubjectChangeListener(
                         this));
-                DiscussionHistory history = new DiscussionHistory();
-                history.setSince(new Date());
-                history.setMaxStanzas(0);
-                history.setMaxChars(0);
-//                if (!muc.isJoined()) {
-                muc.join(dbAdapter.getLogin().get(0).getUserName()
-                                + KachingMeApplication.getHost(), null, history,
-                        6000000L);
-////                }
 
+
+                MucEnterConfiguration.Builder build =  muc.getEnterConfigurationBuilder(Resourcepart.from(jid));
+
+                build.requestHistorySince(new Date());
+                build.requestMaxStanzasHistory(0);
+                build.requestMaxCharsHistory(0);
+                build.timeoutAfter(6000000L);
+
+                MucEnterConfiguration musOb =  build.build();
+
+
+//                if (!muc.isJoined()) {
+                muc.join(musOb);
+////                }
 
 
             } catch (Exception e) {
@@ -6392,7 +6593,7 @@ public class MUCTest extends AppCompatActivity implements
             mchatHeadBackLayout = (LinearLayout) findViewById(R.id.mchatlayoutHeadBack);
             mChatHedderLayout = (LinearLayout) findViewById(R.id.chat_hedder_layout);
             mChatHedderTextLayout = (LinearLayout) findViewById(R.id.chat_hedder_text_layout);
-            mChatHedderCopyLayout= (LinearLayout) findViewById(R.id.chat_hedder_copy_layout);
+            mChatHedderCopyLayout = (LinearLayout) findViewById(R.id.chat_hedder_copy_layout);
             mChatHedderAttachmentLayout = (LinearLayout) findViewById(R.id.chat_hedder_attachment_layout);
             mChatHedderMenuLayout = (LinearLayout) findViewById(R.id.chat_hedder_menu_layout);
             mChatHedderCopyLayout.setVisibility(View.GONE);
@@ -6411,14 +6612,14 @@ public class MUCTest extends AppCompatActivity implements
             mChatFooterSendBtn = (RounderImageView) findViewById(R.id.sendButton);
 
             mDynamicView = (LinearLayout) findViewById(R.id.mdynamicView);
-            mScrollView= (ScrollView) findViewById(R.id.scroll_view);
+            mScrollView = (ScrollView) findViewById(R.id.scroll_view);
 
             mContactLayout = (LinearLayout) findViewById(R.id.contact_layout);
             mContactLayout.setVisibility(View.GONE);
 
             mSliderMenuLayout = (LinearLayout) findViewById(R.id.slider_menu_layout);
             mSliderMenuLayout.setVisibility(View.GONE);
-            
+
         } catch (Exception e) {
 
         }
@@ -6432,6 +6633,9 @@ public class MUCTest extends AppCompatActivity implements
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         height = displayMetrics.heightPixels;
         width = displayMetrics.widthPixels;
+
+        Constant.screenHeight = displayMetrics.heightPixels;
+        Constant.screenWidth = displayMetrics.widthPixels;
 
         LinearLayout.LayoutParams hedderLayoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -6512,17 +6716,19 @@ public class MUCTest extends AppCompatActivity implements
         LinearLayout.LayoutParams footerSlideMenuParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT);
-        footerSlideMenuParams.width = width * 7 / 100;
-        footerSlideMenuParams.height = height * 2 / 100;
+        footerSlideMenuParams.width = width * 6 / 100;
+        footerSlideMenuParams.height = width * 4 / 100;
         footerSlideMenuParams.gravity = Gravity.CENTER;
         mChatFooterSlideMenuImg.setLayoutParams(footerSlideMenuParams);
-
 
         LinearLayout.LayoutParams footerDownArrowParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
-        footerDownArrowParams.width = width * 13 / 100;
+        footerDownArrowParams.width = width * 11 / 100;
+        footerDownArrowParams.height = width * 11 / 100;
         footerDownArrowParams.gravity = Gravity.CENTER | Gravity.CENTER;
+        footerDownArrowParams.leftMargin = 2 * width / 100;
+        footerDownArrowParams.rightMargin = 1 * width / 100;
         mDownArrowLayout.setLayoutParams(footerDownArrowParams);
 
         LinearLayout.LayoutParams footerEdittextLayoutParams = new LinearLayout.LayoutParams(
@@ -6553,15 +6759,15 @@ public class MUCTest extends AppCompatActivity implements
         footerSendBtnParams.width = width * 11 / 100;
         footerSendBtnParams.height = width * 11 / 100;
         footerSendBtnParams.leftMargin = width * 2 / 100;
+        footerSendBtnParams.rightMargin = width * 1 / 100;
         footerSendBtnParams.gravity = Gravity.CENTER_VERTICAL;
         mChatFooterSendBtn.setLayoutParams(footerSendBtnParams);
-
 
         FrameLayout.LayoutParams mScrollViewParams = new FrameLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.MATCH_PARENT);
-        mScrollViewParams.topMargin=height*8/100;
-        mScrollViewParams.bottomMargin=height*11/100;
+        mScrollViewParams.topMargin = height * 8 / 100;
+        mScrollViewParams.bottomMargin = height * 11 / 100;
         mScrollView.setLayoutParams(mScrollViewParams);
 
 
@@ -6575,7 +6781,7 @@ public class MUCTest extends AppCompatActivity implements
                         LinearLayout.LayoutParams.WRAP_CONTENT);
                 listviewParams.width = width;
 //                listviewParams.topMargin = height * 8 / 100;
-                listviewParams.gravity = Gravity.BOTTOM|Gravity.BOTTOM;
+                listviewParams.gravity = Gravity.BOTTOM | Gravity.BOTTOM;
 //                listviewParams.bottomMargin = mChatFooterLayout.getHeight() + 2;
                 listview.setLayoutParams(listviewParams);
                 listview.scrollTo(0, listview.getHeight());
@@ -6704,7 +6910,7 @@ public class MUCTest extends AppCompatActivity implements
 
             @Override
             public void onClick(View v) {
-                if(mPopup){
+                if (mPopup) {
                     downArrowClickAction();
                 }
                 Constant.mNynmFromSlider = false;
@@ -6718,7 +6924,7 @@ public class MUCTest extends AppCompatActivity implements
 
         });
 
-        autodes.setOnClickListener(new OnClickListener() {
+        /*autodes.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -6746,9 +6952,47 @@ public class MUCTest extends AppCompatActivity implements
 
             }
 
+        });*/
+
+        autodes.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (edt_msg.getText().toString().length() != 0) {
+                    if (Connectivity.isOnline(mParentActivity)) {
+                        try {
+                            String[] words = edt_msg.getText().toString().split("\\s+");
+
+                            Constant.printMsg("Destruct Msg ::: 04 " + words.length + "   " + mFinalNyms);
+
+                            if (mFinalNyms.size() > 0) {
+                                Toast.makeText(getApplicationContext(), "Can't Able to Send Nymn Message as DesT", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Show_Self_desc_time(selected_self_desc_index);
+
+                                Constant.mselfdestruct = true;
+                            }
+
+                            Constant.printMsg("Destruct Msg ::: ff " + Constant.mChatText);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+
+                        Constant.printMsg("Destruct Msg ::: 00 " + Constant.mself_destruct_msg);
+                    } else {
+                        Toast.makeText(getApplicationContext(),
+                                "Check Your Network Connection",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(),
+                            "Please enter some text",
+                            Toast.LENGTH_SHORT).show();
+                }
+
+            }
         });
 
-        mdazzle.setOnClickListener(new OnClickListener() {
+        /*mdazzle.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
@@ -6764,26 +7008,33 @@ public class MUCTest extends AppCompatActivity implements
                     Constant.mChatText="";
 
                     try {
+                        boolean mTempIsMatch=false;
                         String[] words = edt_msg.getText().toString().split("\\s+");
-                        if(mMessegeList.size()>0) {
+                        Constant.printMsg("fralkjf"+words.length+"   "+mFinalNyms);
+                        if (mFinalNyms.size() > 0) {
                             for (int i = 0; i < words.length; i++) {
-                                for (int j = 0; j < mMessegeList.size(); j++) {
-
+                                mTempIsMatch=false;
+                                for (int j = 0; j < mFinalNyms.size(); j++) {
+                                    Constant.printMsg("fralkjf000"+words[i]+"   "+mFinalNyms);
                                     try {
 
-                                        if (mMessegeList.get(j).toString().substring(0,mMessegeList.get(j).toString().length()-1).equalsIgnoreCase(words[i].substring(0, words[i].length() - 1))) {
+                                        if (mFinalNyms.get(j).toString().substring(0, mFinalNyms.get(j).toString().length() - 1).equalsIgnoreCase(words[i].substring(0, words[i].length() - 1))) {
 
                                             Constant.mChatText += words[i].substring(0, words[i].length() - 1) + " ";
-
-                                        } else {
-                                            Constant.mChatText += words[i] + " ";
+                                            Constant.printMsg("fralkjf111"+Constant.mChatText);
+                                            mTempIsMatch=true;
                                         }
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                     }
                                 }
+                                if(mTempIsMatch==false) {
+                                    Constant.printMsg("fralkjf222"+Constant.mChatText);
+
+                                    Constant.mChatText += words[i] + " ";
+                                }
                             }
-                        }else{
+                        } else {
                             Constant.mChatText = edt_msg.getText().toString();
                         }
                     } catch (Exception e) {
@@ -6800,19 +7051,49 @@ public class MUCTest extends AppCompatActivity implements
                 }
 
             }
+        });*/
+
+        mdazzle.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mPopup) {
+                    downArrowClickAction();
+                }
+
+                Constant.zzleFromgroup = true;
+
+                Constant.mChatText = "";
+
+                try {
+                    String[] words = edt_msg.getText().toString().split("\\s+");
+
+                    Constant.printMsg("fralkjf" + words.length + "   " + mFinalNyms);
+
+                    if (mFinalNyms.size() > 0) {
+                        Toast.makeText(getApplicationContext(), "Can't Able to Send Nymn Message as DazZ", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Constant.mChatText = edt_msg.getText().toString();
+                        Intent intent = new Intent(mParentActivity, DazzPlainActivity.class);
+                        startActivity(intent);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
         });
+
         mbazzle.setOnClickListener(new OnClickListener() {
 
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
                 try {
-                    
+
                     Constant.mKrokFromGroup = true;
                     Constant.mKroKFromSlider = false;
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
 
-                    if(mPopup){
+                    if (mPopup) {
                         downArrowClickAction();
                     }
 
@@ -6834,9 +7115,9 @@ public class MUCTest extends AppCompatActivity implements
             public void onClick(View v) {
                 // TODO Auto-generated method stub
                 try {
-                    
+
                     // mDownArrow.setImageResource(R.drawable.rt_arrow);
-                    if(mPopup){
+                    if (mPopup) {
                         downArrowClickAction();
                     }
 
@@ -6844,7 +7125,7 @@ public class MUCTest extends AppCompatActivity implements
                             KonsHomeScreen.class);
                     startActivity(intent);
 
-                  //  mPopup = false;
+                    //  mPopup = false;
                 } catch (Exception e) {
 
                 }
@@ -6872,7 +7153,7 @@ public class MUCTest extends AppCompatActivity implements
             anim.setFillEnabled(true);
             anim.setFillAfter(true);
             mDownArrow.startAnimation(anim);
-
+            mSliderMenuLayout.setVisibility(View.VISIBLE);
             TranslateAnimation anim1 = new TranslateAnimation(-(width * 65 / 100), 0, 0, 0);
             anim1.setDuration(500); // 1000 ms = 1second
 
@@ -6914,7 +7195,6 @@ public class MUCTest extends AppCompatActivity implements
             mPopup = false;
             Constant.printMsg("falseeee::::>>>>>>>");
 
-          
 
             Constant.printMsg("rotate:3" + currentRotation);
 
@@ -6999,6 +7279,7 @@ public class MUCTest extends AppCompatActivity implements
                 startVideoRecording();
             }
         });
+
         mChatMenuLocationImg.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7006,25 +7287,27 @@ public class MUCTest extends AppCompatActivity implements
                 locationShare();
             }
         });
+
         mChatMenuContactImg.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                Intent intent = new Intent(Intent.ACTION_PICK,
-                        ContactsContract.Contacts.CONTENT_URI);
-                startActivityForResult(intent, 55);
-                ;
+                contactShare();
             }
         });
+
         mChatMenuAudioImg.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                Constant.mFromGroupAudio = true;
-                startActivity(new Intent(mParentActivity, SongList.class));
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.mFromGroupAudio = true;
+                    startActivity(new Intent(mParentActivity, SongList.class));
+                } else {
+                    Constant.permissionRequest(mParentActivity, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
             }
         });
-
 
         // Layout click
         mChatMenuGalleryLayout.setOnClickListener(new OnClickListener() {
@@ -7034,6 +7317,7 @@ public class MUCTest extends AppCompatActivity implements
                 selectImage();
             }
         });
+
         mChatMenuShootLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7041,6 +7325,7 @@ public class MUCTest extends AppCompatActivity implements
                 imageCapture();
             }
         });
+
         mChatmenuVideoLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7048,6 +7333,7 @@ public class MUCTest extends AppCompatActivity implements
                 startVideoRecording();
             }
         });
+
         mChatMenuLocationLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -7055,22 +7341,25 @@ public class MUCTest extends AppCompatActivity implements
                 locationShare();
             }
         });
+
         mChatMenuContactLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                Intent intent = new Intent(Intent.ACTION_PICK,
-                        ContactsContract.Contacts.CONTENT_URI);
-                startActivityForResult(intent, 55);
-                ;
+                contactShare();
             }
         });
+
         mChatMenuAudioLayout.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 topMenuHideFunction();
-                Constant.mFromGroupAudio = true;
-                startActivity(new Intent(mParentActivity, SongList.class));
+                if (Constant.checkPermission(getApplicationContext(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
+                    Constant.mFromGroupAudio = true;
+                    startActivity(new Intent(mParentActivity, SongList.class));
+                } else {
+                    Constant.permissionRequest(mParentActivity, Manifest.permission.READ_EXTERNAL_STORAGE, Constant.PERMISSION_CODE_STORAGE);
+                }
             }
         });
     }
@@ -7157,7 +7446,7 @@ public class MUCTest extends AppCompatActivity implements
                             dbAdapter.setGroupDeleteMessages(jid);
                             int msg_id = dbAdapter.getLastMsgid(jid);
                             dbAdapter.setUpdateChat_lits(jid, msg_id);
-                            mDynamicView=(LinearLayout) findViewById(R.id.mdynamicView);
+                            mDynamicView = (LinearLayout) findViewById(R.id.mdynamicView);
 //                            clearGroupHistory(jid);
                             clearDataList();
                             k = 0;
@@ -7183,8 +7472,8 @@ public class MUCTest extends AppCompatActivity implements
             bm1 = BookmarkManager
                     .getBookmarkManager(TempConnectionService.connection);
 
-            bm1.addBookmarkedConference(jid, jid, true,
-                    Bookmarked_time, "");
+            bm1.addBookmarkedConference(jid, JidCreate.entityBareFrom(jid), true,
+                    Resourcepart.from(Bookmarked_time), "");
 
 
         } catch (Exception e1) {
@@ -7194,6 +7483,7 @@ public class MUCTest extends AppCompatActivity implements
         }
 
         msg_list.clear();
+        mPositionKey_muc.clear();
         ConcurrentAsyncTaskExecutor.executeConcurrently(new FetchChat());
     }
 
@@ -7221,16 +7511,6 @@ public class MUCTest extends AppCompatActivity implements
     }
 
     /**
-     * Calling the user from chat
-     */
-    public void callUser() {
-        Intent callIntent = new Intent(Intent.ACTION_CALL);
-        callIntent.setData(Uri
-                .parse("tel:+" + jid.toString().split("@")[0]));
-        startActivity(callIntent);
-    }
-
-    /**
      * To see the User Profile
      */
     public void viewUserProfile() {
@@ -7247,23 +7527,27 @@ public class MUCTest extends AppCompatActivity implements
      */
     public void startVideoRecording() {
         // image_picker(2);
-        try {
-            Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.CAMERA)) {
+            try {
+                Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
 
-            fileUri = Utils.getOutputMediaFileUri(2); // create a file to save
-            // the video
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-            // file name
-            intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0.8); // set the
-            // video
-            // image
-            // quality
-            // to high
-            intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 26214400);
-            // start the Video Capture Intent
-            startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
-        } catch (Exception e) {
+                fileUri = Utils.getOutputMediaFileUri(2); // create a file to save
+                // the video
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+                // file name
+                intent.putExtra(MediaStore.EXTRA_VIDEO_QUALITY, 0.8); // set the
+                // video
+                // image
+                // quality
+                // to high
+                intent.putExtra(MediaStore.EXTRA_SIZE_LIMIT, 26214400);
+                // start the Video Capture Intent
+                startActivityForResult(intent, CAPTURE_VIDEO_ACTIVITY_REQUEST_CODE);
+            } catch (Exception e) {
 
+            }
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.CAMERA, Constant.PERMISSION_CODE_STORAGE);
         }
     }
 
@@ -7271,21 +7555,22 @@ public class MUCTest extends AppCompatActivity implements
      * Capture Image
      */
     public void imageCapture() {
-        // image_picker(1);
-        // create Intent to take a picture and return control to the calling
-        // application
-        try {
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.CAMERA)) {
+            try {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-            fileUri = Utils.getOutputMediaFileUri(1);
-            // create a file to save the image
-            intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
-            // file name
+                fileUri = Utils.getOutputMediaFileUri(1);
+                // create a file to save the image
+                intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri); // set the image
+                // file name
 
-            // start the image capture Intent
-            startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
-        } catch (Exception e) {
+                // start the image capture Intent
+                startActivityForResult(intent, CAPTURE_IMAGE_ACTIVITY_REQUEST_CODE);
+            } catch (Exception e) {
 
+            }
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.CAMERA, Constant.PERMISSION_CODE_MISCEL);
         }
     }
 
@@ -7293,8 +7578,21 @@ public class MUCTest extends AppCompatActivity implements
      * Share location
      */
     public void locationShare() {
-        Intent intent = new Intent(this, LocationShare.class);
-        startActivityForResult(intent, 44);
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION)) {
+            Intent intent = new Intent(this, LocationShare.class);
+            startActivityForResult(intent, 44);
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.ACCESS_FINE_LOCATION, Constant.PERMISSION_CODE_STORAGE);
+        }
+    }
+
+    public void contactShare() {
+        if (Constant.checkPermission(getApplicationContext(), Manifest.permission.WRITE_CONTACTS)) {
+            Intent intent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+            startActivityForResult(intent, 55);
+        } else {
+            Constant.permissionRequest(this, Manifest.permission.WRITE_CONTACTS, Constant.PERMISSION_CODE_STORAGE);
+        }
     }
 
     @Override
@@ -7601,7 +7899,7 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-     private void delete_query(String query) {
+    private void delete_query(String query) {
         // TODO Auto-generated method stub
         Cursor c = null;
 
@@ -7660,7 +7958,7 @@ public class MUCTest extends AppCompatActivity implements
                         "hh:mma");
 
                 LastActivity la = LastActivityManager
-                        .getInstanceFor(connection).getLastActivity(jid);
+                        .getInstanceFor(connection).getLastActivity(JidCreate.from(jid));
 
                 Calendar cal = Calendar.getInstance();
                 Long l = (cal.getTimeInMillis() - (la.getIdleTime() * 1000));
@@ -7685,7 +7983,7 @@ public class MUCTest extends AppCompatActivity implements
 
             try {
                 Roster roster = Roster.getInstanceFor(connection);
-                presence = roster.getPresence(jid);
+                presence = roster.getPresence(JidCreate.bareFrom(jid));
 
                 // Presence presence = new Pre
             } catch (Exception e) {
@@ -7718,7 +8016,6 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
     private class FetchChat extends AsyncTask<String, String, ArrayList<MessageGetSet>> {
 
         @Override
@@ -7736,60 +8033,62 @@ public class MUCTest extends AppCompatActivity implements
             try {
 
 
-            if (cursor != null) {
+                if (cursor != null) {
 
-                Constant.printMsg("Fetch Chat onPreExecute 3.5  " + cursor.getCount());
+                    Constant.printMsg("Fetch Chat onPreExecute 3.5  " + cursor.getCount());
 
-                msg_list.clear();
-                Constant.msg_list_adapter.clear();
-                try {
-                    Constant.printMsg("Fetch Chat onPreExecute4");
+                    msg_list.clear();
+                    mPositionKey_muc.clear();
+                    Constant.msg_list_adapter.clear();
+                    try {
+                        Constant.printMsg("Fetch Chat onPreExecute4");
 
-                    if (cursor.moveToFirst()) {
-                        do {
+                        if (cursor.moveToFirst()) {
+                            do {
 
-                            MessageGetSet msg = new MessageGetSet();
-                            msg.set_id(cursor.getInt(0));
-                            msg.setData(cursor.getString(6));
-                            msg.setKey_from_me(cursor.getInt(2));
-                            msg.setKey_id(cursor.getString(3));
-                            msg.setKey_remote_jid(cursor.getString(1));
-                            msg.setLatitude(cursor.getDouble(14));
-                            msg.setLongitude(cursor.getDouble(15));
-                            msg.setMedia_duration(cursor.getInt(24));
-                            msg.setMedia_hash(cursor.getString(13));
-                            msg.setMedia_mime_type(cursor.getString(9));
-                            msg.setMedia_name(cursor.getString(12));
-                            msg.setMedia_size(cursor.getInt(11));
-                            msg.setMedia_url(cursor.getString(8));
-                            msg.setMedia_wa_type(cursor.getString(10));
-                            msg.setNeeds_push(cursor.getInt(5));
-                            msg.setOrigin(cursor.getInt(25));
-                            msg.setReceipt_device_timestamp(cursor.getLong(21));
-                            msg.setReceipt_server_timestamp(cursor.getLong(20));
-                            msg.setReceived_timestamp(cursor.getLong(18));
-                            msg.setRemote_resource(cursor.getString(17));
-                            msg.setRow_data(cursor.getBlob(22));
-                            msg.setSend_timestamp(cursor.getLong(19));
-                            msg.setStatus(cursor.getInt(4));
-                            msg.setThumb_image(cursor.getBlob(16));
-                            msg.setTimestamp(cursor.getLong(7));
+                                MessageGetSet msg = new MessageGetSet();
+                                msg.set_id(cursor.getInt(0));
+                                msg.setData(cursor.getString(6));
+                                msg.setKey_from_me(cursor.getInt(2));
+                                msg.setKey_id(cursor.getString(3));
+                                msg.setKey_remote_jid(cursor.getString(1));
+                                msg.setLatitude(cursor.getDouble(14));
+                                msg.setLongitude(cursor.getDouble(15));
+                                msg.setMedia_duration(cursor.getInt(24));
+                                msg.setMedia_hash(cursor.getString(13));
+                                msg.setMedia_mime_type(cursor.getString(9));
+                                msg.setMedia_name(cursor.getString(12));
+                                msg.setMedia_size(cursor.getInt(11));
+                                msg.setMedia_url(cursor.getString(8));
+                                msg.setMedia_wa_type(cursor.getString(10));
+                                msg.setNeeds_push(cursor.getInt(5));
+                                msg.setOrigin(cursor.getInt(25));
+                                msg.setReceipt_device_timestamp(cursor.getLong(21));
+                                msg.setReceipt_server_timestamp(cursor.getLong(20));
+                                msg.setReceived_timestamp(cursor.getLong(18));
+                                msg.setRemote_resource(cursor.getString(17));
+                                msg.setRow_data(cursor.getBlob(22));
+                                msg.setSend_timestamp(cursor.getLong(19));
+                                msg.setStatus(cursor.getInt(4));
+                                msg.setThumb_image(cursor.getBlob(16));
+                                msg.setTimestamp(cursor.getLong(7));
 
-                            msg_list.add(msg);
+                                msg_list.add(msg);
+                                mPositionKey_muc.add(msg.getKey_id());
 
-                        } while (cursor.moveToNext());
+                            } while (cursor.moveToNext());
+                        }
+
+
+                    } catch (Exception e) {
+                        Constant.printMsg("Fetch Chat onPreExecute  Exppp " + e.toString());
+                    } finally {
+                        if (cursor != null)
+                            cursor.close();
                     }
 
-
-                } catch (Exception e) {
-                    Constant.printMsg("Fetch Chat onPreExecute  Exppp " + e.toString());
-                } finally {
-                    if (cursor != null)
-                        cursor.close();
                 }
-
-            }
-                }catch (Exception e){
+            } catch (Exception e) {
 
             }
             return msg_list;
@@ -7798,10 +8097,10 @@ public class MUCTest extends AppCompatActivity implements
         @Override
         protected void onPostExecute(ArrayList<MessageGetSet> result) {
 
-            if (result != null)  {
-                try   {
+            if (result != null) {
+                try {
 
-                    Constant.msg_list_adapter=msg_list;
+                    Constant.msg_list_adapter = msg_list;
 
                     mDynamicView.removeAllViews();
 
@@ -7815,7 +8114,6 @@ public class MUCTest extends AppCompatActivity implements
                             notificationMessages();
                         }
 
-
                         //Right Chat
                         else if (msg_list.get(k).getKey_from_me() != 1) {
 
@@ -7823,9 +8121,11 @@ public class MUCTest extends AppCompatActivity implements
                             //Right Text Chat
                             if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 0) {
 
-                                //Text
                                 rightTextChat();
                                 setRightChatText();
+                                //Text
+//                                rightTextChat();
+//                                setRightChatText();
 
 
                             } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 1) {
@@ -7834,32 +8134,32 @@ public class MUCTest extends AppCompatActivity implements
                                 rightImageChat();
                                 setRightImage();
 
-                            }  else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 2) {
+                            } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 2) {
 
                                 //Video
                                 rightVideoChat();
                                 setRightVideo();
 
-                            }  else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 5) {
+                            } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 5) {
 
                                 //Contact
                                 rightContactChat();
                                 setRightContact();
 
-                            }  else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 3) {
+                            } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 3) {
 
                                 //Audio
                                 rightAudioChat();
                                 setRightAudio_Old();
 
-                            }  else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 4) {
+                            } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 4) {
 
                                 //Location
                                 rightImageChat();
                                 setRightLocation();
 
                             }
-                        }else{
+                        } else {
                             intializationElements(2);
 
                             if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 0) {
@@ -7871,8 +8171,7 @@ public class MUCTest extends AppCompatActivity implements
 
                                 leftImageChat();
                                 setLeftImage();
-                            }
-                            else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 2) {
+                            } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 2) {
 
                                 leftVideoChat();
                                 setLeftVideo();
@@ -7882,13 +8181,13 @@ public class MUCTest extends AppCompatActivity implements
                                 leftContactChat();
                                 setLeftContact();
 
-                            }else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 3) {
+                            } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 3) {
 
                                 //Audio
                                 leftAudioChat();
                                 setLeftAudio_Old();
 
-                            }  else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 4) {
+                            } else if (Integer.parseInt(msg_list.get(k).getMedia_wa_type()) == 4) {
 
                                 //Location
                                 leftImageChat();
@@ -7899,24 +8198,22 @@ public class MUCTest extends AppCompatActivity implements
                         }
 
                     }
-
-
+                    Constant.printMsg("Fetch Chat onPreExecute 7 " + msg_list.size());
 
                     mRightTipLayout.requestFocus();
                     edt_msg.requestFocus();
 
 
-            } catch (Exception e) {
-                e.printStackTrace();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
-        }
-            isFirstTime=false;
+            isFirstTime = false;
             isFetchChatReady = false;
 
             super.onPostExecute(result);
 
         }
-
 
 
     }
@@ -8188,16 +8485,19 @@ public class MUCTest extends AppCompatActivity implements
 
     /**
      * Seding recording status to other member
-     *
      */
-    public void presence_recording()
-    {
+    public void presence_recording() {
         timer = new Timer();
         // This timer task will be executed every 1 sec.
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                Message msg = new Message(jid, Type.chat);
+                Message msg = null;
+                try {
+                    msg = new Message(JidCreate.from(jid), Type.chat);
+                } catch (XmppStringprepException e) {
+                    e.printStackTrace();
+                }
                 msg.setStanzaId(Constant.TYPING_STATUS_RECORDING);
 
                 msg.setBody(Constant.TYPING_STATUS_RECORDING);
@@ -8205,8 +8505,8 @@ public class MUCTest extends AppCompatActivity implements
                 try {
 
 
-                    if(Connectivity.isOnline(mParentActivity) && Connectivity.isTempConnection()){
-                            TempConnectionService.connection.sendStanza(msg);
+                    if (Connectivity.isOnline(mParentActivity) && Connectivity.isTempConnection()) {
+                        TempConnectionService.connection.sendStanza(msg);
                     }
 
 
@@ -8217,116 +8517,6 @@ public class MUCTest extends AppCompatActivity implements
             }
         }, 0, 1000);
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
     // ////////////////////////----Image
@@ -8366,7 +8556,7 @@ public class MUCTest extends AppCompatActivity implements
 
             try {
 
-                final Message msg = new Message(jid, Type.groupchat);
+                final Message msg = new Message(JidCreate.from(jid), Type.groupchat);
                 msg.setStanzaId("" + message.getKey_id());
                 msg.setBody("");
 
@@ -8391,12 +8581,12 @@ public class MUCTest extends AppCompatActivity implements
 
 
                 request_params.put("primaryNo", "" + KachingMeApplication.getUserID().split("@")[0]);
-                request_params.put("fileType",  "1");
-                request_params.put("fileName",  "null");
-                request_params.put("latitude",  "null");
-                request_params.put("longitude", "null");
+                request_params.put("fileType", "1");
+                request_params.put("fileName", "null");
+                request_params.put("latitude", "0");
+                request_params.put("longitude", "0");
                 request_params.put("reciverId", "1");
-                request_params.put("groupId", "null");
+                request_params.put("groupId", "" + message.getKey_remote_jid());
                 request_params.put("msgId", "" + message.getKey_id());
                 request_params.put("file", new File(
                         Constant.local_image_dir + message.getMedia_name()), "image/jpeg");
@@ -8408,7 +8598,7 @@ public class MUCTest extends AppCompatActivity implements
                     client.post(mParentActivity,
                             MEDIA_UPLOAD_URL,
                             null,
-                            request_params,"multipart/form-data",
+                            request_params, "multipart/form-data",
                             new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
                                 @Override
@@ -8450,7 +8640,7 @@ public class MUCTest extends AppCompatActivity implements
                                         JSONObject jsonObject_Image = new JSONObject(content);
 //
                                         url = jsonObject_Image.getString("url");
-                                        msg_id = jsonObject_Image.getString("msgId");
+                                        //  msg_id = jsonObject_Image.getString("msgId");
 
                                         /*Log.d(TAG, "URL::" + url);*/
 
@@ -8561,14 +8751,14 @@ public class MUCTest extends AppCompatActivity implements
             long pushB = dbAdapter.setUpdateMessage_need_push(message.getKey_id(), 2);
 
             dbAdapter.setUpdateMessage_status(message.getKey_id(), 3);
-            Constant.printMsg("......Chat Video 3..data1...." +pushB
+            Constant.printMsg("......Chat Video 3..data1...." + pushB
             );
             from = params[1];
             msg_id = params[0];
 
             try {
 
-                final Message msg = new Message(jid, Type.groupchat);
+                final Message msg = new Message(JidCreate.from(jid), Type.groupchat);
                 JivePropertiesManager.addProperty(msg, "msg_type", 2);
                 msg.setStanzaId("" + message.getKey_id());
                 msg.setBody("");
@@ -8594,12 +8784,12 @@ public class MUCTest extends AppCompatActivity implements
 
 
                 request_params.put("primaryNo", "" + KachingMeApplication.getUserID().split("@")[0]);
-                request_params.put("fileType",  "3");
-                request_params.put("fileName",  "null");
-                request_params.put("latitude",  "null");
-                request_params.put("longitude", "null");
+                request_params.put("fileType", "3");
+                request_params.put("fileName", "null");
+                request_params.put("latitude", "0");
+                request_params.put("longitude", "0");
                 request_params.put("reciverId", "1");
-                request_params.put("groupId", "null");
+                request_params.put("groupId", "" + message.getKey_remote_jid());
                 request_params.put("msgId", "" + message.getKey_id());
                 request_params.put("file", new File(
                         Constant.local_video_dir + message.getMedia_name()));
@@ -8610,7 +8800,7 @@ public class MUCTest extends AppCompatActivity implements
                     client.post(mParentActivity,
                             MEDIA_UPLOAD_URL,
                             null,
-                            request_params,"multipart/form-data",
+                            request_params, "multipart/form-data",
                             new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
 
@@ -8649,7 +8839,7 @@ public class MUCTest extends AppCompatActivity implements
                                         JSONObject jsonObject_Image = new JSONObject(content);
 //
                                         url = jsonObject_Image.getString("url");
-                                        msg_id = jsonObject_Image.getString("msgId");
+                                        //  msg_id = jsonObject_Image.getString("msgId");
 
                                     } catch (JSONException e1) {
                                         // ACRA.getErrorReporter().handleException(e1);
@@ -8716,7 +8906,6 @@ public class MUCTest extends AppCompatActivity implements
         protected void onPostExecute(String result) {
 
             super.onPostExecute(result);
-
 
 
         }
@@ -8923,7 +9112,7 @@ public class MUCTest extends AppCompatActivity implements
 
             try {
 
-                final Message msg = new Message(jid, Type.groupchat);
+                final Message msg = new Message(JidCreate.from(jid), Type.groupchat);
                 JivePropertiesManager.addProperty(msg, "msg_type", 3);
                 msg.setStanzaId("" + message.getKey_id());
                 msg.setBody("");
@@ -8944,12 +9133,12 @@ public class MUCTest extends AppCompatActivity implements
 
 
                 request_params.put("primaryNo", "" + KachingMeApplication.getUserID().split("@")[0]);
-                request_params.put("fileType",  "2");
-                request_params.put("fileName",  "null");
-                request_params.put("latitude",  "null");
-                request_params.put("longitude", "null");
+                request_params.put("fileType", "2");
+                request_params.put("fileName", "null");
+                request_params.put("latitude", "0");
+                request_params.put("longitude", "0");
                 request_params.put("reciverId", "1");
-                request_params.put("groupId", "null");
+                request_params.put("groupId", "" + message.getKey_remote_jid());
                 request_params.put("msgId", "" + message.getKey_id());
                 request_params.put("file", new File(
                         Constant.local_audio_dir + message.getMedia_name()));
@@ -8960,7 +9149,7 @@ public class MUCTest extends AppCompatActivity implements
                     client.post(mParentActivity,
                             MEDIA_UPLOAD_URL,
                             null,
-                            request_params,"multipart/form-data",
+                            request_params, "multipart/form-data",
                             new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 
 
@@ -8996,7 +9185,7 @@ public class MUCTest extends AppCompatActivity implements
                                         JSONObject jsonObject_Image = new JSONObject(content);
 //
                                         url = jsonObject_Image.getString("url");
-                                        msg_id = jsonObject_Image.getString("msgId");
+                                        // msg_id = jsonObject_Image.getString("msgId");
 
                                     } catch (JSONException e1) {
                                         // TODO Auto-generated catch block
@@ -9067,10 +9256,6 @@ public class MUCTest extends AppCompatActivity implements
 			 * else { dbAdapter.setUpdateMessage_status(message.getKey_id(),0);
 			 * }
 			 */
-
-
-
-
 
 
         }
@@ -9192,12 +9377,17 @@ public class MUCTest extends AppCompatActivity implements
                                 dbAdapter.setUpdateMessage_MediaName(msg_id,
                                         file_name + ".jpg");
 
+
+                                int j = mPositionKey_muc.indexOf(msg_id);
+
                                 bites = (long) fileData.length;
                                 updateMediaNetwork_Receive(bites);
 
-                                Intent login_broadcast = new Intent("chat");
-                                login_broadcast.putExtra("jid", from);
-                                mParentActivity.getApplicationContext().sendBroadcast(
+                                Intent login_broadcast = new Intent("download_set_image");
+                                login_broadcast.putExtra("key", j);
+                                login_broadcast.putExtra("result", "success");
+                                login_broadcast.putExtra("media_name", file_name + ".jpg");
+                                getApplicationContext().sendBroadcast(
                                         login_broadcast);
 
                             } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
@@ -9281,6 +9471,8 @@ public class MUCTest extends AppCompatActivity implements
                 Log.w("directory not created", "directory not created");
             }
 
+            Constant.printMsg(".......Download Chat video...." + msg_url);
+
             AsyncHttpClient client = new AsyncHttpClient();
             client.setTimeout(60000);
             String[] allowedContentTypes = new String[]{".*"};
@@ -9299,9 +9491,9 @@ public class MUCTest extends AppCompatActivity implements
                                                     .getString(
                                                             R.string.sorry_image_downloading_fail),
                                             true);
-                            Intent login_broadcast = new Intent("chat");
-                            login_broadcast.putExtra("jid", from);
-                            mParentActivity.getApplicationContext().sendBroadcast(
+                            Intent login_broadcast = new Intent("download_set_video");
+                            login_broadcast.putExtra("result", "fail");
+                            getApplicationContext().sendBroadcast(
                                     login_broadcast);
 
                             // super.onFailure(statusCode, headers, binaryData,
@@ -9347,10 +9539,11 @@ public class MUCTest extends AppCompatActivity implements
                         @Override
                         public void onSuccess(int arg0, Header[] arg1,
                                               byte[] fileData) {
-                            // TODO Auto-generated method stub
 
                             data1 = String.valueOf(String.format(
                                     Constant.local_video_dir + "%d.mp4", time));
+
+                            Constant.printMsg(".......Download Chat video...." + data1);
 
                             try {
                                 File file = new File(data1);
@@ -9384,12 +9577,16 @@ public class MUCTest extends AppCompatActivity implements
 
                                 }
 
+                                int j = mPositionKey_muc.indexOf(msg_id);
+
                                 dbAdapter.setUpdateMessage_MediaName(msg_id,
                                         file_name + ".mp4");
 
-                                Intent login_broadcast = new Intent("chat");
-                                login_broadcast.putExtra("jid", from);
-                                mParentActivity.getApplicationContext().sendBroadcast(
+                                Intent login_broadcast = new Intent("download_set_video");
+                                login_broadcast.putExtra("key", j);
+                                login_broadcast.putExtra("result", "success");
+                                login_broadcast.putExtra("media_name", file_name + ".mp4");
+                                getApplicationContext().sendBroadcast(
                                         login_broadcast);
 
                             } catch (Exception e) {
@@ -9444,6 +9641,8 @@ public class MUCTest extends AppCompatActivity implements
             ;
             file_name = "" + time;
 
+            Constant.printMsg("Image Downloading" + msg_url);
+
             boolean success = (new File(Constant.local_audio_dir)).mkdirs();
             if (!success) {
                 Log.w("directory not created", "directory not created");
@@ -9467,9 +9666,9 @@ public class MUCTest extends AppCompatActivity implements
                                                     .getString(
                                                             R.string.sorry_audio_downloading_fail),
                                             true);
-                            Intent login_broadcast = new Intent("chat");
-                            login_broadcast.putExtra("jid", from);
-                            mParentActivity.getApplicationContext().sendBroadcast(
+                            Intent login_broadcast = new Intent("download_set_audio");
+                            login_broadcast.putExtra("result", "fail");
+                            getApplicationContext().sendBroadcast(
                                     login_broadcast);
 
                             // super.onFailure(statusCode, headers, binaryData,
@@ -9518,9 +9717,13 @@ public class MUCTest extends AppCompatActivity implements
 
                                 dbAdapter.setUpdateMessage_MediaName(msg_id,
                                         file_name + ".amr");
+                                int j = mPositionKey_muc.indexOf(msg_id);
 
-                                Intent login_broadcast = new Intent("chat");
-                                login_broadcast.putExtra("jid", from);
+
+                                Intent login_broadcast = new Intent("download_set_audio");
+                                login_broadcast.putExtra("key", j);
+                                login_broadcast.putExtra("result", "success");
+                                login_broadcast.putExtra("media_name", file_name + ".amr");
                                 getApplicationContext().sendBroadcast(
                                         login_broadcast);
 
@@ -9550,11 +9753,11 @@ public class MUCTest extends AppCompatActivity implements
 
     void myMethod(String value) {
 
-        mMessegeList=new ArrayList();
-        mMeaningList=new ArrayList();
+        mMessegeList = new ArrayList();
+        mMeaningList = new ArrayList();
         try {
             Constant.printMsg("Priya Test Nymn mymethod " + value);
-            this.Normallist = ACRAConstants.DEFAULT_STRING_VALUE;
+            this.Normallist = "";
             String[] arr = value.split(" ");
             for (String ss : arr) {
                 if (!ss.isEmpty()) {
@@ -9610,7 +9813,7 @@ public class MUCTest extends AppCompatActivity implements
                     }
                 }
             }
-            Constant.printMsg("OOOOOOOOOOOOOOO"+ mMessegeList
+            Constant.printMsg("OOOOOOOOOOOOOOO" + mMessegeList
                     + mMeaningList);
             Constant.printMsg("Priya Test Nymn NormalList" + this.Normallist);
         } catch (Exception e) {
@@ -9660,14 +9863,14 @@ public class MUCTest extends AppCompatActivity implements
             while (index >= 0) {
                 this.Normallist = removeCharAt(this.Normallist, index);
                 this.ssb.replace(index, index + 1,
-                        ACRAConstants.DEFAULT_STRING_VALUE);
+                        "");
                 index = this.Normallist.indexOf(guess, index);
             }
             index = this.Normallist.indexOf(guess1);
             while (index >= 0) {
                 this.Normallist = removeCharAt(this.Normallist, index);
                 this.ssb.replace(index, index + 1,
-                        ACRAConstants.DEFAULT_STRING_VALUE);
+                        "");
                 index = this.Normallist.indexOf(guess1, index);
             }
 
@@ -9730,7 +9933,6 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
     // ////////////////////////----Image
     // Download-----//////////////////////////////////////////////////////////////////////
 
@@ -9767,22 +9969,14 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-    public void intializationElements(int side)
-    {
+    public void intializationElements(int side) {
         try {
-            MEDIA_UPLOAD_URL = KachingMeConfig.UPLOAD_MEDIA;
-            mNetworkSharPref = new NetworkSharedPreference(mParentActivity);
 
-            db = new Dbhelper(mParentActivity);
             SharedPreferences sharedPrefs = PreferenceManager
                     .getDefaultSharedPreferences(mParentActivity);
 
-            mNetworkSharPref = new NetworkSharedPreference(mParentActivity);
-
             font_size = Integer.parseInt(sharedPrefs.getString("pref_font_size",
                     "16"));
-
             if (font_size == 14) {
                 notificatiob_font_size = 10;
                 status_font_siz = 10;
@@ -9793,58 +9987,39 @@ public class MUCTest extends AppCompatActivity implements
                 msg_font_size = 18;
             }
 
-            dbAdapter = KachingMeApplication.getDatabaseAdapter();
-
-            is_auto_dowload_image = sharedPrefs.getBoolean(
-                    "media_auto_download_images", false);
-            is_auto_dowload_video = sharedPrefs.getBoolean(
-                    "media_auto_download_videos", false);
-            is_auto_dowload_audio = sharedPrefs.getBoolean(
-                    "media_auto_download_audio", false);
-            is_auto_dowload_files = sharedPrefs.getBoolean(
-                    "media_auto_download_files", false);
-
-
-            new File(Constant.local_image_dir).mkdirs();
-            new File(Constant.local_video_dir).mkdirs();
-            new File(Constant.local_audio_dir).mkdirs();
-            new File(Constant.local_files_dir).mkdirs();
-            mSelectedItemsIds = new SparseBooleanArray();
-
-
             Constant.printMsg("MUCTest adapter item count constructor :" + msg_list.size());
 
-            try {
-                byte[] img_byte = KachingMeApplication.getAvatar();
-                if (img_byte != null) {
-                    mSenderPhoto = BitmapFactory.decodeByteArray(
-                            img_byte, 0, img_byte.length,Util.getBitmapOptions());
-                    mSenderPhoto = new AvatarManager()
-                            .roundCornerImage(mSenderPhoto, 180);
+//            try {
+//                byte[] img_byte = KachingMeApplication.getAvatar();
+//                if (img_byte != null) {
+//                    mSenderPhoto = BitmapFactory.decodeByteArray(
+//                            img_byte, 0, img_byte.length, Util.getBitmapOptions());
+//                    mSenderPhoto = new AvatarManager()
+//                            .roundCornerImage(mSenderPhoto, 180);
+//
+//                    if (mSenderPhoto.getByteCount() < 5) {
+//
+//                        Bitmap largeIcon = BitmapFactory.decodeResource(mParentActivity.getResources(), R.drawable.avtar);
+//                        mSenderPhoto = largeIcon;
+//
+//                    }
+//
+//                    //                            arg0.mRightSenderImage.setImageBitmap(new AvatarManager()
+//                    //                                    .roundCornerImage(bmp, 180));
+//                } else {
+//                    Bitmap largeIcon = BitmapFactory.decodeResource(mParentActivity.getResources(), R.drawable.avtar);
+//                    mSenderPhoto = largeIcon;
+//                }
+//            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
 
-                    if (mSenderPhoto.getByteCount() < 5) {
-
-                        Bitmap largeIcon = BitmapFactory.decodeResource(mParentActivity.getResources(), R.drawable.avtar);
-                        mSenderPhoto = largeIcon;
-
-                    }
-
-                    //                            arg0.mRightSenderImage.setImageBitmap(new AvatarManager()
-                    //                                    .roundCornerImage(bmp, 180));
-                }else{
-                    Bitmap largeIcon = BitmapFactory.decodeResource(mParentActivity.getResources(), R.drawable.avtar);
-                    mSenderPhoto = largeIcon;
-                }
-            } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
-
-            }
+//            }
 
 
-            if(side==1) {
+            if (side == 1) {
 
                 //Right...
                 mRightTipLayout = new FrameLayout(mParentActivity);
-                mRightTipLayout.setId(k+200000);
+                mRightTipLayout.setId(k + 200000);
                 mRightTipLayout.setFocusable(true);
                 mRightTipLayout.setFocusableInTouchMode(true);
 
@@ -9856,7 +10031,7 @@ public class MUCTest extends AppCompatActivity implements
                 mRightChatLayout = new LinearLayout(mParentActivity);
                 mRightChatLayout.setGravity(Gravity.RIGHT);
                 mRightChatLayout.setOrientation(LinearLayout.VERTICAL);
-                mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
+//                mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
 
                 FrameLayout.LayoutParams mRightChatLayoutParams = new FrameLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -9881,19 +10056,19 @@ public class MUCTest extends AppCompatActivity implements
                         LinearLayout.LayoutParams.WRAP_CONTENT);
                 mRoundImageParams.width = (int) width * 11 / 100;
                 mRoundImageParams.height = (int) width * 11 / 100;
-                mRoundImageParams.topMargin=height*1/100;
+                mRoundImageParams.topMargin = height * 1 / 100;
                 mRoundImageParams.leftMargin = (int) width * 88 / 100;
 
                 ImageView mSenderRoundImage = new ImageView(mParentActivity);
                 mSenderRoundImage.setLayoutParams(mRoundImageParams);
                 System.gc();
 
-                if(KachingMeApplication.getAvatar()!=null) {
+                if (KachingMeApplication.getAvatar() != null) {
 
                     byte[] img_byte = KachingMeApplication.getAvatar();
                     Bitmap bmp = BitmapFactory.decodeByteArray(
                             KachingMeApplication.getAvatar(), 0,
-                            KachingMeApplication.getAvatar().length,Util.getBitmapOptions());
+                            KachingMeApplication.getAvatar().length, Util.getBitmapOptions());
 
                     if (bmp != null) {
 
@@ -9901,13 +10076,13 @@ public class MUCTest extends AppCompatActivity implements
                         mSenderRoundImage.setImageDrawable(mSenderImage);
                     } else {
 
-                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,Util.getBitmapOptions());
+                        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                         ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                         mSenderRoundImage.setImageDrawable(mSenderImage);
                     }
-                }else{
+                } else {
 
-                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2,Util.getBitmapOptions());
+                    Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
                     ProfileRoundImg mSenderImage = new ProfileRoundImg(bm);
                     mSenderRoundImage.setImageDrawable(mSenderImage);
                 }
@@ -9922,18 +10097,19 @@ public class MUCTest extends AppCompatActivity implements
                 mRightTipLayout.addView(mTipImage);
                 mRightTipLayout.addView(mSenderRoundImage);
 
-            }
-            else {
+            } else {
 
                 // Left...
 
                 mLeftTextProfile = new EmojiconTextView(mParentActivity);
                 mLeftTextProfile.setGravity(Gravity.LEFT);
+                mLeftTextProfile.setSingleLine(true);
+                mLeftTextProfile.setMinimumWidth(width * 20 / 100);
                 mLeftTextProfile.setTextColor(Color.parseColor("#CC494040"));
-                mLeftTextProfile.setPadding((int) width * 2 / 100, 0, (int) width * 2/ 100, (int)width *1 / 100);
+                mLeftTextProfile.setPadding(0, 0, (int) width * 2 / 100, (int) width * 1 / 100);
 
                 mRightTipLayout = new FrameLayout(mParentActivity);
-                mRightTipLayout.setId(k+200000);
+                mRightTipLayout.setId(k + 200000);
                 mRightTipLayout.setFocusable(true);
                 mRightTipLayout.setFocusableInTouchMode(true);
 
@@ -9945,7 +10121,7 @@ public class MUCTest extends AppCompatActivity implements
                 mRightChatLayout = new LinearLayout(mParentActivity);
                 mRightChatLayout.setGravity(Gravity.RIGHT);
                 mRightChatLayout.setOrientation(LinearLayout.VERTICAL);
-                mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
+//                mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
 
                 FrameLayout.LayoutParams mRightChatLayoutParams = new FrameLayout.LayoutParams(
                         LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -9970,13 +10146,13 @@ public class MUCTest extends AppCompatActivity implements
                         LinearLayout.LayoutParams.WRAP_CONTENT);
                 mRoundImageParams.width = (int) width * 11 / 100;
                 mRoundImageParams.height = (int) width * 11 / 100;
-                mRoundImageParams.topMargin=height*1/100;
+                mRoundImageParams.topMargin = height * 1 / 100;
                 mRoundImageParams.leftMargin = (int) width * 1 / 100;
 
-                Bitmap bm = BitmapFactory.decodeResource(getResources(),R.drawable.ic_launcher2);
-                ProfileRoundImg mSenderImage=null;
+                Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2);
+                ProfileRoundImg mSenderImage = null;
 
-                ImageView mSenderRoundImage=new ImageView(mParentActivity);
+                ImageView mSenderRoundImage = new ImageView(mParentActivity);
                 mSenderRoundImage.setLayoutParams(mRoundImageParams);
 
                 ContactsGetSet contact = new ContactsGetSet();
@@ -9988,29 +10164,29 @@ public class MUCTest extends AppCompatActivity implements
                     // ACRA.getErrorReporter().handleException(e);
                     // TODO: handle exception
                 }
-
+                bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
+                mSenderImage = new ProfileRoundImg(bm);
+                mSenderRoundImage.setImageDrawable(mSenderImage);
                 try {
                     System.gc();
                     byte[] img_byte = contact.getPhoto_ts();
-                    Constant.printMsg("kldfksjfks"+img_byte.length);
-                        if (img_byte != null) {
-                            Bitmap bmp = BitmapFactory.decodeByteArray(
-                                    img_byte, 0, img_byte.length, Util.getBitmapOptions());
-                            mSenderImage = new ProfileRoundImg(bmp);
-                            mSenderRoundImage.setImageDrawable(mSenderImage);
+                    Constant.printMsg("kldfksjfks" + img_byte.length);
+                    if (img_byte != null) {
+                        Bitmap bmp = BitmapFactory.decodeByteArray(
+                                img_byte, 0, img_byte.length, Util.getBitmapOptions());
+                        mSenderImage = new ProfileRoundImg(bmp);
+                        mSenderRoundImage.setImageDrawable(mSenderImage);
 
-                            //                    mSenderRoundImage.setImageBitmap(new AvatarManager()
-                            //                            .roundCornerImage(bmp, 180));
-                        } else {
-                            bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
-                            mSenderImage = new ProfileRoundImg(bm);
-                            mSenderRoundImage.setImageDrawable(mSenderImage);
-                        }
+                        //                    mSenderRoundImage.setImageBitmap(new AvatarManager()
+                        //                            .roundCornerImage(bmp, 180));
+                    } else {
+                        bm = BitmapFactory.decodeResource(getResources(), R.drawable.ic_launcher2, Util.getBitmapOptions());
+                        mSenderImage = new ProfileRoundImg(bm);
+                        mSenderRoundImage.setImageDrawable(mSenderImage);
                     }
-                 catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
+                } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
 
                 }
-
 
 
                 mRightTipLayout.addView(mTipImage);
@@ -10055,7 +10231,7 @@ public class MUCTest extends AppCompatActivity implements
                     if (mIsLogClick) {
                         String copiedtext = "";
                         int j = 0;
-                        ArrayList<MessageGetSet> mTempCopy=new ArrayList<MessageGetSet>();
+                        ArrayList<MessageGetSet> mTempCopy = new ArrayList<MessageGetSet>();
                         if (mOnLongSelectedPostions != null) {
                             for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
 
@@ -10090,11 +10266,11 @@ public class MUCTest extends AppCompatActivity implements
 
                         });
 
-                        copiedtext="";
+                        copiedtext = "";
 
-                        for(int i=0;i<mTempCopy.size();i++){
+                        for (int i = 0; i < mTempCopy.size(); i++) {
 
-                            copiedtext+=mTempCopy.get(i).getData()+ "\n";
+                            copiedtext += mTempCopy.get(i).getData() + "\n";
 
                         }
 
@@ -10112,7 +10288,7 @@ public class MUCTest extends AppCompatActivity implements
                             clipboard.setText(copiedtext);
                         }
 
-                        Toast.makeText(mParentActivity,"Copied to clipboard", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(mParentActivity, "Copied to clipboard", Toast.LENGTH_SHORT).show();
                         for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
 
                             mRightTipLayout = (FrameLayout) findViewById(Integer.valueOf(mOnLongSelectedPostions.get(i)) + 200000);
@@ -10163,14 +10339,19 @@ public class MUCTest extends AppCompatActivity implements
             mRightTipLayout.setOnTouchListener(new OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-
-                    v.requestFocus();
-                    v.setFocusableInTouchMode(true);
-
-                    if(!mIsLogClick) {
+                    if (mIsLogClick) {
+                        v.requestFocus();
+                        v.setFocusableInTouchMode(true);
                         InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                         imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
                     }
+//                    v.requestFocus();
+//                    v.setFocusableInTouchMode(true);
+//
+//                    if(!mIsLogClick) {
+//                        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//                        imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
+//                    }
 
                     return false;
                 }
@@ -10182,81 +10363,357 @@ public class MUCTest extends AppCompatActivity implements
 
                     topMenuHideFunction();
 
-                    if(mIsLogClick){
+                    if (mIsLogClick) {
 
-                        String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
-                        String splText = msg_list.get(v.getId()-200000).getData();
+                        try {
+//                        topMenuHideFunction();
 
-                        if(mOnLongSelectedPostions.contains(v.getId()-200000)){
+//                        mIsLogClick = true;
+
+                            LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 40 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                            LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 11 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                            Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId() - 200000));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                            String splText = msg_list.get(v.getId() - 200000).getData();
+
+                            if (mOnLongSelectedPostions.contains((v.getId() - 200000))) {
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                    if (mOnLongSelectedPostions.get(i) == (v.getId() - 200000)) {
+
+                                        Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                        v.setBackgroundColor(Color.parseColor("#00000000"));
+                                        mOnLongSelectedPostions.remove(i);
+
+                                    }
+
+                                }
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+
+                            } else {
+
+                                mOnLongSelectedPostions.add((v.getId() - 200000));
+                                v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                            }
+
+                            if (mOnLongSelectedPostions.size() == 0) {
+                                mIsLogClick = false;
+                                mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                                mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                                hedderTextParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderTextParams.width = width * 50 / 100;
+                                hedderTextParams.leftMargin = width * 3 / 100;
+                                hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                                mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                                hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderAttachmentParams.width = width * 4 / 100;
+                                hedderAttachmentParams.height = width * 8 / 100;
+                                hedderAttachmentParams.gravity = Gravity.CENTER;
+                                mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                                LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderMenuParams.width = (width * 2 / 100) - 2;
+                                hedderMenuParams.height = width * 7 / 100;
+                                hedderMenuParams.gravity = Gravity.CENTER;
+                                mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderCopyLayout.setVisibility(View.GONE);
+                            }
+                        } catch (Exception e) {
+
+                        }
+                    } else {
+                        edt_msg.requestFocus();
+                    }
+
+
+                }
+            });
+
+
+            mRightTipLayout.setOnLongClickListener(new OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+
+
+                    try {
+                        topMenuHideFunction();
+
+                        mIsLogClick = true;
+
+                        LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderTextParams.width = width * 40 / 100;
+                        hedderTextParams.leftMargin = width * 3 / 100;
+                        hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                        mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                        LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderAttachmentParams.width = width * 11 / 100;
+                        hedderAttachmentParams.height = width * 8 / 100;
+                        hedderAttachmentParams.gravity = Gravity.CENTER;
+                        mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                        mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                        Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId() - 200000));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                        String splText = msg_list.get(v.getId() - 200000).getData();
+
+                        if (mOnLongSelectedPostions.contains((v.getId() - 200000))) {
+
                             boolean isOneMedia = false;
                             boolean isSple = false;
-                            for(int i=0;i<mOnLongSelectedPostions.size();i++){
+                            boolean isDoneteBux = false;
 
-                                if(!getCopyPastMediaType(mediaType))
-                                {
+                            for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                if (mOnLongSelectedPostions.get(i) == (v.getId() - 200000)) {
+
+                                    Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                    v.setBackgroundColor(Color.parseColor("#00000000"));
+                                    mOnLongSelectedPostions.remove(i);
+
+                                }
+
+                            }
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                                if (!getCopyPastMediaType(mediaType)) {
                                     isOneMedia = true;
                                     Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
                                 }
-
-                                else  if(chekNynmDazzKon(splText))
-                                {
+                                if (chekNynmDazzKon(tempSplText)) {
                                     isSple = true;
                                 }
-
-                                Constant.printMsg("JJJJJJJJIO1112222"+v.getId()+"    "+mOnLongSelectedPostions.get(i).toString()+"   "+String.valueOf(v.getId()-200000));
-
-                                if(mOnLongSelectedPostions.get(i) == v.getId()-200000){
-
-                                    Constant.printMsg("JJJJJJJJIO111111"+v.getId()+"    "+mOnLongSelectedPostions);
-                                    v.setBackgroundColor(Color.parseColor("#00000000"));
-                                    mOnLongSelectedPostions.remove(i);
-                                    isOneMedia = false;
-                                    isSple = false;
-
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
                                 }
                             }
 
-                            if(isOneMedia)
-                            {
-                                mChatHedderCopyLayout.setVisibility(View.GONE);
-                            }else
-                            {
+                            if (isOneMedia) {
+
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
                                 mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
                             }
 
-                            if(isSple)
-                            {
-                                mChatHedderCopyLayout.setVisibility(View.GONE);
-                            }else
-                            {
-                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-                            }
 
-                        }else{
+                        } else {
 
-                            if(!getCopyPastMediaType(mediaType))
-                            {
-                                mChatHedderCopyLayout.setVisibility(View.GONE);
-                            }
-
-                            else if(chekNynmDazzKon(splText))
-                            {
-                                mChatHedderCopyLayout.setVisibility(View.GONE);
-                            }
-
-                            mOnLongSelectedPostions.add((v.getId()-200000));
+                            mOnLongSelectedPostions.add((v.getId() - 200000));
                             v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId() - 200000));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
 
                         }
 
-                        if(mOnLongSelectedPostions.size()<=0){
-
-                            mOnLongSelectedPostions.clear();
-                            mIsLogClick=false;
+                        if (mOnLongSelectedPostions.size() == 0) {
+                            mIsLogClick = false;
                             mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
                             mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
 
-                            LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                            hedderTextParams = new LinearLayout.LayoutParams(
                                     LinearLayout.LayoutParams.WRAP_CONTENT,
                                     LinearLayout.LayoutParams.WRAP_CONTENT);
                             hedderTextParams.width = width * 50 / 100;
@@ -10265,7 +10722,7 @@ public class MUCTest extends AppCompatActivity implements
                             mChatHedderTextLayout.setLayoutParams(hedderTextParams);
 
 
-                            LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                            hedderAttachmentParams = new LinearLayout.LayoutParams(
                                     LinearLayout.LayoutParams.WRAP_CONTENT,
                                     LinearLayout.LayoutParams.WRAP_CONTENT);
                             hedderAttachmentParams.width = width * 4 / 100;
@@ -10281,118 +10738,14 @@ public class MUCTest extends AppCompatActivity implements
                             hedderMenuParams.gravity = Gravity.CENTER;
                             mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
 
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
                             mChatHedderCopyLayout.setVisibility(View.GONE);
                         }
-                    }else{
-                        edt_msg.requestFocus();
+                    } catch (Exception e) {
+
                     }
 
-
-
-                }
-            });
-
-
-            mRightTipLayout.setOnLongClickListener(new OnLongClickListener() {
-                @Override
-                public boolean onLongClick(View v) {
-
-
-                    topMenuHideFunction();
-
-                    mIsLogClick=true;
-
-                    LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT);
-                    hedderTextParams.width = width * 40 / 100;
-                    hedderTextParams.leftMargin = width * 3 / 100;
-                    hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
-                    mChatHedderTextLayout.setLayoutParams(hedderTextParams);
-
-                    LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
-                            LinearLayout.LayoutParams.WRAP_CONTENT,
-                            LinearLayout.LayoutParams.WRAP_CONTENT);
-                    hedderAttachmentParams.width = width * 11 / 100;
-                    hedderAttachmentParams.height = width * 8 / 100;
-                    hedderAttachmentParams.gravity = Gravity.CENTER;
-                    mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
-                    mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
-                    mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
-
-                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-
-
-                    mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
-                    mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
-
-                    Constant.printMsg("JJJJJJJJIO"+v.getId()+"    "+mOnLongSelectedPostions+"   "+String.valueOf(v.getId()-200000));
-
-                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
-                    String splText = msg_list.get(v.getId()-200000).getData();
-
-                    if(mOnLongSelectedPostions.contains((v.getId()-200000))){
-
-                        boolean isOneMedia = false;
-                        boolean isSple = false;
-
-                        for(int i=0;i<mOnLongSelectedPostions.size();i++){
-
-                            Constant.printMsg("JJJJJJJJIO1112222"+v.getId()+"    "+mOnLongSelectedPostions.get(i).toString()+"   "+String.valueOf(v.getId()-200000));
-                            if(!getCopyPastMediaType(mediaType))
-                            {
-                                isOneMedia = true;
-                                Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
-                            }
-
-                            else if(chekNynmDazzKon(splText))
-                            {
-                                isSple = true;
-                            }
-                            if(mOnLongSelectedPostions.get(i)== (v.getId()-200000)){
-
-                                Constant.printMsg("JJJJJJJJIO111111"+v.getId()+"    "+mOnLongSelectedPostions);
-                                v.setBackgroundColor(Color.parseColor("#00000000"));
-                                mOnLongSelectedPostions.remove(i);
-
-                                isOneMedia = false;
-
-                                isSple = false;
-
-                            }
-                        }
-
-                        if(isOneMedia)
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-                        }
-
-                        if(isSple)
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }else
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
-                        }
-
-                    }else{
-
-                        if(!getCopyPastMediaType(mediaType))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
-                        else if(chekNynmDazzKon(splText))
-                        {
-                            mChatHedderCopyLayout.setVisibility(View.GONE);
-                        }
-
-                        mOnLongSelectedPostions.add((v.getId()-200000));
-                        v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
-
-                    }
 
                     return true;
                 }
@@ -10404,38 +10757,59 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-    void rightTextChat(){
+    void rightTextChat() {
 
         try {
-            mRightTextview = new EmojiconTextView(MUCTest.this);
+            mRightTextview = new EmojiconTextView(mParentActivity);
             mRightTextview.setGravity(Gravity.LEFT);
             mRightTextview.setTextColor(Color.parseColor("#000000"));
-            mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, width * 2 / 100);
             mRightTextview.setId(k);
+//            mRightTextview = new EmojiconTextView(MUCTest.this);
+//            mRightTextview.setGravity(Gravity.LEFT);
+//            mRightTextview.setTextColor(Color.parseColor("#000000"));
+//            mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, width * 2 / 100);
+//            mRightTextview.setId(k);
 
-            mRightSenderTimeText = new TextView(MUCTest.this);
+//            mRightSenderTimeText = new TextView(MUCTest.this);
+//            mRightSenderTimeText.setGravity(Gravity.LEFT);
+//            mRightSenderTimeText.setTextSize(getTimeTxtSize());
+//            mRightSenderTimeText.setTextColor(Color.parseColor("#000000"));
+//            mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+
+            mRightSenderTimeText = new TextView(mParentActivity);
             mRightSenderTimeText.setGravity(Gravity.LEFT);
             mRightSenderTimeText.setTextSize(getTimeTxtSize());
             mRightSenderTimeText.setTextColor(Color.parseColor("#000000"));
-            mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
 
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             mRightTextview.setLayoutParams(textviewParams);
-            mRightSenderTimeText.setLayoutParams(textviewParams);
 
+            LinearLayout.LayoutParams textviewParams1 = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            textviewParams1.gravity = Gravity.RIGHT | Gravity.BOTTOM;
+            mRightSenderTimeText.setLayoutParams(textviewParams1);
 
-            LinearLayout textFooterLayout = new LinearLayout(MUCTest.this);
-            textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
+            LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.FILL_PARENT);
 //            textfooterParams.topMargin = width * 1 / 100;
+            textfooterParams.gravity = Gravity.END | Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
+
+//            LinearLayout textFooterLayout = new LinearLayout(MUCTest.this);
+//            textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
+//
+//            LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
+//                    LinearLayout.LayoutParams.WRAP_CONTENT,
+//                    LinearLayout.LayoutParams.WRAP_CONTENT);
+////            textfooterParams.topMargin = width * 1 / 100;
+//            textFooterLayout.setLayoutParams(textfooterParams);
 
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
@@ -10443,10 +10817,10 @@ public class MUCTest extends AppCompatActivity implements
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             mRightTickMarkParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
 
-            mRightTickMark = new ImageView(MUCTest.this);
+            mRightTickMark = new ImageView(mParentActivity);
             mRightTickMark.setId(k + 600000);
             mRightTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightTickMark.setPadding((int) width * 2 / 100, 0, (int) width * 1 / 100, width * 1 / 100);
+            mRightTickMark.setLayoutParams(textviewParams1);
 
 
             FrameLayout.LayoutParams right_bomb_params = new FrameLayout.LayoutParams(
@@ -10457,19 +10831,97 @@ public class MUCTest extends AppCompatActivity implements
             right_bomb_params.gravity = Gravity.CENTER_VERTICAL;
             right_bomb_params.leftMargin = width * 5 / 100;
 
-
-            mRightDestTime = new TextView(MUCTest.this);
+            mRightDestTime = new TextView(mParentActivity);
             mRightDestTime.setBackgroundResource(R.drawable.black_bomb);
             mRightDestTime.setGravity(Gravity.CENTER);
             mRightDestTime.setTextColor(Color.parseColor("#ffffff"));
             mRightDestTime.setLayoutParams(right_bomb_params);
             mRightDestTime.setVisibility(View.INVISIBLE);
-            mRightDestTime.setId(k + 100000);
+            int poscount = k + 100000;
+            mRightDestTime.setId(poscount);
 
             textFooterLayout.addView(mRightTickMark);
             textFooterLayout.addView(mRightSenderTimeText);
-            mRightChatLayout.addView(mRightTextview);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout TemptextFooterLayout = new LinearLayout(mParentActivity);
+            TemptextFooterLayout.setLayoutParams(textfooterParams);
+            TemptextFooterLayout.setBackgroundResource(R.drawable.shadow_effect);
+
+
+            if (msg_list.get(k).getData().length() > 20 && msg_list.get(k).getData().length() <= 40) {
+
+                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                mRightTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, 0, width * 1 / 100);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, 0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+
+            } else if (msg_list.get(k).getData().length() > 40) {
+
+                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                mRightTickMark.setPadding((int) width * 2 / 100, 0, 0, width * 1 / 100);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, 0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+
+            } else {
+                TemptextFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
+                TemptextFooterLayout.setPadding(0, (int) width * 2 / 100, 0, (int) width * 4 / 100);
+                mRightTickMark.setPadding(width * 1 / 100, 0, 0, 0);
+                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 1 / 100, 0);
+                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, 0);
+
+
+            }
+            try {
+                String text = msg_list.get(k).getData().toString();
+
+                if (text.length() > 3) {
+
+                    char s = text.charAt(0);
+                    char s1 = text.charAt(1);
+                    char s2 = text.charAt(2);
+
+                    if ((s == '<' && s1 == '-') || (s1 == 'b' && s2 == '>') || (s1 == 'z' && s2 == '>') || (s1 == 'l' && s2 == '>') || (s1 == 'x' && s2 == '>')) {
+                        Constant.printMsg("DEEEEESSSSSTTTTT1 " + text.substring(2).length() + "    " + text.substring(2));
+
+                        TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                        mRightTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, 0, width * 1 / 100);
+                        mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, 0);
+                        mRightSenderTimeText.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+
+                    } else if (s == '<') {
+                        if (s1 == 's' && s2 == '>') {
+
+                            String self_destruct = text.substring(3)
+                                    .toString();
+                            String[] parts = self_destruct.split("-");
+                            String part1 = parts[0];
+                            String part2 = parts[1];
+                            String part3 = parts[2];
+
+                            if (part2.length() > 20) {
+                                TemptextFooterLayout.setOrientation(LinearLayout.VERTICAL);
+                                mRightTickMark.setPadding((int) width * 2 / 100, 0, 0, width * 1 / 100);
+                                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 3 / 100, 0);
+                                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+
+                            } else {
+
+                                TemptextFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
+                                TemptextFooterLayout.setPadding(0, (int) width * 2 / 100, 0, (int) width * 4 / 100);
+                                mRightTickMark.setPadding(width * 1 / 100, 0, 0, 0);
+                                mRightTextview.setPadding((int) width * 3 / 100, width * 1 / 100, (int) width * 1 / 100, 0);
+                                mRightSenderTimeText.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, 0);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
+
+
+            TemptextFooterLayout.addView(mRightTextview);
+            TemptextFooterLayout.addView(textFooterLayout);
+            mRightChatLayout.addView(TemptextFooterLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightDestTime);
             mRightTipLayout.addView(mRightChatLayout);
 
@@ -10512,49 +10964,61 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-    void rightImageChat(){
+    void rightImageChat() {
 
         try {
             mRightImageChat = new ImageView(mParentActivity);
-            mRightImageChat.setPadding((int) width * 3 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+            mRightImageChat.setAdjustViewBounds(true);
             mRightImageChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mRightImageChat.setMaxWidth(width * 65 / 100);
+            mRightImageChat.setMaxHeight(height * 40 / 100);
+            mRightImageChat.setMinimumWidth(width * 30 / 100);
+            mRightImageChat.setMinimumHeight(height * 23 / 100);
 
-            mRightImageTextTime=new TextView(mParentActivity);
-            mRightImageTextTime.setGravity(Gravity.RIGHT);
+//            mRightImageChat = new ImageView(mParentActivity);
+//            mRightImageChat.setPadding((int) width * 3 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+//            mRightImageChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+            mRightImageTextTime = new TextView(mParentActivity);
+//            mRightImageTextTime.setGravity(Gravity.RIGHT|Gravity.BOTTOM);
             mRightImageTextTime.setTextSize(getTimeTxtSize());
             mRightImageTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightImageTextTime.setPadding((int) width * 1 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+            mRightImageTextTime.setPadding(width * 1 / 100, width * 2 / 100, 0, 0);
+
             //        mRightSenderTimeText.setText(time);
 
-            FrameLayout.LayoutParams textviewParams = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.width=  width * 57 / 100;
-            textviewParams.height= height * 30 / 100;
-            textviewParams.topMargin=width * 2 / 100;
-            textviewParams.gravity=Gravity.CENTER;
-            mRightImageChat.setLayoutParams(textviewParams);
+//            FrameLayout.LayoutParams textviewParams = new FrameLayout.LayoutParams(
+//                    LinearLayout.LayoutParams.WRAP_CONTENT,
+//                    LinearLayout.LayoutParams.WRAP_CONTENT);
+//            textviewParams.width=  width * 57 / 100;
+//            textviewParams.height= height * 30 / 100;
+//            textviewParams.topMargin=width * 2 / 100;
+//            textviewParams.gravity=Gravity.CENTER;
+//            mRightImageChat.setLayoutParams(textviewParams);
             //        mRightSenderTimeText.setLayoutParams(textviewParams);
 
-            FrameLayout ImachChatLayout=new FrameLayout(mParentActivity);
+
+            FrameLayout ImachChatLayout = new FrameLayout(mParentActivity);
 
             mRightImageChatUpload = new ImageView(mParentActivity);
             mRightImageChatUpload.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mRightImageChatUpload.setId(k + 800000);
             mRightImageChatUpload.setBackgroundResource(R.drawable.image_upload_normal);
 
             mRightImageChatCancel = new ImageView(mParentActivity);
             mRightImageChatCancel.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mRightImageChatCancel.setId(k + 120000);
             mRightImageChatCancel.setBackgroundResource(R.drawable.ic_action_content_remove);
 
-            mRightImageProgress=new ProgressBar(mParentActivity);
+            mRightImageProgress = new ProgressBar(mParentActivity);
+            mRightImageProgress.setId(k + 900000);
 
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            left_download_icon_params.width = (int) width * 15/100;
-            left_download_icon_params.height = (int) width *15/100;
-            left_download_icon_params.gravity=Gravity.CENTER;
+            left_download_icon_params.width = (int) width * 15 / 100;
+            left_download_icon_params.height = (int) width * 15 / 100;
+            left_download_icon_params.gravity = Gravity.CENTER;
             mRightImageChatUpload.setLayoutParams(left_download_icon_params);
             mRightImageChatCancel.setLayoutParams(left_download_icon_params);
 
@@ -10562,9 +11026,9 @@ public class MUCTest extends AppCompatActivity implements
             FrameLayout.LayoutParams left_download_progres_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            left_download_progres_params.width = (int) width * 16/100;
-            left_download_progres_params.height = (int) width *16/100;
-            left_download_progres_params.gravity=Gravity.CENTER;
+            left_download_progres_params.width = (int) width * 16 / 100;
+            left_download_progres_params.height = (int) width * 16 / 100;
+            left_download_progres_params.gravity = Gravity.CENTER;
             mRightImageProgress.setLayoutParams(left_download_progres_params);
 
 
@@ -10574,34 +11038,66 @@ public class MUCTest extends AppCompatActivity implements
             ImachChatLayout.addView(mRightImageProgress);
 
 
-            LinearLayout textFooterLayout=new LinearLayout(mParentActivity);
+            LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
             textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.FILL_PARENT);
+//            textfooterParams.gravity=Gravity.CENTER_VERTICAL;
+            textfooterParams.gravity = Gravity.END | Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mRightTickMarkParams.gravity=Gravity.LEFT|Gravity.CENTER_VERTICAL;
+            mRightTickMarkParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
 
-            mRightImageTickMark=new ImageView(mParentActivity);
-            mRightImageTickMark.setId(k+600000);
+            mRightImageTickMark = new ImageView(mParentActivity);
+            mRightImageTickMark.setId(k + 600000);
             mRightImageTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightImageTickMark.setPadding((int) width * 2 / 100, 0, (int) width * 1 / 100, width * 1 / 100);
+            mRightImageTextTime.setLayoutParams(mRightTickMarkParams);
+            mRightImageTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
 
             textFooterLayout.addView(mRightImageTickMark);
             textFooterLayout.addView(mRightImageTextTime);
 
-            mRightChatLayout.addView(ImachChatLayout);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width * 2 / 100, width * 2 / 100, width * 2 / 100, width * 1 / 100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect);
+            mTempLayout.addView(ImachChatLayout);
+            mTempLayout.addView(textFooterLayout);
+
+//            mTempLayout.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+
+////            mTempLayout.addView(textFooterLayout);
+//
+////            LinearLayout.LayoutParams mRightChatLayoutParams = new LinearLayout.LayoutParams(
+////                    LinearLayout.LayoutParams.WRAP_CONTENT,
+////                    LinearLayout.LayoutParams.WRAP_CONTENT);
+////            mRightChatLayoutParams.width = (int) width * 65 / 100;
+////            mRightChatLayoutParams.height = (int) height * 32 / 100;
+////            mRightChatLayoutParams.leftMargin = (int) width * 19 / 100;
+////            mTempLayout.setLayoutParams(mRightChatLayoutParams);
+//
+//            mTempLayout.addView(ImachChatLayout);
+//
+//            LinearLayout mTempLayoutwithStatus=new LinearLayout(mParentActivity);
+//            mTempLayoutwithStatus.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+//            mTempLayoutwithStatus.setBackgroundResource(R.drawable.shadow_effect);
+//            mTempLayoutwithStatus.addView(mTempLayout);
+//            mTempLayoutwithStatus.addView(textFooterLayout);
+
+            mRightChatLayout.addView(mTempLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
+
         } catch (Exception e) {
 
         }
@@ -10609,39 +11105,42 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-    void rightVideoChat(){
+    void rightVideoChat() {
 
         try {
             mRightVideoChat = new ImageView(mParentActivity);
-            mRightVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+            mRightVideoChat.setAdjustViewBounds(true);
             mRightVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mRightVideoChat.setMaxWidth(width * 65 / 100);
+            mRightVideoChat.setMaxHeight(width * 65 / 100);
+            mRightVideoChat.setMinimumWidth(width * 30 / 100);
+            mRightVideoChat.setMinimumHeight(height * 23 / 100);
+//            mRightVideoChat = new ImageView(mParentActivity);
+//            mRightVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+//            mRightVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
 
-            mRightVideoTimeText=new TextView(mParentActivity);
+            mRightVideoTimeText = new TextView(mParentActivity);
             mRightVideoTimeText.setGravity(Gravity.RIGHT);
             mRightVideoTimeText.setTextSize(getTimeTxtSize());
             mRightVideoTimeText.setTextColor(Color.parseColor("#000000"));
-            mRightVideoTimeText.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
-            //        mRightSenderTimeText.setText(time);
+            mRightVideoTimeText.setPadding(width * 1 / 100, width * 2 / 100, 0, 0);
 
 
-            FrameLayout.LayoutParams mLeftVideoChatParams = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftVideoChatParams.width=  width * 59 / 100;
-            mLeftVideoChatParams.height= height * 30 / 100;
-            mLeftVideoChatParams.topMargin=width * 2 / 100;
-            mLeftVideoChatParams.gravity=Gravity.CENTER;
-            mRightVideoChat.setLayoutParams(mLeftVideoChatParams);
+//            FrameLayout.LayoutParams mLeftVideoChatParams = new FrameLayout.LayoutParams(
+//                    LinearLayout.LayoutParams.WRAP_CONTENT,
+//                    LinearLayout.LayoutParams.WRAP_CONTENT);
+//            mLeftVideoChatParams.width=  width * 59 / 100;
+//            mLeftVideoChatParams.height= height * 30 / 100;
+//            mLeftVideoChatParams.topMargin=width * 2 / 100;
+//            mLeftVideoChatParams.gravity=Gravity.CENTER;
+//            mRightVideoChat.setLayoutParams(mLeftVideoChatParams);
             //        mRightSenderTimeText.setLayoutParams(textviewParams);
 
-            FrameLayout mLeftVideoChatLayout=new FrameLayout(mParentActivity);
+            FrameLayout mLeftVideoChatLayout = new FrameLayout(mParentActivity);
 
             mRightVideoChatUpload = new ImageView(mParentActivity);
             mRightVideoChatUpload.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mRightVideoChatUpload.setBackgroundResource(R.drawable.image_upload_normal);
-
-
-
 
             mRightVideoChatCancel = new ImageView(mParentActivity);
             mRightVideoChatCancel.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -10652,70 +11151,69 @@ public class MUCTest extends AppCompatActivity implements
             mRightVideoButtonPlay.setBackgroundResource(R.drawable.videooverlay);
 
 
-            mRightVideoProgress=new ProgressBar(mParentActivity);
+            mRightVideoProgress = new ProgressBar(mParentActivity);
 
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            left_download_icon_params.width = (int) width * 15/100;
-            left_download_icon_params.height = (int) width *15/100;
-            left_download_icon_params.gravity=Gravity.CENTER;
+            left_download_icon_params.width = (int) width * 15 / 100;
+            left_download_icon_params.height = (int) width * 15 / 100;
+            left_download_icon_params.gravity = Gravity.CENTER;
             mRightVideoChatUpload.setLayoutParams(left_download_icon_params);
             mRightVideoChatCancel.setLayoutParams(left_download_icon_params);
+            //     mRightVideoProgress.setLayoutParams(left_download_icon_params);
             mRightVideoButtonPlay.setLayoutParams(left_download_icon_params);
 
-            FrameLayout.LayoutParams left_download_progress_params = new FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams left_upload_icon_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            left_download_progress_params.width = (int) width * 16/100;
-            left_download_progress_params.height = (int) width *16/100;
-            left_download_progress_params.gravity=Gravity.CENTER;
-            mRightVideoProgress.setLayoutParams(left_download_progress_params);
-
+            left_upload_icon_params.width = (int) width * 16 / 100;
+            left_upload_icon_params.height = (int) width * 16 / 100;
+            left_upload_icon_params.gravity = Gravity.CENTER;
+            mRightVideoProgress.setLayoutParams(left_upload_icon_params);
 
             FrameLayout.LayoutParams videoFooter_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            videoFooter_params.gravity=Gravity.BOTTOM|Gravity.CENTER_VERTICAL;
-            videoFooter_params.topMargin=width*3/100;
+            videoFooter_params.gravity = Gravity.BOTTOM | Gravity.CENTER_VERTICAL;
+            videoFooter_params.topMargin = width * 3 / 100;
 
-            FrameLayout videoFooter=new FrameLayout(mParentActivity);
+            FrameLayout videoFooter = new FrameLayout(mParentActivity);
             videoFooter.setLayoutParams(videoFooter_params);
 
             FrameLayout.LayoutParams videoimage = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            videoimage.width=width*10/100;
-            videoimage.height=width*8/100;
-            videoimage.topMargin=width*1/100;
-            videoimage.gravity=Gravity.CENTER_VERTICAL;
-            videoimage.leftMargin=width*3/100;
+            videoimage.width = width * 10 / 100;
+            videoimage.height = width * 8 / 100;
+            videoimage.topMargin = width * 1 / 100;
+            videoimage.gravity = Gravity.CENTER_VERTICAL;
+            videoimage.leftMargin = width * 2 / 100;
 
-            mRightVideoImgOverlay=new ImageView(mParentActivity);
+            mRightVideoImgOverlay = new ImageView(mParentActivity);
             mRightVideoImgOverlay.setBackgroundResource(R.drawable.frame_overlay_gallery_video);
             mRightVideoImgOverlay.setLayoutParams(videoimage);
 
             FrameLayout.LayoutParams videoDuration_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            videoDuration_params.gravity=Gravity.LEFT;
-            videoDuration_params.topMargin=width*3/100;
-            videoDuration_params.leftMargin=width*12/100;
+            videoDuration_params.gravity = Gravity.LEFT;
+            videoDuration_params.topMargin = width * 3 / 100;
+            videoDuration_params.leftMargin = width * 12 / 100;
 
-            mRightVideoDuration=new TextView(mParentActivity);
+            mRightVideoDuration = new TextView(mParentActivity);
             mRightVideoDuration.setTextColor(Color.parseColor("#ffffff"));
-            mRightVideoDuration.setText("1");
             mRightVideoDuration.setLayoutParams(videoDuration_params);
 
             FrameLayout.LayoutParams videoSize_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            videoSize_params.gravity=Gravity.RIGHT;
-            videoSize_params.topMargin=width*3/100;
-            videoSize_params.rightMargin=width*5/100;
+            videoSize_params.gravity = Gravity.RIGHT;
+            videoSize_params.topMargin = width * 3 / 100;
+            videoSize_params.rightMargin = width * 4 / 100;
 
 
-            mRightVideoSize=new TextView(mParentActivity);
+            mRightVideoSize = new TextView(mParentActivity);
             mRightVideoSize.setTextColor(Color.parseColor("#ffffff"));
             mRightVideoSize.setText("1");
             mRightVideoSize.setLayoutParams(videoSize_params);
@@ -10732,29 +11230,67 @@ public class MUCTest extends AppCompatActivity implements
             mLeftVideoChatLayout.addView(mRightVideoButtonPlay);
             mLeftVideoChatLayout.addView(videoFooter);
 
-            LinearLayout textFooterLayout=new LinearLayout(mParentActivity);
+            LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
             textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                    LinearLayout.LayoutParams.FILL_PARENT);
+            textfooterParams.gravity = Gravity.END | Gravity.END;
             textFooterLayout.setLayoutParams(textfooterParams);
 
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mRightTickMarkParams.gravity=Gravity.LEFT|Gravity.CENTER_VERTICAL;
+            mRightTickMarkParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
 
-            mRightVideoTickMark=new ImageView(mParentActivity);
-            mRightVideoTickMark.setId(k+600000);
+//            mRightImageTickMark = new ImageView(mParentActivity);
+//            mRightImageTickMark.setId(k + 600000);
+//            mRightImageTickMark.setLayoutParams(mRightTickMarkParams);
+//            mRightImageTextTime.setLayoutParams(mRightTickMarkParams);
+//            mRightImageTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
+
+            mRightVideoTickMark = new ImageView(mParentActivity);
+            mRightVideoTickMark.setId(k + 600000);
             mRightVideoTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightVideoTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            //   mRightImageTextTime.setLayoutParams(mRightTickMarkParams);
+            mRightVideoTickMark.setPadding((int) width * 2 / 100, (int) width * 2 / 100, 0, 0);
 
             textFooterLayout.addView(mRightVideoTickMark);
             textFooterLayout.addView(mRightVideoTimeText);
 
-            mRightChatLayout.addView(mLeftVideoChatLayout);
-            mRightChatLayout.addView(textFooterLayout);
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width * 2 / 100, width * 2 / 100, width * 2 / 100, width * 1 / 100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect);
+            mTempLayout.addView(mLeftVideoChatLayout);
+            mTempLayout.addView(textFooterLayout);
+
+//            mTempLayout.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+
+////            mTempLayout.addView(textFooterLayout);
+//
+////            LinearLayout.LayoutParams mRightChatLayoutParams = new LinearLayout.LayoutParams(
+////                    LinearLayout.LayoutParams.WRAP_CONTENT,
+////                    LinearLayout.LayoutParams.WRAP_CONTENT);
+////            mRightChatLayoutParams.width = (int) width * 65 / 100;
+////            mRightChatLayoutParams.height = (int) height * 32 / 100;
+////            mRightChatLayoutParams.leftMargin = (int) width * 19 / 100;
+////            mTempLayout.setLayoutParams(mRightChatLayoutParams);
+//
+//            mTempLayout.addView(ImachChatLayout);
+//
+//            LinearLayout mTempLayoutwithStatus=new LinearLayout(mParentActivity);
+//            mTempLayoutwithStatus.setPadding(width*2/100,width*2/100,width*2/100,width*2/100);
+//            mTempLayoutwithStatus.setBackgroundResource(R.drawable.shadow_effect);
+//            mTempLayoutwithStatus.addView(mTempLayout);
+//            mTempLayoutwithStatus.addView(textFooterLayout);
+
+            mRightChatLayout.addView(mTempLayout);
+
+//            mRightChatLayout.addView(mLeftVideoChatLayout);
+//            mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
@@ -10767,18 +11303,18 @@ public class MUCTest extends AppCompatActivity implements
 
     }
 
-    void rightContactChat(){
+    void rightContactChat() {
 
         try {
             LinearLayout.LayoutParams contactLayoutParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            contactLayoutParams.width=width*50/100;
-            contactLayoutParams.height=height*8/100;
-            contactLayoutParams.topMargin=width*2/100;
-            contactLayoutParams.gravity=Gravity.CENTER;
+            contactLayoutParams.width = width * 50 / 100;
+            contactLayoutParams.height = height * 8 / 100;
+            contactLayoutParams.topMargin = width * 2 / 100;
+            contactLayoutParams.gravity = Gravity.CENTER;
 
-            LinearLayout contactLayout=new LinearLayout(mParentActivity);
+            LinearLayout contactLayout = new LinearLayout(mParentActivity);
             contactLayout.setOrientation(LinearLayout.HORIZONTAL);
             contactLayout.setBackgroundColor(Color.parseColor("#80ffffff"));
             contactLayout.setLayoutParams(contactLayoutParams);
@@ -10786,20 +11322,21 @@ public class MUCTest extends AppCompatActivity implements
             LinearLayout.LayoutParams contactAvathorParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            contactAvathorParams.width=width*10/100;
-            contactAvathorParams.height=width*10/100;
-            contactAvathorParams.leftMargin=width*5/100;
+            contactAvathorParams.width = width * 10 / 100;
+            contactAvathorParams.height = width * 10 / 100;
+            contactAvathorParams.leftMargin = width * 5 / 100;
 
-            mRightContactAvathor=new ImageView(mParentActivity);
+            mRightContactAvathor = new ImageView(mParentActivity);
             mRightContactAvathor.setBackgroundResource(R.drawable.silhouette121);
             mRightContactAvathor.setLayoutParams(contactAvathorParams);
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.gravity=Gravity.CENTER_VERTICAL;
+            textviewParams.gravity = Gravity.CENTER_VERTICAL;
 
-            mRightContactTextView= new EmojiconTextView(mParentActivity);
+            mRightContactTextView = new EmojiconTextView(mParentActivity);
+            mRightContactTextView.setSingleLine(true);
             mRightContactTextView.setGravity(Gravity.CENTER_VERTICAL);
             mRightContactTextView.setTextColor(Color.parseColor("#000000"));
             mRightContactTextView.setTypeface(Typeface.DEFAULT_BOLD);
@@ -10808,11 +11345,11 @@ public class MUCTest extends AppCompatActivity implements
             mRightContactTextView.setLayoutParams(textviewParams);
 
 
-            mRightContactTextTime=new TextView(mParentActivity);
+            mRightContactTextTime = new TextView(mParentActivity);
             mRightContactTextTime.setGravity(Gravity.LEFT);
             mRightContactTextTime.setTextSize(getTimeTxtSize());
             mRightContactTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightContactTextTime.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mRightContactTextTime.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
             //        mRightSenderTimeText.setText(time);
 
             LinearLayout.LayoutParams timeParams = new LinearLayout.LayoutParams(
@@ -10824,7 +11361,7 @@ public class MUCTest extends AppCompatActivity implements
             contactLayout.addView(mRightContactAvathor);
             contactLayout.addView(mRightContactTextView);
 
-            LinearLayout textFooterLayout=new LinearLayout(mParentActivity);
+            LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
             textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
@@ -10835,17 +11372,17 @@ public class MUCTest extends AppCompatActivity implements
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mRightTickMarkParams.gravity=Gravity.LEFT|Gravity.CENTER_VERTICAL;
+            mRightTickMarkParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
 
-            mRightContactTickMark=new ImageView(mParentActivity);
-            mRightContactTickMark.setId(k+600000);
+            mRightContactTickMark = new ImageView(mParentActivity);
+            mRightContactTickMark.setId(k + 600000);
             mRightContactTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightContactTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            mRightContactTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 1 / 100, width * 1 / 100);
 
             textFooterLayout.addView(mRightContactTickMark);
             textFooterLayout.addView(mRightContactTextTime);
 
-
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
             mRightChatLayout.addView(contactLayout);
             mRightChatLayout.addView(textFooterLayout);
             mRightTipLayout.addView(mRightChatLayout);
@@ -10889,90 +11426,86 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-
-
-    void rightAudioChat(){
+    void rightAudioChat() {
 
 
         try {
-            LinearLayout audioLayout=new LinearLayout(mParentActivity);
+            LinearLayout audioLayout = new LinearLayout(mParentActivity);
             audioLayout.setOrientation(LinearLayout.HORIZONTAL);
-            audioLayout.setPadding(0,width*2/100,0,0);
+            audioLayout.setPadding(0, width * 2 / 100, 0, 0);
 
             LinearLayout.LayoutParams playBtnParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            playBtnParams.width=width*9/100;
-            playBtnParams.height=width*8/100;
-            playBtnParams.leftMargin=width*1/100;
-            playBtnParams.gravity=Gravity.CENTER_VERTICAL;
+            playBtnParams.width = width * 9 / 100;
+            playBtnParams.height = width * 8 / 100;
+            playBtnParams.leftMargin = width * 1 / 100;
+            playBtnParams.gravity = Gravity.CENTER_VERTICAL;
 
-            mRightAudioBtnPlay=new Button(mParentActivity);
+            mRightAudioBtnPlay = new Button(mParentActivity);
             mRightAudioBtnPlay.setBackgroundResource(R.drawable.ic_action_audio_play);
             mRightAudioBtnPlay.setLayoutParams(playBtnParams);
 
-
-            mRightAudioBtnCancel=new Button(mParentActivity);
-            mRightAudioBtnCancel.setBackgroundResource(R.drawable.icon_cancel);
+            mRightAudioBtnCancel = new Button(mParentActivity);
+            mRightAudioBtnCancel.setBackgroundResource(R.drawable.ic_action_content_remove);
             mRightAudioBtnCancel.setLayoutParams(playBtnParams);
 
             LinearLayout.LayoutParams seekBarParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            seekBarParams.width=width*52/100;
-            seekBarParams.leftMargin=width*1/100;
-            seekBarParams.rightMargin=width*2/100;
-            seekBarParams.gravity=Gravity.CENTER_VERTICAL;
+            seekBarParams.width = width * 52 / 100;
+            seekBarParams.leftMargin = width * 1 / 100;
+            seekBarParams.rightMargin = width * 2 / 100;
+            seekBarParams.gravity = Gravity.CENTER_VERTICAL;
 
-            mRightAudioSeekBar=new SeekBar(mParentActivity);
+            mRightAudioSeekBar = new SeekBar(mParentActivity);
             mRightAudioSeekBar.setLayoutParams(seekBarParams);
 
 
-            mRightAudioBtnUpload=new Button(mParentActivity);
+            mRightAudioBtnUpload = new Button(mParentActivity);
             mRightAudioBtnUpload.setBackgroundResource(R.drawable.audio_upload_normal);
             mRightAudioBtnUpload.setLayoutParams(playBtnParams);
 
             LinearLayout.LayoutParams audioUploadProgressParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            audioUploadProgressParams.width=width*52/100;
-            audioUploadProgressParams.leftMargin=width*1/100;
-            audioUploadProgressParams.rightMargin=width*2/100;
-            audioUploadProgressParams.gravity=Gravity.CENTER_VERTICAL;
+            audioUploadProgressParams.width = width * 52 / 100;
+            audioUploadProgressParams.leftMargin = width * 1 / 100;
+            audioUploadProgressParams.rightMargin = width * 2 / 100;
+            audioUploadProgressParams.gravity = Gravity.CENTER_VERTICAL;
 
-            mRightAudioUploadProgress=new ProgressBar(mParentActivity, null,
+            mRightAudioUploadProgress = new ProgressBar(mParentActivity, null,
                     android.R.attr.progressBarStyleHorizontal);
-            mRightAudioUploadProgress.setPadding(0,0,width*2/100,0);
+            mRightAudioUploadProgress.setPadding(0, 0, width * 2 / 100, 0);
             mRightAudioUploadProgress.setLayoutParams(audioUploadProgressParams);
 
 
-            LinearLayout audioTimeLayout=new LinearLayout(mParentActivity);
+            LinearLayout audioTimeLayout = new LinearLayout(mParentActivity);
             audioLayout.setOrientation(LinearLayout.HORIZONTAL);
-            audioLayout.setPadding(0,width*2/100,0,0);
+            audioLayout.setPadding(0, width * 2 / 100, 0, 0);
 
-            mRightAudioSize=new TextView(mParentActivity);
+            mRightAudioSize = new TextView(mParentActivity);
             mRightAudioSize.setTextColor(Color.parseColor("#000000"));
-            mRightAudioSize.setPadding(width*3/100,0,0,0);
+            mRightAudioSize.setPadding(width * 3 / 100, 0, 0, 0);
             mRightAudioSize.setText("5.00 kb");
 
             LinearLayout.LayoutParams audioDurationParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            audioDurationParams.leftMargin=width*35/100;
+            audioDurationParams.leftMargin = width * 35 / 100;
 
-            mRightAudioDuration=new TextView(mParentActivity);
+            mRightAudioDuration = new TextView(mParentActivity);
             mRightAudioDuration.setTextColor(Color.parseColor("#000000"));
             mRightAudioDuration.setText("00.00.00");
             mRightAudioDuration.setLayoutParams(audioDurationParams);
 
-            mRightAudioTextTime=new TextView(mParentActivity);
+            mRightAudioTextTime = new TextView(mParentActivity);
             mRightAudioTextTime.setGravity(Gravity.LEFT);
             mRightAudioTextTime.setTextSize(getTimeTxtSize());
             mRightAudioTextTime.setTextColor(Color.parseColor("#000000"));
-            mRightAudioTextTime.setPadding((int) width * 1 / 100, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+            mRightAudioTextTime.setPadding((int) width * 1 / 100, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
 
-            LinearLayout textFooterLayout=new LinearLayout(mParentActivity);
+            LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
             textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
@@ -10984,30 +11517,27 @@ public class MUCTest extends AppCompatActivity implements
             LinearLayout.LayoutParams mRightTickMarkParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mRightTickMarkParams.gravity=Gravity.LEFT|Gravity.CENTER_VERTICAL;
+            mRightTickMarkParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
 
-            mRightAudioTickMark=new ImageView(mParentActivity);
-            mRightAudioTickMark.setId(k+600000);
+            mRightAudioTickMark = new ImageView(mParentActivity);
+            mRightAudioTickMark.setId(k + 600000);
             mRightAudioTickMark.setLayoutParams(mRightTickMarkParams);
-            mRightAudioTickMark.setPadding((int) width * 2 / 100, width * 1 / 100, (int) width * 1 / 100, width * 1 / 100);
+            mRightAudioTickMark.setPadding((int) width * 2 / 100, width * 2 / 100, (int) width * 1 / 100, width * 1 / 100);
 
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.gravity=Gravity.CENTER_VERTICAL;
+            textviewParams.gravity = Gravity.CENTER_VERTICAL;
             mRightAudioTextTime.setLayoutParams(textviewParams);
             audioLayout.setLayoutParams(textviewParams);
             mRightAudioTickMark.setLayoutParams(textviewParams);
             mRightAudioSize.setLayoutParams(textviewParams);
 
-            audioLayout.addView(mRightAudioBtnCancel);
-            audioLayout.addView(mRightAudioBtnUpload);
-            audioLayout.addView(mRightAudioUploadProgress);
-            audioLayout.addView(mRightAudioBtnPlay);
-            audioLayout.addView(mRightAudioSeekBar);
 
-       /* if(msg_list.get(k).getStatus()!=3)
+
+/*
+        if(msg_list.get(k).getStatus()!=3)
         {
             audioLayout.addView(mRightAudioBtnPlay);
             audioLayout.addView(mRightAudioSeekBar);
@@ -11016,12 +11546,18 @@ public class MUCTest extends AppCompatActivity implements
             audioLayout.addView(mRightAudioUploadProgress);
         }*/
 
+            audioLayout.addView(mRightAudioBtnCancel);
+            audioLayout.addView(mRightAudioBtnUpload);
+            audioLayout.addView(mRightAudioUploadProgress);
+            audioLayout.addView(mRightAudioBtnPlay);
+            audioLayout.addView(mRightAudioSeekBar);
 
             audioTimeLayout.addView(mRightAudioSize);
             audioTimeLayout.addView(mRightAudioDuration);
 
             textFooterLayout.addView(mRightAudioTickMark);
             textFooterLayout.addView(mRightAudioTextTime);
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect);
             mRightChatLayout.addView(audioLayout);
             mRightChatLayout.addView(audioTimeLayout);
             mRightChatLayout.addView(textFooterLayout);
@@ -11065,28 +11601,28 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-    void leftAudioChat(){
+    void leftAudioChat() {
 
 
         try {
-            LinearLayout audioLayout=new LinearLayout(mParentActivity);
+            LinearLayout audioLayout = new LinearLayout(mParentActivity);
             audioLayout.setOrientation(LinearLayout.HORIZONTAL);
-            audioLayout.setPadding(0,width*2/100,0,0);
+            audioLayout.setPadding(0, width * 2 / 100, 0, 0);
 
             LinearLayout.LayoutParams playBtnParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            playBtnParams.width=width*9/100;
-            playBtnParams.height=width*8/100;
-            playBtnParams.leftMargin=width*1/100;
-            playBtnParams.gravity=Gravity.CENTER_VERTICAL;
+            playBtnParams.width = width * 9 / 100;
+            playBtnParams.height = width * 8 / 100;
+            playBtnParams.leftMargin = width * 1 / 100;
+            playBtnParams.gravity = Gravity.CENTER_VERTICAL;
 
-            mLeftAudioBtnPlay=new Button(mParentActivity);
+            mLeftAudioBtnPlay = new Button(mParentActivity);
             mLeftAudioBtnPlay.setId(k + 400000);
             mLeftAudioBtnPlay.setBackgroundResource(R.drawable.ic_action_audio_play);
             mLeftAudioBtnPlay.setLayoutParams(playBtnParams);
 
-            mLeftAudioBtnCancel=new Button(mParentActivity);
+            mLeftAudioBtnCancel = new Button(mParentActivity);
             mLeftAudioBtnCancel.setId(k + 1100000);
             mLeftAudioBtnCancel.setBackgroundResource(R.drawable.icon_cancel);
             mLeftAudioBtnCancel.setLayoutParams(playBtnParams);
@@ -11094,17 +11630,17 @@ public class MUCTest extends AppCompatActivity implements
             LinearLayout.LayoutParams seekBarParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            seekBarParams.width=width*53/100;
-            seekBarParams.leftMargin=width*1/100;
-            seekBarParams.rightMargin=width*2/100;
-            seekBarParams.gravity=Gravity.CENTER_VERTICAL;
+            seekBarParams.width = width * 53 / 100;
+            seekBarParams.leftMargin = width * 1 / 100;
+            seekBarParams.rightMargin = width * 2 / 100;
+            seekBarParams.gravity = Gravity.CENTER_VERTICAL;
 
-            mLeftAudioSeekBar=new SeekBar(mParentActivity);
+            mLeftAudioSeekBar = new SeekBar(mParentActivity);
             mLeftAudioSeekBar.setId(k + 500000);
             mLeftAudioSeekBar.setLayoutParams(seekBarParams);
 
 
-            mLeftAudioBtnDownload =new Button(mParentActivity);
+            mLeftAudioBtnDownload = new Button(mParentActivity);
             mLeftAudioBtnDownload.setId(k + 300000);
             mLeftAudioBtnDownload.setBackgroundResource(R.drawable.audio_download_normal);
             mLeftAudioBtnDownload.setLayoutParams(playBtnParams);
@@ -11112,45 +11648,45 @@ public class MUCTest extends AppCompatActivity implements
             LinearLayout.LayoutParams audioUploadProgressParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            audioUploadProgressParams.width=width*53/100;
-            audioUploadProgressParams.leftMargin=width*1/100;
-            audioUploadProgressParams.rightMargin=width*2/100;
-            audioUploadProgressParams.gravity=Gravity.CENTER_VERTICAL;
+            audioUploadProgressParams.width = width * 53 / 100;
+            audioUploadProgressParams.leftMargin = width * 1 / 100;
+            audioUploadProgressParams.rightMargin = width * 2 / 100;
+            audioUploadProgressParams.gravity = Gravity.CENTER_VERTICAL;
 
-            mLeftAudioDownloadProgress =new ProgressBar(mParentActivity, null,
+            mLeftAudioDownloadProgress = new ProgressBar(mParentActivity, null,
                     android.R.attr.progressBarStyleHorizontal);
             mLeftAudioDownloadProgress.setId(k + 1200000);
             mLeftAudioDownloadProgress.setPadding(0, 0, width * 2 / 100, 0);
             mLeftAudioDownloadProgress.setLayoutParams(audioUploadProgressParams);
 
 
-            LinearLayout audioTimeLayout=new LinearLayout(mParentActivity);
+            LinearLayout audioTimeLayout = new LinearLayout(mParentActivity);
             audioLayout.setOrientation(LinearLayout.HORIZONTAL);
-            audioLayout.setPadding(0,width*2/100,0,0);
+            audioLayout.setPadding(0, width * 2 / 100, 0, 0);
 
-            mLeftAudioSize=new TextView(mParentActivity);
+            mLeftAudioSize = new TextView(mParentActivity);
             mLeftAudioSize.setTextColor(Color.parseColor("#000000"));
-            mLeftAudioSize.setPadding(width*2/100,0,0,0);
+            mLeftAudioSize.setPadding(width * 2 / 100, 0, 0, 0);
             mLeftAudioSize.setText("5.00 kb");
 
             LinearLayout.LayoutParams audioDurationParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             //  audioDurationParams.leftMargin=width*32/100;
-            audioDurationParams.rightMargin=width*2/100;
+            audioDurationParams.rightMargin = width * 2 / 100;
 
-            mLeftAudioDuration=new TextView(mParentActivity);
+            mLeftAudioDuration = new TextView(mParentActivity);
             mLeftAudioDuration.setTextColor(Color.parseColor("#000000"));
             mLeftAudioDuration.setText("00.00.00");
             mLeftAudioDuration.setLayoutParams(audioDurationParams);
 
-            mLeftAudioTextTime=new TextView(mParentActivity);
+            mLeftAudioTextTime = new TextView(mParentActivity);
             mLeftAudioTextTime.setGravity(Gravity.LEFT);
             mLeftAudioTextTime.setTextSize(getTimeTxtSize());
             mLeftAudioTextTime.setTextColor(Color.parseColor("#000000"));
             mLeftAudioTextTime.setPadding((int) width * 4 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
 
-            LinearLayout textFooterLayout=new LinearLayout(mParentActivity);
+            LinearLayout textFooterLayout = new LinearLayout(mParentActivity);
             textFooterLayout.setOrientation(LinearLayout.HORIZONTAL);
 
             LinearLayout.LayoutParams textfooterParams = new LinearLayout.LayoutParams(
@@ -11158,13 +11694,13 @@ public class MUCTest extends AppCompatActivity implements
                     LinearLayout.LayoutParams.WRAP_CONTENT);
             textFooterLayout.setLayoutParams(textfooterParams);
 
-            mLeftAudioTickMark=new ImageView(mParentActivity);
+            mLeftAudioTickMark = new ImageView(mParentActivity);
             mLeftAudioTickMark.setPadding((int) width * 4 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.gravity=Gravity.CENTER_VERTICAL;
+            textviewParams.gravity = Gravity.CENTER_VERTICAL;
             mLeftAudioTextTime.setLayoutParams(textviewParams);
             audioLayout.setLayoutParams(textviewParams);
             mLeftAudioTickMark.setLayoutParams(textviewParams);
@@ -11172,7 +11708,7 @@ public class MUCTest extends AppCompatActivity implements
             LinearLayout.LayoutParams mLeftAudioSizeParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftAudioSizeParams.width=width*40/100;
+            mLeftAudioSizeParams.width = width * 40 / 100;
             mLeftAudioSize.setLayoutParams(mLeftAudioSizeParams);
 
      /*   if(msg_list.get(k).getMedia_name()!=null){
@@ -11197,6 +11733,7 @@ public class MUCTest extends AppCompatActivity implements
             textFooterLayout.addView(mLeftAudioTextTime);
 
             mRightChatLayout.addView(mLeftTextProfile);
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
             mRightChatLayout.addView(audioLayout);
             mRightChatLayout.addView(audioTimeLayout);
             mRightChatLayout.addView(textFooterLayout);
@@ -11240,44 +11777,126 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-    void leftTextChat(){
+    void leftTextChat() {
 
         try {
-            mLeftTextview = new EmojiconTextView(MUCTest.this);
-            mLeftTextview.setGravity(Gravity.LEFT);
-
+            mLeftTextview = new EmojiconTextView(mParentActivity);
+//            mLeftTextview.setGravity(Gravity.LEFT);
             mLeftTextview.setTextColor(Color.parseColor("#000000"));
-            mLeftTextview.setPadding((int) width * 2 / 100, 0, (int) width * 2 / 100, width * 2 / 100);
             mLeftTextview.setId(k);
             //        mLeftTextview.setText(text);
 
-            mLeftSenderTimeText = new TextView(MUCTest.this);
-            mLeftSenderTimeText.setGravity(Gravity.LEFT);
+            mLeftSenderTimeText = new TextView(mParentActivity);
+//            mLeftSenderTimeText.setGravity(Gravity.LEFT);
             mLeftSenderTimeText.setTextSize(getTimeTxtSize());
             mLeftSenderTimeText.setTextColor(Color.parseColor("#000000"));
-            mLeftSenderTimeText.setPadding((int) width * 2 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
 
             //        mLeftSenderTimeText.setText(time);
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
+            textviewParams.gravity = Gravity.LEFT;
             mLeftTextview.setLayoutParams(textviewParams);
+            mLeftTextProfile.setLayoutParams(textviewParams);
 
             LinearLayout.LayoutParams mLeftSenderTimeTextParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftSenderTimeTextParams.rightMargin = width * 47 / 100;
+            mLeftSenderTimeTextParams.gravity = Gravity.LEFT | Gravity.CENTER_VERTICAL;
+            //            mLeftSenderTimeTextParams.rightMargin = width * 47 / 100;
             mLeftSenderTimeText.setLayoutParams(mLeftSenderTimeTextParams);
 
-            mRightChatLayout.addView(mLeftTextProfile);
-            mRightChatLayout.addView(mLeftTextview);
-            mRightChatLayout.addView(mLeftSenderTimeText);
+            LinearLayout.LayoutParams mLeftSenderTimeTextParamsa = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            mLeftSenderTimeTextParamsa.gravity = Gravity.LEFT;
+            LinearLayout lay = new LinearLayout(mParentActivity);
+            lay.setLayoutParams(mLeftSenderTimeTextParamsa);
+
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect_left);
+            mTempLayout.setLayoutParams(textviewParams);
+
+            if (msg_list.get(k).getData().length() > 20) {
+                lay.setOrientation(LinearLayout.VERTICAL);
+                mLeftTextview.setPadding(0, width * 1 / 100, (int) width * 2 / 100, 0);
+                mLeftSenderTimeText.setPadding(0, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+                mTempLayout.setPadding(width * 2 / 100, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+            } else {
+                lay.setOrientation(LinearLayout.HORIZONTAL);
+                mLeftTextview.setPadding(0, 0, (int) width * 2 / 100, width * 2 / 100);
+                mLeftSenderTimeText.setPadding(0, 3, (int) width * 2 / 100, 0);
+                mTempLayout.setPadding(width * 2 / 100, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+            }
+            try {
+                String text = msg_list.get(k).getData().toString();
+
+                if (text.length() > 3) {
+
+                    char s = text.charAt(0);
+                    char s1 = text.charAt(1);
+                    char s2 = text.charAt(2);
+
+                    if ((s == '<' && s1 == '-') || (s1 == 'b' && s2 == '>') || (s1 == 'z' && s2 == '>') || (s1 == 'l' && s2 == '>') || (s1 == 'x' && s2 == '>')) {
+                        Constant.printMsg("DEEEEESSSSSTTTTT1 " + text.substring(2).length() + "    " + text.substring(2));
+
+                        lay.setOrientation(LinearLayout.VERTICAL);
+                        mLeftTextview.setPadding(0, width * 1 / 100, (int) width * 2 / 100, 0);
+                        mLeftSenderTimeText.setPadding(0, width * 2 / 100, (int) width * 3 / 100, width * 1 / 100);
+                        mTempLayout.setPadding(width * 2 / 100, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+
+                    } else if (s == '<') {
+                        if (s1 == 's' && s2 == '>') {
+
+                            String self_destruct = text.substring(3)
+                                    .toString();
+                            String[] parts = self_destruct.split("-");
+                            String part1 = parts[0];
+                            String part2 = parts[1];
+                            String part3 = parts[2];
+
+                            if (part2.length() > 20) {
+                                lay.setOrientation(LinearLayout.VERTICAL);
+                                mLeftTextview.setPadding(0, width * 1 / 100, (int) width * 2 / 100, 0);
+                                mLeftSenderTimeText.setPadding(0, width * 1 / 100, (int) width * 3 / 100, width * 1 / 100);
+                                mTempLayout.setPadding(width * 2 / 100, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+                            } else {
+                                lay.setOrientation(LinearLayout.HORIZONTAL);
+                                mLeftTextview.setPadding(0, 0, (int) width * 2 / 100, width * 2 / 100);
+                                mLeftSenderTimeText.setPadding(0, 3, (int) width * 2 / 100, 0);
+                                mTempLayout.setPadding(width * 2 / 100, (int) width * 1 / 100, 0, (int) width * 1 / 100);
+                            }
+                        }
+                    }
+                }
+            } catch (Exception e) {
+            }
+
+            lay.addView(mLeftTextview);
+            lay.addView(mLeftSenderTimeText);
+            mLeftTextProfile.setPadding(0, 0, 0, 0);
+            mTempLayout.addView(mLeftTextProfile);
+            mTempLayout.addView(lay);
+
+            mRightChatLayout.addView(mTempLayout);
+//            mRightChatLayout.addView(mLeftSenderTimeText);
+//            mRightTipLayout.addView(mRightDestTime);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
+
+//            mRightChatLayout.addView(mLeftTextProfile);
+//            mRightChatLayout.addView(mLeftTextview);
+//            mRightChatLayout.addView(mLeftSenderTimeText);
+//            mRightTipLayout.addView(mRightChatLayout);
+//
+//            mRightTipLayout.setPadding(0, 3, 0, 3);
+//
+//            mDynamicView.addView(mRightTipLayout);
 
 
             if (width >= 600) {
@@ -11290,7 +11909,6 @@ public class MUCTest extends AppCompatActivity implements
 
                 mLeftTextview.setTextSize(16);
                 mLeftTextview.setEmojiconSize(46);
-
 
 
             } else if (width > 331 && width < 500) {
@@ -11318,51 +11936,58 @@ public class MUCTest extends AppCompatActivity implements
 
     }
 
-    void leftImageChat(){
+    void leftImageChat() {
 
         try {
             mLeftImageChat = new ImageView(mParentActivity);
-            mLeftImageChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+            mLeftImageChat.setId(k + 150000);
+            mLeftImageChat.setAdjustViewBounds(true);
             mLeftImageChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mLeftImageChat.setMaxWidth(width * 65 / 100);
+            mLeftImageChat.setMaxHeight(height * 40 / 100);
+            mLeftImageChat.setMinimumWidth(width * 30 / 100);
+            mLeftImageChat.setMinimumHeight(height * 23 / 100);
 
-            mLeftImageTextTime=new TextView(mParentActivity);
+            mLeftImageTextTime = new TextView(mParentActivity);
             mLeftImageTextTime.setGravity(Gravity.LEFT);
             mLeftImageTextTime.setTextSize(getTimeTxtSize());
             mLeftImageTextTime.setTextColor(Color.parseColor("#000000"));
-            mLeftImageTextTime.setPadding((int) width * 2 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+            mLeftImageTextTime.setPadding(0, (int) width * 2 / 100, 0, 0);
             //        mLeftImageTextTime.setText(time);
 
             LinearLayout.LayoutParams mLeftSenderTimeTextParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftSenderTimeTextParams.rightMargin=width*45/100;
+            mLeftSenderTimeTextParams.gravity = Gravity.LEFT;
             mLeftImageTextTime.setLayoutParams(mLeftSenderTimeTextParams);
 
-            FrameLayout.LayoutParams textviewParams = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.width=  width * 59 / 100;
-            textviewParams.height= height * 30 / 100;
-            textviewParams.topMargin=width * 2 / 100;
-            textviewParams.bottomMargin=width * 2 / 100;
-            textviewParams.gravity=Gravity.CENTER;
-            mLeftImageChat.setLayoutParams(textviewParams);
+//            FrameLayout.LayoutParams textviewParams = new FrameLayout.LayoutParams(
+//                    LinearLayout.LayoutParams.WRAP_CONTENT,
+//                    LinearLayout.LayoutParams.WRAP_CONTENT);
+//            textviewParams.width=  width * 59 / 100;
+//            textviewParams.height= height * 30 / 100;
+//            textviewParams.topMargin=width * 2 / 100;
+//            textviewParams.bottomMargin=width * 2 / 100;
+//            textviewParams.gravity=Gravity.CENTER;
+//            mLeftImageChat.setLayoutParams(textviewParams);
             //        mRightSenderTimeText.setLayoutParams(textviewParams);
 
-            FrameLayout ImachChatLayout=new FrameLayout(mParentActivity);
+            FrameLayout ImachChatLayout = new FrameLayout(mParentActivity);
 
             mLeftImageChatDownload = new ImageView(mParentActivity);
+            mLeftImageChatDownload.setId(k + 160000);
             mLeftImageChatDownload.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mLeftImageChatDownload.setBackgroundResource(R.drawable.image_download_normal);
 
-            mLeftImagetProgressBar =new ProgressBar(mParentActivity);
+            mLeftImagetProgressBar = new ProgressBar(mParentActivity);
+            mLeftImagetProgressBar.setId(k + 170000);
 
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            left_download_icon_params.width = (int) width * 15/100;
-            left_download_icon_params.height = (int) width *15/100;
-            left_download_icon_params.gravity=Gravity.CENTER;
+            left_download_icon_params.width = (int) width * 15 / 100;
+            left_download_icon_params.height = (int) width * 15 / 100;
+            left_download_icon_params.gravity = Gravity.CENTER;
             mLeftImageChatDownload.setLayoutParams(left_download_icon_params);
             mLeftImagetProgressBar.setLayoutParams(left_download_icon_params);
 
@@ -11371,14 +11996,31 @@ public class MUCTest extends AppCompatActivity implements
             ImachChatLayout.addView(mLeftImageChatDownload);
             ImachChatLayout.addView(mLeftImagetProgressBar);
 
-            mRightChatLayout.addView(mLeftTextProfile);
-            mRightChatLayout.addView(ImachChatLayout);
-            mRightChatLayout.addView(mLeftImageTextTime);
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width * 2 / 100, width * 1 / 100, width * 2 / 100, width * 1 / 100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect_left);
+            mTempLayout.addView(mLeftTextProfile);
+            mTempLayout.addView(ImachChatLayout);
+            mTempLayout.addView(mLeftImageTextTime);
+
+            mRightChatLayout.addView(mTempLayout);
+//            mRightChatLayout.addView(mLeftImageTextTime);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
+
+//            mRightChatLayout.addView(mLeftTextProfile);
+//            mRightChatLayout.addView(ImachChatLayout);
+//            mRightChatLayout.addView(mLeftImageTextTime);
+//            mRightTipLayout.addView(mRightChatLayout);
+//
+//            mRightTipLayout.setPadding(0, 3, 0, 3);
+//
+//            mDynamicView.addView(mRightTipLayout);
         } catch (Exception e) {
 
         }
@@ -11386,56 +12028,69 @@ public class MUCTest extends AppCompatActivity implements
 
     }
 
-    void leftVideoChat(){
+    void leftVideoChat() {
 
         try {
             mLeftVideoChat = new ImageView(mParentActivity);
-            mLeftVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
-            mLeftVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            mLeftVideoChat.setAdjustViewBounds(true);
+            mLeftVideoChat.setScaleType(ImageView.ScaleType.CENTER);
+            mLeftVideoChat.setMaxWidth(width * 65 / 100);
+            mLeftVideoChat.setMaxHeight(width * 65 / 100);
+            mLeftVideoChat.setMinimumWidth(width * 30 / 100);
+            mLeftVideoChat.setMinimumHeight(height * 23 / 100);
+            mLeftVideoChat.setId(k + 180000);
 
-            mLeftVideoTimeText=new TextView(mParentActivity);
+//            mLeftVideoChat = new ImageView(mParentActivity);
+//            mLeftVideoChat.setId(k + 180000 );
+//            mLeftVideoChat.setPadding((int) width * 1 / 100, 0, (int) width * 1 / 100, width * 2 / 100);
+//            mLeftVideoChat.setScaleType(ImageView.ScaleType.CENTER_CROP);
+
+            mLeftVideoTimeText = new TextView(mParentActivity);
             mLeftVideoTimeText.setGravity(Gravity.LEFT);
             mLeftVideoTimeText.setTextSize(getTimeTxtSize());
             mLeftVideoTimeText.setTextColor(Color.parseColor("#000000"));
-            mLeftVideoTimeText.setPadding((int) width * 2 / 100, 0, (int) width * 3 / 100, width * 1 / 100);
+            mLeftVideoTimeText.setPadding(width * 1 / 100, width * 2 / 100, 0, 0);
             //        mLeftImageTextTime.setText(time);
 
             LinearLayout.LayoutParams mLeftSenderTimeTextParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.FILL_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftSenderTimeTextParams.rightMargin=width*38/100;
+            mLeftSenderTimeTextParams.gravity = Gravity.LEFT;
             mLeftVideoTimeText.setLayoutParams(mLeftSenderTimeTextParams);
             //        mLeftVideoTimeText.setText(time);
 
-            FrameLayout.LayoutParams mLeftVideoChatParams = new FrameLayout.LayoutParams(
-                    LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftVideoChatParams.width=  width * 60 / 100;
-            mLeftVideoChatParams.height= height * 30 / 100;
-            mLeftVideoChatParams.topMargin=width * 2 / 100;
-            mLeftVideoChatParams.gravity=Gravity.CENTER;
-            mLeftVideoChat.setLayoutParams(mLeftVideoChatParams);
+//            FrameLayout.LayoutParams mLeftVideoChatParams = new FrameLayout.LayoutParams(
+//                    LinearLayout.LayoutParams.WRAP_CONTENT,
+//                    LinearLayout.LayoutParams.WRAP_CONTENT);
+//            mLeftVideoChatParams.width = width * 60 / 100;
+//            mLeftVideoChatParams.height = height * 30 / 100;
+//            mLeftVideoChatParams.topMargin = width * 2 / 100;
+//            mLeftVideoChatParams.gravity = Gravity.CENTER;
+//            mLeftVideoChat.setLayoutParams(mLeftVideoChatParams);
             //        mRightSenderTimeText.setLayoutParams(textviewParams);
 
-            FrameLayout mLeftVideoChatLayout=new FrameLayout(mParentActivity);
+            FrameLayout mLeftVideoChatLayout = new FrameLayout(mParentActivity);
 
             mLeftVideoChatDownload = new ImageView(mParentActivity);
+            mLeftVideoChatDownload.setId(k + 190000);
             mLeftVideoChatDownload.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mLeftVideoChatDownload.setBackgroundResource(R.drawable.image_download_normal);
 
             mLeftVideoButtonPlay = new ImageView(mParentActivity);
+            mLeftVideoButtonPlay.setId(k + 210000);
             mLeftVideoButtonPlay.setScaleType(ImageView.ScaleType.CENTER_CROP);
             mLeftVideoButtonPlay.setBackgroundResource(R.drawable.videooverlay);
 
 
-            mLeftVideoProgress =new ProgressBar(mParentActivity);
+            mLeftVideoProgress = new ProgressBar(mParentActivity);
+            mLeftVideoProgress.setId(k + 220000);
 
             FrameLayout.LayoutParams left_download_icon_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            left_download_icon_params.width = (int) width * 15/100;
-            left_download_icon_params.height = (int) width *15/100;
-            left_download_icon_params.gravity=Gravity.CENTER;
+            left_download_icon_params.width = (int) width * 15 / 100;
+            left_download_icon_params.height = (int) width * 15 / 100;
+            left_download_icon_params.gravity = Gravity.CENTER;
             mLeftVideoChatDownload.setLayoutParams(left_download_icon_params);
             mLeftVideoProgress.setLayoutParams(left_download_icon_params);
             mLeftVideoButtonPlay.setLayoutParams(left_download_icon_params);
@@ -11444,32 +12099,32 @@ public class MUCTest extends AppCompatActivity implements
             FrameLayout.LayoutParams videoFooter_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            videoFooter_params.gravity=Gravity.BOTTOM;
+            videoFooter_params.gravity = Gravity.BOTTOM;
 
-            FrameLayout videoFooter=new FrameLayout(mParentActivity);
+            FrameLayout videoFooter = new FrameLayout(mParentActivity);
             videoFooter.setLayoutParams(videoFooter_params);
 
             FrameLayout.LayoutParams videoimage = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            videoimage.width=width*10/100;
-            videoimage.height=width*8/100;
-            videoimage.gravity=Gravity.LEFT;
-            videoimage.bottomMargin=width*1/100;
-            videoimage.leftMargin=width*4/100;
+            videoimage.width = width * 10 / 100;
+            videoimage.height = width * 8 / 100;
+            videoimage.gravity = Gravity.LEFT;
+            videoimage.bottomMargin = width * 1 / 100;
+            videoimage.leftMargin = width * 2 / 100;
 
-            mLeftVideoImgOverlay=new ImageView(mParentActivity);
+            mLeftVideoImgOverlay = new ImageView(mParentActivity);
             mLeftVideoImgOverlay.setBackgroundResource(R.drawable.frame_overlay_gallery_video);
             mLeftVideoImgOverlay.setLayoutParams(videoimage);
 
             FrameLayout.LayoutParams videoDuration_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            videoDuration_params.gravity=Gravity.LEFT;
-            videoDuration_params.topMargin=(width*1/100)+1;
-            videoDuration_params.leftMargin=width*13/100;
+            videoDuration_params.gravity = Gravity.LEFT;
+            videoDuration_params.topMargin = (width * 1 / 100) + 1;
+            videoDuration_params.leftMargin = width * 13 / 100;
 
-            mLeftVideoDuration=new TextView(mParentActivity);
+            mLeftVideoDuration = new TextView(mParentActivity);
             mLeftVideoDuration.setTextColor(Color.parseColor("#ffffff"));
             mLeftVideoDuration.setText("1");
             mLeftVideoDuration.setLayoutParams(videoDuration_params);
@@ -11477,10 +12132,10 @@ public class MUCTest extends AppCompatActivity implements
             FrameLayout.LayoutParams videoSize_params = new FrameLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            videoSize_params.gravity=Gravity.RIGHT;
-            videoSize_params.topMargin=width*1/100;
-            videoSize_params.rightMargin=width*5/100;
-            videoSize_params.leftMargin=width*47/100;
+            videoSize_params.gravity = Gravity.RIGHT;
+            videoSize_params.topMargin = width * 1 / 100;
+            videoSize_params.rightMargin = width * 2 / 100;
+            videoSize_params.leftMargin = width * 49 / 100;
 
 
             mLeftVideoSize = new TextView(mParentActivity);
@@ -11491,47 +12146,58 @@ public class MUCTest extends AppCompatActivity implements
             videoFooter.addView(mLeftVideoDuration);
             videoFooter.addView(mLeftVideoSize);
 
-
             mLeftVideoChatLayout.addView(mLeftVideoChat);
 
-            if(msg_list.get(k).getMedia_name()!=null){
 
-
-                mLeftVideoChatLayout.addView(mLeftVideoButtonPlay);
-
-            }else{
-                mLeftVideoChatLayout.addView(mLeftVideoChatDownload);
-                mLeftVideoChatLayout.addView(mLeftVideoProgress);
-
-            }
+            mLeftVideoChatLayout.addView(mLeftVideoButtonPlay);
+            mLeftVideoChatLayout.addView(mLeftVideoChatDownload);
+            mLeftVideoChatLayout.addView(mLeftVideoProgress);
             mLeftVideoChatLayout.addView(videoFooter);
 
-            mRightChatLayout.addView(mLeftTextProfile);
-            mRightChatLayout.addView(mLeftVideoChatLayout);
-            mRightChatLayout.addView(mLeftVideoTimeText);
+
+            LinearLayout mTempLayout = new LinearLayout(mParentActivity);
+            mTempLayout.setOrientation(LinearLayout.VERTICAL);
+            mTempLayout.setGravity(Gravity.CENTER);
+            mTempLayout.setPadding(width * 2 / 100, width * 1 / 100, width * 2 / 100, width * 1 / 100);
+            mTempLayout.setBackgroundResource(R.drawable.shadow_effect_left);
+            mTempLayout.addView(mLeftTextProfile);
+            mTempLayout.addView(mLeftVideoChatLayout);
+            mTempLayout.addView(mLeftVideoTimeText);
+
+            mRightChatLayout.addView(mTempLayout);
+//            mRightChatLayout.addView(mLeftVideoTimeText);
             mRightTipLayout.addView(mRightChatLayout);
 
             mRightTipLayout.setPadding(0, 3, 0, 3);
 
             mDynamicView.addView(mRightTipLayout);
+
+//            mRightChatLayout.addView(mLeftTextProfile);
+//            mRightChatLayout.addView(mLeftVideoChatLayout);
+//            mRightChatLayout.addView(mLeftVideoTimeText);
+//            mRightTipLayout.addView(mRightChatLayout);
+//
+//            mRightTipLayout.setPadding(0, 3, 0, 3);
+//
+//            mDynamicView.addView(mRightTipLayout);
         } catch (Exception e) {
 
         }
 
     }
 
-    void leftContactChat(){
+    void leftContactChat() {
 
         try {
             LinearLayout.LayoutParams contactLayoutParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            contactLayoutParams.width=width*50/100;
-            contactLayoutParams.height=height*8/100;
-            contactLayoutParams.topMargin=width*2/100;
-            contactLayoutParams.gravity=Gravity.CENTER;
+            contactLayoutParams.width = width * 50 / 100;
+            contactLayoutParams.height = height * 8 / 100;
+            contactLayoutParams.topMargin = width * 2 / 100;
+            contactLayoutParams.gravity = Gravity.CENTER;
 
-            LinearLayout contactLayout=new LinearLayout(mParentActivity);
+            LinearLayout contactLayout = new LinearLayout(mParentActivity);
             contactLayout.setOrientation(LinearLayout.HORIZONTAL);
             contactLayout.setBackgroundColor(Color.parseColor("#80ffffff"));
             contactLayout.setLayoutParams(contactLayoutParams);
@@ -11539,20 +12205,20 @@ public class MUCTest extends AppCompatActivity implements
             LinearLayout.LayoutParams contactAvathorParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            contactAvathorParams.width=width*10/100;
-            contactAvathorParams.height=width*10/100;
-            contactAvathorParams.leftMargin=width*5/100;
+            contactAvathorParams.width = width * 10 / 100;
+            contactAvathorParams.height = width * 10 / 100;
+            contactAvathorParams.leftMargin = width * 5 / 100;
 
-            mLeftContactAvathor=new ImageView(mParentActivity);
+            mLeftContactAvathor = new ImageView(mParentActivity);
             mLeftContactAvathor.setBackgroundResource(R.drawable.silhouette121);
             mLeftContactAvathor.setLayoutParams(contactAvathorParams);
 
             LinearLayout.LayoutParams textviewParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            textviewParams.gravity=Gravity.CENTER_VERTICAL;
-            textviewParams.width=width*35/100;
-            textviewParams.leftMargin=width*2/100;
+            textviewParams.gravity = Gravity.CENTER_VERTICAL;
+            textviewParams.width = width * 35 / 100;
+            textviewParams.leftMargin = width * 2 / 100;
 
             mLeftContactTextView = new EmojiconTextView(mParentActivity);
             mLeftContactTextView.setGravity(Gravity.CENTER_VERTICAL);
@@ -11563,7 +12229,7 @@ public class MUCTest extends AppCompatActivity implements
             mLeftContactTextView.setLayoutParams(textviewParams);
 
 
-            mLeftContactTextTime=new TextView(mParentActivity);
+            mLeftContactTextTime = new TextView(mParentActivity);
             mLeftContactTextTime.setGravity(Gravity.LEFT);
             mLeftContactTextTime.setTextSize(getTimeTxtSize());
             mLeftContactTextTime.setTextColor(Color.parseColor("#000000"));
@@ -11573,7 +12239,7 @@ public class MUCTest extends AppCompatActivity implements
             LinearLayout.LayoutParams mLeftSenderTimeTextParams = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT);
-            mLeftSenderTimeTextParams.rightMargin=width*38/100;
+            mLeftSenderTimeTextParams.rightMargin = width * 38 / 100;
             mLeftContactTextTime.setLayoutParams(mLeftSenderTimeTextParams);
 
 
@@ -11586,6 +12252,7 @@ public class MUCTest extends AppCompatActivity implements
             contactLayout.addView(mLeftContactAvathor);
 
             mRightChatLayout.addView(mLeftTextProfile);
+            mRightChatLayout.setBackgroundResource(R.drawable.shadow_effect_left);
             mRightChatLayout.addView(contactLayout);
             mRightChatLayout.addView(mLeftContactTextTime);
             mRightTipLayout.addView(mRightChatLayout);
@@ -11627,7 +12294,6 @@ public class MUCTest extends AppCompatActivity implements
 
 
     }
-
 
 
     public void setRightChatText() {
@@ -11744,7 +12410,7 @@ public class MUCTest extends AppCompatActivity implements
                         mTextMsg.setTypeface(null, Color.RED);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         mTextMsg.setTextSize(valueText());
@@ -11775,7 +12441,7 @@ public class MUCTest extends AppCompatActivity implements
                         mTextMsg.setTypeface(null, Color.YELLOW);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         mTextMsg.setTextSize(valueText());
@@ -11813,7 +12479,7 @@ public class MUCTest extends AppCompatActivity implements
                         mTextMsg.setTypeface(null, Color.RED);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         mTextMsg.setTextSize(valueText());
@@ -12064,7 +12730,7 @@ public class MUCTest extends AppCompatActivity implements
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
 
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -12076,7 +12742,7 @@ public class MUCTest extends AppCompatActivity implements
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
                         mTextMsg.setTextColor(Color.BLACK);
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -12091,7 +12757,7 @@ public class MUCTest extends AppCompatActivity implements
                         mTextMsg.setTextColor(Color.BLACK);
                         mTextMsg.setTypeface(null, Typeface.NORMAL);
                         mTextMsg.setBackground(null);
-                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         mTextMsg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         mTextMsg.setTextSize(valueText());
@@ -12109,7 +12775,7 @@ public class MUCTest extends AppCompatActivity implements
                     mTextMsg.setTextColor(Color.BLACK);
                     mTextMsg.setTypeface(null, Color.BLACK);
                     mTextMsg.setBackground(null);
-                    mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                    mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                     mTextMsg.setGravity(Gravity.CENTER
                             | Gravity.LEFT);
                     mTextMsg.setTextSize(valueText());
@@ -12130,7 +12796,7 @@ public class MUCTest extends AppCompatActivity implements
                 mTextMsg.setTextColor(Color.BLACK);
                 mTextMsg.setTypeface(null, Color.BLACK);
                 mTextMsg.setBackground(null);
-                //                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                                        mTextMsg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                 mTextMsg.setGravity(Gravity.CENTER
                         | Gravity.RIGHT);
                 mTextMsg.setTextSize(valueText());
@@ -12149,7 +12815,202 @@ public class MUCTest extends AppCompatActivity implements
             }
 
             mTextMsg.setTag(k);
+            mTextMsg.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
 
+
+                    try {
+                        topMenuHideFunction();
+
+                        mIsLogClick = true;
+
+                        LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderTextParams.width = width * 40 / 100;
+                        hedderTextParams.leftMargin = width * 3 / 100;
+                        hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                        mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                        LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderAttachmentParams.width = width * 11 / 100;
+                        hedderAttachmentParams.height = width * 8 / 100;
+                        hedderAttachmentParams.gravity = Gravity.CENTER;
+                        mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                        mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                        Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                        String splText = msg_list.get(v.getId()).getData();
+
+                        if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                    Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                    mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                    mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                    mOnLongSelectedPostions.remove(i);
+
+                                }
+
+                            }
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+
+                        } else {
+
+                            mOnLongSelectedPostions.add((v.getId()));
+                            mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                            mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                        }
+
+                        if (mOnLongSelectedPostions.size() == 0) {
+                            mIsLogClick = false;
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                            hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 50 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                            hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 4 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                            LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderMenuParams.width = (width * 2 / 100) - 2;
+                            hedderMenuParams.height = width * 7 / 100;
+                            hedderMenuParams.gravity = Gravity.CENTER;
+                            mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderCopyLayout.setVisibility(View.GONE);
+                        }
+                    } catch (Exception e) {
+
+                    }
+
+
+                    return true;
+                }
+            });
             mTextMsg.setOnClickListener(new OnClickListener() {
 
                 @Override
@@ -12158,13 +13019,206 @@ public class MUCTest extends AppCompatActivity implements
                     // Constant.printMsg("clicked syms:::::>>>>>>");
                     //                EmojiconTextView mTextMsg = (EmojiconTextView) v
                     //                        .findViewById(R.id.right_chat_text);
-                    int position = (Integer) v.getTag();
 
-                    String text = mTextMsg.getText().toString();
+                    if (mIsLogClick) {
 
-                    boolean toggle = true;
 
-                    //String text = mTextMsg.getText().toString();
+                        try {
+                            topMenuHideFunction();
+
+                            mIsLogClick = true;
+
+                            LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 40 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                            LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 11 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                            Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                            String splText = msg_list.get(v.getId()).getData();
+
+                            if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                    if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                        Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                        mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                        mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                        mOnLongSelectedPostions.remove(i);
+
+                                    }
+
+                                }
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+
+                            } else {
+
+                                mOnLongSelectedPostions.add((v.getId()));
+                                mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                            }
+
+                            if (mOnLongSelectedPostions.size() == 0) {
+                                mIsLogClick = false;
+                                mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                                mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                                hedderTextParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderTextParams.width = width * 50 / 100;
+                                hedderTextParams.leftMargin = width * 3 / 100;
+                                hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                                mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                                hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderAttachmentParams.width = width * 4 / 100;
+                                hedderAttachmentParams.height = width * 8 / 100;
+                                hedderAttachmentParams.gravity = Gravity.CENTER;
+                                mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                                LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderMenuParams.width = (width * 2 / 100) - 2;
+                                hedderMenuParams.height = width * 7 / 100;
+                                hedderMenuParams.gravity = Gravity.CENTER;
+                                mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderCopyLayout.setVisibility(View.GONE);
+                            }
+                        } catch (Exception e) {
+
+                        }
+
+
+                    } else {
+                        int position = (Integer) v.getTag();
+
+                        String text = mTextMsg.getText().toString();
+
+                        boolean toggle = true;
+
+                        //String text = mTextMsg.getText().toString();
 
 
 //                    if (mTextMsg.getCurrentTextColor() == -65536) {
@@ -12178,74 +13232,74 @@ public class MUCTest extends AppCompatActivity implements
 //                        mParentActivity.startActivity(intent);
 //                    }
 
-                    if (mTextMsg.getCurrentTextColor() == -256) {
+                        if (mTextMsg.getCurrentTextColor() == -256) {
 
-                        OrientationGroup.mZzleTextor = mTextMsg
-                                .getText().toString();
-
-                        // HorizonalSlideshow.mZzleTextor = mTextMsg
-                        // .getText().toString();
-
-                        Intent intent = new Intent(mParentActivity,
-                                OrientationGroup.class);
-                        mParentActivity.startActivity(intent);
-
-                        // }
-
-                    }
-                    if (mTextMsg.getCurrentTextColor() == -65536) {
-                        MessageGetSet selectedItem1 = Constant.msg_list_adapter
-                                .get(position);
-                        System.out.println("testing group dazZ" + selectedItem1.getData());
-                        if (selectedItem1.getData().startsWith("<x>")) {
-                            Constant.mZzleText = mTextMsg.getText()
-                                    .toString();
-
-                            BannerActivityChat.mZzleText = mTextMsg
-                                    .getText().toString();
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityChat.mZzleTextBackground = part1;
-                            BannerActivityChat.mZzleTextColor = part3;
-                            BannerActivityChat.mZzleTextSize = part4;
-                            BannerActivityChat.mZzleTextSpeed = part2;
-                            Intent intent = new Intent(mParentActivity,
-                                    BannerActivityChat.class);
-                            startActivity(intent);
-                        } else {
-                            Constant.zzle = false;
-
-                            BannerActivityLED.mZzleText = mTextMsg
+                            OrientationGroup.mZzleTextor = mTextMsg
                                     .getText().toString();
 
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityLED.mZzleTextBackground =part5;
-                            BannerActivityLED.mZzleTextSpeed =part3;
-                            BannerActivityLED.mZzleTextSize =part4;
-
+                            // HorizonalSlideshow.mZzleTextor = mTextMsg
+                            // .getText().toString();
 
                             Intent intent = new Intent(mParentActivity,
-                                    BannerActivityLED.class);
-                            startActivity(intent);
+                                    OrientationGroup.class);
+                            mParentActivity.startActivity(intent);
+
+                            // }
+
                         }
+                        if (mTextMsg.getCurrentTextColor() == -65536) {
+                            MessageGetSet selectedItem1 = Constant.msg_list_adapter
+                                    .get(position);
+                            System.out.println("testing group dazZ" + selectedItem1.getData());
+                            if (selectedItem1.getData().startsWith("<x>")) {
+                                Constant.mZzleText = mTextMsg.getText()
+                                        .toString();
+
+                                BannerActivityChat.mZzleText = mTextMsg
+                                        .getText().toString();
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityChat.mZzleTextBackground = part1;
+                                BannerActivityChat.mZzleTextColor = part3;
+                                BannerActivityChat.mZzleTextSize = part4;
+                                BannerActivityChat.mZzleTextSpeed = part2;
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityChat.class);
+                                startActivity(intent);
+                            } else {
+                                Constant.zzle = false;
+
+                                BannerActivityLED.mZzleText = mTextMsg
+                                        .getText().toString();
+
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityLED.mZzleTextBackground = part5;
+                                BannerActivityLED.mZzleTextSpeed = part3;
+                                BannerActivityLED.mZzleTextSize = part4;
+
+
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityLED.class);
+                                startActivity(intent);
+                            }
+                        }
+
                     }
-
                 }
-
             });
         } catch (Exception e) {
 
@@ -12255,7 +13309,7 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-    public void setLeftChatText(){
+    public void setLeftChatText() {
 
 
         try {
@@ -12277,25 +13331,23 @@ public class MUCTest extends AppCompatActivity implements
                 if (contact == null) {
                     mLeftTextProfile.setText(msg_list.get(k).getRemote_resource().split("@")[0]);
                     displayName = msg_list.get(k).getRemote_resource().split("@")[0];
-                } else if (contact.getDisplay_name()!=null){
+                } else if (contact.getDisplay_name() != null) {
                     mLeftTextProfile.setText(contact.getDisplay_name());
                     displayName = contact.getDisplay_name();
-                }else
-                {
+                } else {
                     mLeftTextProfile.setText(msg_list.get(k).getRemote_resource().split("@")[0]);
                     displayName = msg_list.get(k).getRemote_resource().split("@")[0];
                 }
-
-                if(displayName.length()>1)
-                {
-                    getColorLeftUser(displayName);
-                }else {
-                    mLeftTextProfile.setText(msg_list.get(k).getRemote_resource().split("@")[0]);
-                    displayName = msg_list.get(k).getRemote_resource().split("@")[0];
-
-                    getColorLeftUser(displayName);
-                }
-
+//zz
+//                if(displayName.length()>=1)
+//                {
+//                    getColorLeftUser(displayName);
+//                }else {
+//                    mLeftTextProfile.setText(msg_list.get(k).getRemote_resource().split("@")[0]);
+//                    displayName = msg_list.get(k).getRemote_resource().split("@")[0];
+//
+//                    getColorLeftUser(displayName);
+//                }
 
 
             } catch (Exception e) {
@@ -12373,15 +13425,14 @@ public class MUCTest extends AppCompatActivity implements
                         //                                bubbleImgParams.leftMargin = Constant.screenWidth * 15 / 100;
 
                         txt_msg.setLayoutParams(bubbleImgParams);
-                    }
-                    else if (s1 == 'z' && s2 == '>') {
+                    } else if (s1 == 'z' && s2 == '>') {
 
                         txt_msg.setTextColor(Color.RED);
                         txt_msg.setText(text.substring(3));
                         txt_msg.setTypeface(null, Color.RED);
 
                         txt_msg.setBackground(null);
-                        txt_msg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
+//                        txt_msg.setMinimumWidth(LinearLayout.LayoutParams.WRAP_CONTENT);
                         txt_msg.setGravity(Gravity.CENTER
                                 | Gravity.LEFT);
                         txt_msg.setTextSize(valueText());
@@ -12455,10 +13506,8 @@ public class MUCTest extends AppCompatActivity implements
 
                                     if (mSeenList.contains(scrollpart2)) {
 
-                                    } else
-                                    {
-                                        if (Constant.mDefaultScroll == true)
-                                        {
+                                    } else {
+                                        if (Constant.mDefaultScroll == true) {
                                             BannerActivityZzleAdapter.mZzleText
                                                     = scrollpart1.substring(3);
                                             BannerActivityZzleAdapter.mZzleTexTime
@@ -12594,7 +13643,7 @@ public class MUCTest extends AppCompatActivity implements
 
                                         if (Constant.mDefaultScroll == true) {
 
-                                            if(k==msg_list.size()-1) {
+                                            if (k == msg_list.size() - 1) {
                                                 BannerActivityDazzAdapter.mZzleText = scrollpart5;
                                                 BannerActivityDazzAdapter.mZzleTexTime = scrollpart6;
                                                 Intent intent = new Intent(
@@ -12766,7 +13815,7 @@ public class MUCTest extends AppCompatActivity implements
                         txt_msg.setTypeface(null, Color.MAGENTA);
 
                         txt_msg.setBackground(null);
-                        txt_msg.setMinimumWidth(Constant.screenWidth);
+//                        txt_msg.setMinimumWidth(Constant.screenWidth);
                         txt_msg.setTextSize(
                                 TypedValue.COMPLEX_UNIT_SP,
                                 msg_font_size);
@@ -12869,7 +13918,7 @@ public class MUCTest extends AppCompatActivity implements
                 txt_msg.setTypeface(null, Typeface.NORMAL);
 
                 txt_msg.setBackground(null);
-                txt_msg.setMinimumWidth(Constant.screenWidth);
+//                txt_msg.setMinimumWidth(Constant.screenWidth);
                 txt_msg.setTextSize(valueText());
                 txt_msg.setEmojiconSize(33);
                 LinearLayout.LayoutParams bubbleImgParams = new LinearLayout.LayoutParams(
@@ -12890,13 +13939,205 @@ public class MUCTest extends AppCompatActivity implements
                 public void onClick(View v) {
                     // TODO Auto-generated method stub
                     // Constant.printMsg("clicked syms:::::>>>>>>");
-                    final EmojiconTextView txt_msg = (EmojiconTextView) v;
+                    if (mIsLogClick) {
 
-                    boolean toggle = true;
 
-                    int position = (Integer) v.getTag();
+                        try {
+                            topMenuHideFunction();
 
-                    String text = txt_msg.getText().toString();
+                            mIsLogClick = true;
+
+                            LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 40 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                            LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 11 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                            mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                            mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                            Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                            String splText = msg_list.get(v.getId()).getData();
+
+                            if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                    if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                        Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                        mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                        mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                        mOnLongSelectedPostions.remove(i);
+
+                                    }
+
+                                }
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+
+                            } else {
+
+                                mOnLongSelectedPostions.add((v.getId()));
+                                mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                                boolean isOneMedia = false;
+                                boolean isSple = false;
+                                boolean isDoneteBux = false;
+
+                                for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                    String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                    String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                    Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                    if (!getCopyPastMediaType(mediaType)) {
+                                        isOneMedia = true;
+                                        Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                    }
+                                    if (chekNynmDazzKon(tempSplText)) {
+                                        isSple = true;
+                                    }
+                                    if (chekDonate(tempSplText)) {
+                                        isDoneteBux = true;
+                                    }
+                                }
+
+                                if (isOneMedia) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isSple) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+                                if (isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                                if (!isOneMedia && !isSple && !isDoneteBux) {
+                                    mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                    mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                }
+
+                            }
+
+                            if (mOnLongSelectedPostions.size() == 0) {
+                                mIsLogClick = false;
+                                mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                                mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                                hedderTextParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderTextParams.width = width * 50 / 100;
+                                hedderTextParams.leftMargin = width * 3 / 100;
+                                hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                                mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                                hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderAttachmentParams.width = width * 4 / 100;
+                                hedderAttachmentParams.height = width * 8 / 100;
+                                hedderAttachmentParams.gravity = Gravity.CENTER;
+                                mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                                LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                                        LinearLayout.LayoutParams.WRAP_CONTENT);
+                                hedderMenuParams.width = (width * 2 / 100) - 2;
+                                hedderMenuParams.height = width * 7 / 100;
+                                hedderMenuParams.gravity = Gravity.CENTER;
+                                mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderCopyLayout.setVisibility(View.GONE);
+                            }
+                        } catch (Exception e) {
+
+                        }
+
+
+                    } else {
+                        final EmojiconTextView txt_msg = (EmojiconTextView) v;
+
+                        boolean toggle = true;
+
+                        int position = (Integer) v.getTag();
+
+                        String text = txt_msg.getText().toString();
 
 
 //                    if (txt_msg.getCurrentTextColor() == -65536) {
@@ -12910,72 +14151,269 @@ public class MUCTest extends AppCompatActivity implements
 //                        mParentActivity.startActivity(intent);
 //                    }
 
-                    if (txt_msg.getCurrentTextColor() == -256) {
+                        if (txt_msg.getCurrentTextColor() == -256) {
 
-                        OrientationGroup.mZzleTextor = txt_msg
-                                .getText().toString();
-
-                        // HorizonalSlideshow.mZzleTextor = txt_msg
-                        // .getText().toString();
-
-                        Intent intent = new Intent(mParentActivity,
-                                OrientationGroup.class);
-                        mParentActivity.startActivity(intent);
-
-                        // }
-
-                    }
-                    if (txt_msg.getCurrentTextColor() == -65536) {
-                        MessageGetSet selectedItem1 = Constant.msg_list_adapter
-                                .get(position);
-                        System.out.println("testing group dazZ"+selectedItem1.getData());
-                        if (selectedItem1.getData().startsWith("<x>")) {
-                            Constant.mZzleText = txt_msg.getText()
-                                    .toString();
-
-                            BannerActivityChat.mZzleText = txt_msg
-                                    .getText().toString();
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityChat.mZzleTextBackground = part1;
-                            BannerActivityChat.mZzleTextColor = part3;
-                            BannerActivityChat.mZzleTextSize = part4;
-                            BannerActivityChat.mZzleTextSpeed = part2;
-                            Intent intent = new Intent(mParentActivity,
-                                    BannerActivityChat.class);
-                            mParentActivity.startActivity(intent);
-                        } else {
-                            Constant.zzle = false;
-
-                            BannerActivityLED.mZzleText = txt_msg
+                            OrientationGroup.mZzleTextor = txt_msg
                                     .getText().toString();
 
-                            String value1 = selectedItem1.getData()
-                                    .substring(3).toString();
-                            String[] parts = value1.split("-");
-                            String part1 = parts[0];
-                            String part2 = parts[1];
-                            String part3 = parts[2];
-                            String part4 = parts[3];
-                            String part5 = parts[4];
-                            BannerActivityLED.mZzleTextBackground =part5;
-                            BannerActivityLED.mZzleTextSpeed =part3;
-                            BannerActivityLED.mZzleTextSize =part4;
+                            // HorizonalSlideshow.mZzleTextor = txt_msg
+                            // .getText().toString();
 
                             Intent intent = new Intent(mParentActivity,
-                                    BannerActivityLED.class);
+                                    OrientationGroup.class);
                             mParentActivity.startActivity(intent);
+
+                            // }
+
+                        }
+                        if (txt_msg.getCurrentTextColor() == -65536) {
+                            MessageGetSet selectedItem1 = Constant.msg_list_adapter
+                                    .get(position);
+                            System.out.println("testing group dazZ" + selectedItem1.getData());
+                            if (selectedItem1.getData().startsWith("<x>")) {
+                                Constant.mZzleText = txt_msg.getText()
+                                        .toString();
+
+                                BannerActivityChat.mZzleText = txt_msg
+                                        .getText().toString();
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityChat.mZzleTextBackground = part1;
+                                BannerActivityChat.mZzleTextColor = part3;
+                                BannerActivityChat.mZzleTextSize = part4;
+                                BannerActivityChat.mZzleTextSpeed = part2;
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityChat.class);
+                                mParentActivity.startActivity(intent);
+                            } else {
+                                Constant.zzle = false;
+
+                                BannerActivityLED.mZzleText = txt_msg
+                                        .getText().toString();
+
+                                String value1 = selectedItem1.getData()
+                                        .substring(3).toString();
+                                String[] parts = value1.split("-");
+                                String part1 = parts[0];
+                                String part2 = parts[1];
+                                String part3 = parts[2];
+                                String part4 = parts[3];
+                                String part5 = parts[4];
+                                BannerActivityLED.mZzleTextBackground = part5;
+                                BannerActivityLED.mZzleTextSpeed = part3;
+                                BannerActivityLED.mZzleTextSize = part4;
+
+                                Intent intent = new Intent(mParentActivity,
+                                        BannerActivityLED.class);
+                                mParentActivity.startActivity(intent);
+                            }
                         }
                     }
                 }
+            });
 
+            txt_msg.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+
+
+                    try {
+                        topMenuHideFunction();
+
+                        mIsLogClick = true;
+
+                        LinearLayout.LayoutParams hedderTextParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderTextParams.width = width * 40 / 100;
+                        hedderTextParams.leftMargin = width * 3 / 100;
+                        hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                        mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+                        LinearLayout.LayoutParams hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                LinearLayout.LayoutParams.WRAP_CONTENT,
+                                LinearLayout.LayoutParams.WRAP_CONTENT);
+                        hedderAttachmentParams.width = width * 11 / 100;
+                        hedderAttachmentParams.height = width * 8 / 100;
+                        hedderAttachmentParams.gravity = Gravity.CENTER;
+                        mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderMenuImg.setLayoutParams(hedderAttachmentParams);
+                        mChatHedderCopyImg.setLayoutParams(hedderAttachmentParams);
+
+                        mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+
+
+                        mChatHedderAttachmentImg.setBackgroundResource(R.drawable.ic_action_content_discard);
+                        mChatHedderMenuImg.setBackgroundResource(R.drawable.ic_action_social_forward);
+
+                        Constant.printMsg("JJJJJJJJIO" + v.getId() + "    " + mOnLongSelectedPostions + "   " + String.valueOf(v.getId()));
+
+//                    String mediaType = msg_list.get(v.getId()-200000).getMedia_wa_type();
+                        String splText = msg_list.get(v.getId()).getData();
+
+                        if (mOnLongSelectedPostions.contains((v.getId()))) {
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int i = 0; i < mOnLongSelectedPostions.size(); i++) {
+
+                                if (mOnLongSelectedPostions.get(i) == (v.getId())) {
+
+                                    Constant.printMsg("JJJJJJJJIO111111" + v.getId() + "    " + mOnLongSelectedPostions);
+                                    mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                                    mRightTipLayout.setBackgroundColor(Color.parseColor("#00000000"));
+                                    mOnLongSelectedPostions.remove(i);
+
+                                }
+
+                            }
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+
+                        } else {
+
+                            mOnLongSelectedPostions.add((v.getId()));
+                            mRightTipLayout = (FrameLayout) findViewById(v.getId() + 200000);
+                            mRightTipLayout.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+//                            v.setBackgroundColor(Color.parseColor("#FFFFD98F"));
+
+                            boolean isOneMedia = false;
+                            boolean isSple = false;
+                            boolean isDoneteBux = false;
+
+                            for (int j = 0; j < mOnLongSelectedPostions.size(); j++) {
+
+                                String mediaType = msg_list.get(mOnLongSelectedPostions.get(j)).getMedia_wa_type();
+                                String tempSplText = msg_list.get(mOnLongSelectedPostions.get(j)).getData();
+
+                                Constant.printMsg("JJJJJJJJIO1112222" + v.getId() + "    " + mOnLongSelectedPostions.get(j).toString() + "   " + String.valueOf(v.getId()));
+                                if (!getCopyPastMediaType(mediaType)) {
+                                    isOneMedia = true;
+                                    Constant.printMsg("Dilip copy loop" + " " + isOneMedia);
+                                }
+                                if (chekNynmDazzKon(tempSplText)) {
+                                    isSple = true;
+                                }
+                                if (chekDonate(tempSplText)) {
+                                    isDoneteBux = true;
+                                }
+                            }
+
+                            if (isOneMedia) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isSple) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+                            if (isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.INVISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                            if (!isOneMedia && !isSple && !isDoneteBux) {
+                                mChatHedderCopyLayout.setVisibility(View.VISIBLE);
+                                mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                                mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            }
+
+                        }
+
+                        if (mOnLongSelectedPostions.size() == 0) {
+                            mIsLogClick = false;
+                            mChatHedderAttachmentImg.setBackgroundResource(R.drawable.clip);
+                            mChatHedderMenuImg.setBackgroundResource(R.drawable.menu_right);
+
+                            hedderTextParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderTextParams.width = width * 50 / 100;
+                            hedderTextParams.leftMargin = width * 3 / 100;
+                            hedderTextParams.gravity = Gravity.CENTER_VERTICAL;
+                            mChatHedderTextLayout.setLayoutParams(hedderTextParams);
+
+
+                            hedderAttachmentParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderAttachmentParams.width = width * 4 / 100;
+                            hedderAttachmentParams.height = width * 8 / 100;
+                            hedderAttachmentParams.gravity = Gravity.CENTER;
+                            mChatHedderAttachmentImg.setLayoutParams(hedderAttachmentParams);
+
+                            LinearLayout.LayoutParams hedderMenuParams = new LinearLayout.LayoutParams(
+                                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                                    LinearLayout.LayoutParams.WRAP_CONTENT);
+                            hedderMenuParams.width = (width * 2 / 100) - 2;
+                            hedderMenuParams.height = width * 7 / 100;
+                            hedderMenuParams.gravity = Gravity.CENTER;
+                            mChatHedderMenuImg.setLayoutParams(hedderMenuParams);
+
+                            mChatHedderAttachmentLayout.setVisibility(View.VISIBLE);
+                            mChatHedderMenuLayout.setVisibility(View.VISIBLE);
+                            mChatHedderCopyLayout.setVisibility(View.GONE);
+                        }
+                    } catch (Exception e) {
+
+                    }
+
+
+                    return true;
+                }
             });
         } catch (Exception e) {
 
@@ -12985,9 +14423,7 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-    public void setRightImage()
-    {
+    public void setRightImage() {
         try {
             mRightImageChat.setVisibility(View.VISIBLE);
 
@@ -13035,8 +14471,8 @@ public class MUCTest extends AppCompatActivity implements
 
             if (file != null) {
 
-                Bitmap unscaledBitmapRight =  new CompressImage().compressImage(Constant.local_image_dir
-                        + msg_list.get(k).getMedia_name(), "",1);
+                Bitmap unscaledBitmapRight = new CompressImage().compressImage(Constant.local_image_dir
+                        + msg_list.get(k).getMedia_name(), "", 1);
 
                 Log.d("Image Width",
                         "Image Width::" + (int) width * 50 / 100 + " layout::"
@@ -13054,14 +14490,14 @@ public class MUCTest extends AppCompatActivity implements
 
                 boolean isConn = Connectivity.isOnline(mParentActivity);
 
-                if(!mAsyncUpload_Image.containsKey(String.valueOf(msg_list.get(k).get_id())))
+                if (!mAsyncUpload_Image.containsKey(String.valueOf(msg_list.get(k).get_id())))
                     mAsyncUpload_Image.put(String.valueOf(msg_list.get(k).get_id()), new AsyncHttpClient());
 
                 if (msg_list.get(k).getStatus() == 3
                         && msg_list.get(k).getNeeds_push() == 1) {
 
                     if (!isFirstTime) {
-                        if(isConn) {
+                        if (isConn) {
                             mRightImageChatUpload.setVisibility(View.GONE);
                             mRightImageChatCancel.setVisibility(View.VISIBLE);
                             mRightImageProgress
@@ -13071,15 +14507,13 @@ public class MUCTest extends AppCompatActivity implements
 
                             new uploa_image().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()),
                                     fromuser);
-                        }else
-                        {
+                        } else {
                             mRightImageChatUpload.setVisibility(View.VISIBLE);
                             mRightImageChatCancel.setVisibility(View.GONE);
                             mRightImageProgress
                                     .setVisibility(View.GONE);
                         }
-                    }else
-                    {
+                    } else {
                         mRightImageChatUpload.setVisibility(View.VISIBLE);
                         mRightImageChatCancel.setVisibility(View.GONE);
                         mRightImageProgress
@@ -13088,23 +14522,21 @@ public class MUCTest extends AppCompatActivity implements
                 } else if (msg_list.get(k).getNeeds_push() == 2
                         && msg_list.get(k).getStatus() == 3) {
 
-                    if(!isFirstTime)
-                    {
-                        if(isConn) {
+                    if (!isFirstTime) {
+                        if (isConn) {
                             mRightImageChatUpload.setVisibility(View.GONE);
                             mRightImageChatCancel.setVisibility(View.VISIBLE);
                             mRightImageProgress
                                     .setVisibility(View.VISIBLE);
                             new uploa_image().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf(msg_list.get(k).get_id()),
                                     fromuser);
-                        }else
-                        {
+                        } else {
                             mRightImageChatUpload.setVisibility(View.VISIBLE);
                             mRightImageChatCancel.setVisibility(View.GONE);
                             mRightImageProgress
                                     .setVisibility(View.GONE);
                         }
-                    }else {
+                    } else {
 
                         mRightImageChatUpload.setVisibility(View.GONE);
                         mRightImageChatCancel.setVisibility(View.VISIBLE);
@@ -13125,7 +14557,7 @@ public class MUCTest extends AppCompatActivity implements
                 mRightImageChatCancel.setVisibility(View.GONE);
                 byte[] image_data = msg_list.get(k).getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mRightImageChat.setImageBitmap(bitmap);
                 mRightImageChat.setTag(null);
             }
@@ -13135,7 +14567,7 @@ public class MUCTest extends AppCompatActivity implements
                 @Override
                 public void onClick(View v) {
 
-                    if(Connectivity.isOnline(mParentActivity)) {
+                    if (Connectivity.isOnline(mParentActivity)) {
 
                         if (v.getTag() != null) {
                             String path = v.getTag().toString();
@@ -13158,8 +14590,7 @@ public class MUCTest extends AppCompatActivity implements
                             mParentActivity.startActivity(intent);
 
                         }
-                    }else
-                    {
+                    } else {
                         Toast.makeText(mParentActivity, "No network available", Toast.LENGTH_SHORT).show();
                     }
 
@@ -13207,7 +14638,7 @@ public class MUCTest extends AppCompatActivity implements
                             progressBar
                                     .setVisibility(View.GONE);
                             imgView
-                                    .setVisibility(View.VISIBLE );
+                                    .setVisibility(View.VISIBLE);
                             imgView_cancel
                                     .setVisibility(View.GONE);
 
@@ -13220,8 +14651,7 @@ public class MUCTest extends AppCompatActivity implements
 
     }
 
-    public void setRightVideo()
-    {
+    public void setRightVideo() {
 
 
         try {
@@ -13245,7 +14675,7 @@ public class MUCTest extends AppCompatActivity implements
 
             mRightVideoTimeText.setText(time_format.format(date));
 
-            MessageGetSet  msg = msg_list.get(k);
+            MessageGetSet msg = msg_list.get(k);
             String fromuser = msg.getKey_remote_jid();
             mRightVideoChat.setVisibility(View.VISIBLE);
 
@@ -13278,8 +14708,8 @@ public class MUCTest extends AppCompatActivity implements
                     + msg.getMedia_name());
 
 
-            mRightVideoChat.getLayoutParams().width = (int) width * 57 / 100;
-            mRightVideoChat.getLayoutParams().height = (int) height * 28 / 100;
+//            mRightVideoChat.getLayoutParams().width = (int) width * 57 / 100;
+//            mRightVideoChat.getLayoutParams().height = (int) height * 28 / 100;
 
             String values = msg.get_id() + "," + fromuser;
             mRightVideoChatUpload.setTag(values);
@@ -13291,7 +14721,7 @@ public class MUCTest extends AppCompatActivity implements
             try {
                 byte[] image_data = msg.getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mRightVideoChat.setImageBitmap(bitmap);
                 mRightVideoChat.setTag(null);
             } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
@@ -13301,36 +14731,34 @@ public class MUCTest extends AppCompatActivity implements
 
 
             final boolean isConnected = Connectivity.isOnline(mParentActivity);
-            if(!mAsyncUpload_Video.containsKey(String.valueOf(msg_list.get(k).get_id())))
+            if (!mAsyncUpload_Video.containsKey(String.valueOf(msg_list.get(k).get_id())))
                 mAsyncUpload_Video.put(String.valueOf(msg_list.get(k).get_id()), new AsyncHttpClient());
 
-            Constant.printMsg("......Chat Video 3..data...." + msg_list.get(k).getNeeds_push()+" "+msg_list.get(k).getStatus()
+            Constant.printMsg("......Chat Video 3..data...." + msg_list.get(k).getNeeds_push() + " " + msg_list.get(k).getStatus()
             );
 
             if (msg_list.get(k).getStatus() == 3 &&
-                    msg_list.get(k).getNeeds_push() ==1) {
+                    msg_list.get(k).getNeeds_push() == 1) {
 
                 Constant.printMsg("......Chat Video 3..1...." + isConnected
                 );
 
                 if (!isFirstTime) {
-                    if(isConnected) {
+                    if (isConnected) {
 
                         mRightVideoChatUpload.setVisibility(View.GONE);
                         mRightVideoChatCancel.setVisibility(View.VISIBLE);
                         mRightVideoProgress.setVisibility(View.VISIBLE);
                         mRightVideoButtonPlay.setVisibility(View.GONE);
-                        ConcurrentAsyncTaskExecutor.executeConcurrently( new uploa_video(), String.valueOf(msg_list.get(k).get_id()), fromuser);
-                    } else
-                    {
+                        ConcurrentAsyncTaskExecutor.executeConcurrently(new uploa_video(), String.valueOf(msg_list.get(k).get_id()), fromuser);
+                    } else {
                         mRightVideoChatUpload.setVisibility(View.VISIBLE);
                         mRightVideoChatCancel.setVisibility(View.GONE);
                         mRightVideoProgress.setVisibility(View.GONE);
                         mRightVideoButtonPlay.setVisibility(View.GONE);
 
                     }
-                }else
-                {
+                } else {
                     mRightVideoChatUpload.setVisibility(View.VISIBLE);
                     mRightVideoChatCancel.setVisibility(View.GONE);
                     mRightVideoProgress.setVisibility(View.GONE);
@@ -13339,7 +14767,7 @@ public class MUCTest extends AppCompatActivity implements
 
 
             } else if (msg_list.get(k).getStatus() == 3
-                    && msg_list.get(k).getNeeds_push() == 2 ) {
+                    && msg_list.get(k).getNeeds_push() == 2) {
 
                 Constant.printMsg("......Chat Video 2..null url...."
                 );
@@ -13414,7 +14842,7 @@ public class MUCTest extends AppCompatActivity implements
                         public void onClick(View v) {
                             String[] val = v.getTag().toString()
                                     .split(",");
-                            ConcurrentAsyncTaskExecutor.executeConcurrently( new uploa_video(),val[0],
+                            ConcurrentAsyncTaskExecutor.executeConcurrently(new uploa_video(), val[0],
                                     val[1]);
 
 
@@ -13489,8 +14917,7 @@ public class MUCTest extends AppCompatActivity implements
         }
     }
 
-    public void setRightContact()
-    {
+    public void setRightContact() {
 
 
         try {
@@ -13517,7 +14944,7 @@ public class MUCTest extends AppCompatActivity implements
 
             MessageGetSet msg = msg_list.get(k);
 
-            Constant.printMsg("Diliiip "+ msg_list.get(k).getMedia_name());
+            Constant.printMsg("Diliiip " + msg_list.get(k).getMedia_name());
             String contactName = msg_list.get(k).getMedia_name().split(",")[0];
 
 
@@ -13529,7 +14956,7 @@ public class MUCTest extends AppCompatActivity implements
             try {
                 byte[] image_data = msg.getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mRightContactAvathor.setImageBitmap(bitmap);
             } catch (Exception e) {// ACRA.getErrorReporter().handleException(e);
                 // TODO: handle exception
@@ -13564,10 +14991,11 @@ public class MUCTest extends AppCompatActivity implements
 
     }
 
-    public void setRightLocation()
-    {
+    public void setRightLocation() {
 
         try {
+
+            Constant.printMsg("Set right loc  " + msg_list.get(k).getStatus());
             if (msg_list.get(k).getStatus() == 3) {
                 mRightImageTickMark.setImageResource(R.drawable.message_unsent);
             } else if (msg_list.get(k).getStatus() == 2) {
@@ -13604,10 +15032,12 @@ public class MUCTest extends AppCompatActivity implements
             mRightImageChatUpload.setTag(values);
             mRightImageChatUpload.setVisibility(View.GONE);
             mRightImageProgress.setVisibility(View.GONE);
+
+            mRightImageChatCancel.setVisibility(View.GONE);
             try {
                 byte[] image_data = msg.getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
 //                Bitmap unscaledBitmap = ScalingUtilities
 //                        .decodeFile(Constant.local_image_dir
 //                                + msg.getMedia_name(), (int) width * 57 / 100, (int) height * 30 / 100);
@@ -13694,11 +15124,8 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-
     //----------Left ----------
-    public void setLeftImage()
-    {
+    public void setLeftImage() {
 
         try {
             MessageGetSet msg = msg_list.get(k);
@@ -13734,8 +15161,8 @@ public class MUCTest extends AppCompatActivity implements
                 // TODO: handle exception
             }
 
-            mLeftImageChat.getLayoutParams().width = (int) width * 57 / 100;
-            mLeftImageChat.getLayoutParams().height = (int) height * 28 / 100;
+//            mLeftImageChat.getLayoutParams().width = (int) width * 57 / 100;
+//            mLeftImageChat.getLayoutParams().height = (int) height * 28 / 100;
 
             //      mLeftImageChat.setMaxHeight(i);
 
@@ -13758,7 +15185,7 @@ public class MUCTest extends AppCompatActivity implements
                     }
                 }
                 if (is_auto_dowload_image) {
-                    new download_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,msg.getKey_id(),
+                    new download_image().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, msg.getKey_id(),
                             msg.getMedia_url(), fromuser);
                     mLeftImageChatDownload.setVisibility(View.GONE);
                 } else {
@@ -13774,7 +15201,7 @@ public class MUCTest extends AppCompatActivity implements
                         + msg.getMedia_name());
                 if (file.isFile()) {
                     Bitmap unscaledBitmap = new CompressImage().compressImage(Constant.local_image_dir
-                            + msg_list.get(k).getMedia_name(), "",1);
+                            + msg_list.get(k).getMedia_name(), "", 1);
 
                               /*  Log.d("Image Width",
                                         "Image Width::" + i + " layout::"
@@ -13794,7 +15221,7 @@ public class MUCTest extends AppCompatActivity implements
                 } else {
                     byte[] image_data = msg.getRow_data();
                     Bitmap bitmap = BitmapFactory.decodeByteArray(
-                            image_data, 0, image_data.length,Util.getBitmapOptions());
+                            image_data, 0, image_data.length, Util.getBitmapOptions());
                     mLeftImageChat.setImageBitmap(bitmap);
                     mLeftImageChat.setScaleType(ImageView.ScaleType.FIT_XY);
                     mLeftImageChat.setTag(null);
@@ -13803,7 +15230,7 @@ public class MUCTest extends AppCompatActivity implements
 
             }
 
-            final ProgressBar progress_download_image =mLeftImagetProgressBar;
+            final ProgressBar progress_download_image = mLeftImagetProgressBar;
             final ImageView btn_image_download = mLeftImageChatDownload;
             mLeftImageChatDownload
                     .setOnClickListener(new OnClickListener() {
@@ -13856,10 +15283,7 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-
-    public void setLeftContact()
-    {
+    public void setLeftContact() {
         try {
             // Set timestamp
             Date date = new Date();
@@ -13903,7 +15327,7 @@ public class MUCTest extends AppCompatActivity implements
             try {
                 byte[] image_data = msg.getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mLeftContactAvathor.setImageBitmap(bitmap);
             } catch (Exception e) {
                 // TODO: handle exception
@@ -13942,8 +15366,7 @@ public class MUCTest extends AppCompatActivity implements
 
     }
 
-    public void setLeftVideo()
-    {
+    public void setLeftVideo() {
 
         try {
             MessageGetSet msg = msg_list.get(k);
@@ -13979,7 +15402,7 @@ public class MUCTest extends AppCompatActivity implements
             }
 
             mLeftVideoChat.setVisibility(View.VISIBLE);
-
+            mLeftVideoButtonPlay.setVisibility(View.GONE);
 
             mLeftVideoDuration.setTextSize(TypedValue.COMPLEX_UNIT_SP,
                     notificatiob_font_size);
@@ -13999,14 +15422,14 @@ public class MUCTest extends AppCompatActivity implements
 
             mLeftVideoChatDownload.setTag(values);
 
-            mLeftVideoChat.getLayoutParams().width = (int) width * 57 / 100;
-            mLeftVideoChat.getLayoutParams().height = (int) height * 28 / 100;
+//            mLeftVideoChat.getLayoutParams().width = (int) width * 57 / 100;
+//            mLeftVideoChat.getLayoutParams().height = (int) height * 28 / 100;
 
             if (msg.getMedia_name() == null) {
                 byte[] img_byte = msg.getRow_data();
                 if (img_byte != null) {
                     Bitmap bmp = BitmapFactory.decodeByteArray(
-                            img_byte, 0, img_byte.length,Util.getBitmapOptions());
+                            img_byte, 0, img_byte.length, Util.getBitmapOptions());
                     mLeftVideoChat.setImageBitmap(bmp);
                     mLeftVideoChat.setScaleType(ImageView.ScaleType.FIT_XY);
                     try {
@@ -14018,7 +15441,7 @@ public class MUCTest extends AppCompatActivity implements
                     }
                 }
                 if (is_auto_dowload_video) {
-                    new download_video().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR,msg.getKey_id(),
+                    new download_video().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, msg.getKey_id(),
                             msg.getMedia_url(), fromuser);
                 } else {
 
@@ -14027,11 +15450,13 @@ public class MUCTest extends AppCompatActivity implements
                     mLeftVideoProgress
                             .setVisibility(View.GONE);
                     mLeftVideoChatDownload.setVisibility(View.VISIBLE);
+                    mLeftVideoButtonPlay.setVisibility(View.GONE);
                 }
                 mLeftVideoButtonPlay.setVisibility(View.GONE);
             } else {
                 mLeftVideoChatDownload.setVisibility(View.GONE);
                 mLeftVideoProgress.setVisibility(View.GONE);
+                mLeftVideoButtonPlay.setVisibility(View.VISIBLE);
 
                 File file = new File(Constant.local_video_dir
                         + msg.getMedia_name());
@@ -14040,7 +15465,7 @@ public class MUCTest extends AppCompatActivity implements
                 try {
                     byte[] image_data = msg.getRow_data();
                     Bitmap bitmap = BitmapFactory.decodeByteArray(
-                            image_data, 0, image_data.length,Util.getBitmapOptions());
+                            image_data, 0, image_data.length, Util.getBitmapOptions());
                     mLeftVideoChat.setImageBitmap(bitmap);
                     mLeftVideoChat.setScaleType(ImageView.ScaleType.FIT_XY);
                     mLeftVideoChat.setTag(null);
@@ -14061,6 +15486,9 @@ public class MUCTest extends AppCompatActivity implements
 
             }
 
+
+            Constant.printMsg(".......Download Chat video....11" + msg.getMedia_url());
+
             mLeftVideoChatDownload
                     .setOnClickListener(new OnClickListener() {
 
@@ -14074,6 +15502,7 @@ public class MUCTest extends AppCompatActivity implements
                                     .setVisibility(View.VISIBLE);
                             mLeftVideoChatDownload
                                     .setVisibility(View.GONE);
+                            mLeftVideoButtonPlay.setVisibility(View.GONE);
 
                         }
                     });
@@ -14127,9 +15556,7 @@ public class MUCTest extends AppCompatActivity implements
         }
     }
 
-    public void setLeftLocation()
-    {
-
+    public void setLeftLocation() {
         try {
             // Set timestamp
             Date date = new Date();
@@ -14171,8 +15598,8 @@ public class MUCTest extends AppCompatActivity implements
                     + msg.getLongitude();
             mLeftImageChat.setTag(lat_lon);
 
-            mLeftImageChat.getLayoutParams().width = (int) width * 57 / 100;
-            mLeftImageChat.getLayoutParams().height = (int) height * 30 / 100;
+//            mLeftImageChat.getLayoutParams().width = (int) width * 57 / 100;
+//            mLeftImageChat.getLayoutParams().height = (int) height * 30 / 100;
             mLeftImageChatDownload.setVisibility(View.GONE);
             mLeftImagetProgressBar.setVisibility(View.GONE);
 
@@ -14182,7 +15609,7 @@ public class MUCTest extends AppCompatActivity implements
             try {
                 byte[] image_data = msg.getRow_data();
                 Bitmap bitmap = BitmapFactory.decodeByteArray(
-                        image_data, 0, image_data.length,Util.getBitmapOptions());
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
                 mLeftImageChat.setImageBitmap(bitmap);
             } catch (Exception e) {
                 // ACRA.getErrorReporter().handleException(e);
@@ -14239,10 +15666,7 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-
-    public void setRightAudio_Old()
-    {
+    public void setRightAudio_Old() {
 
 
         MessageGetSet msg = msg_list.get(k);
@@ -14306,8 +15730,8 @@ public class MUCTest extends AppCompatActivity implements
 
         final Button btn_play = mRightAudioBtnPlay;
         final Button btn_cancel_upload = mRightAudioBtnCancel;
-        final ProgressBar progress_audio =mRightAudioUploadProgress;
-        final Button btn_upload =mRightAudioBtnUpload;
+        final ProgressBar progress_audio = mRightAudioUploadProgress;
+        final Button btn_upload = mRightAudioBtnUpload;
         final SeekBar seek_audio = mRightAudioSeekBar;
 
         mRightAudioBtnCancel
@@ -14408,19 +15832,22 @@ public class MUCTest extends AppCompatActivity implements
 
         boolean isConnected = Connectivity.isOnline(mParentActivity);
 
-        if(!mAsyncUpload_Audio.containsKey(String.valueOf(msg_list.get(k).get_id())))
+        Constant.printMsg("......Chat Audio 3..0000...." + msg_list.get(k).getStatus() + " " + msg_list.get(k).getNeeds_push() + " " + isFirstTime
+                + " " + msg.get_id() + " " + fromuser + " " + msg_list.get(k).get_id());
+
+        if (!mAsyncUpload_Audio.containsKey(String.valueOf(msg_list.get(k).get_id())))
             mAsyncUpload_Audio.put(String.valueOf(msg_list.get(k).get_id()), new AsyncHttpClient());
 
         //-----------------------------
 
         if (msg_list.get(k).getStatus() == 3 &&
-                msg_list.get(k).getNeeds_push() ==1) {
+                msg_list.get(k).getNeeds_push() == 1) {
 
-            Constant.printMsg("......Chat Video 3..1...." + isConnected
+            Constant.printMsg("......Chat Audio 3..1...." + isConnected
             );
 
             if (!isFirstTime) {
-                if(isConnected) {
+                if (isConnected) {
 
                     btn_upload.setVisibility(View.GONE);
                     progress_audio.setVisibility(View.VISIBLE);
@@ -14431,9 +15858,8 @@ public class MUCTest extends AppCompatActivity implements
 
                    /* long l = dbAdapter.setUpdateMessage_need_push(
                             msg.getKey_id(), 0);*/
-                   new uploa_audio().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, String.valueOf(msg.get_id()), fromuser);
-                } else
-                {
+                    new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg.get_id()), fromuser);
+                } else {
                     btn_upload.setVisibility(View.VISIBLE);
                     btn_play.setVisibility(View.GONE);
                     btn_cancel_upload.setVisibility(View.GONE);
@@ -14441,16 +15867,22 @@ public class MUCTest extends AppCompatActivity implements
                     seek_audio.setVisibility(View.GONE);
 
                 }
+            } else {
+                btn_upload.setVisibility(View.VISIBLE);
+                btn_play.setVisibility(View.GONE);
+                btn_cancel_upload.setVisibility(View.GONE);
+                progress_audio.setVisibility(View.GONE);
+                seek_audio.setVisibility(View.GONE);
+
             }
 
 
         } else if (msg_list.get(k).getStatus() == 3
-                && msg_list.get(k).getNeeds_push() == 2 ) {
+                && msg_list.get(k).getNeeds_push() == 2) {
 
 
-            if(!isFirstTime)
-            {
-                if(isConnected) {
+            if (!isFirstTime) {
+                if (isConnected) {
 
                     btn_upload.setVisibility(View.GONE);
                     progress_audio.setVisibility(View.VISIBLE);
@@ -14461,9 +15893,8 @@ public class MUCTest extends AppCompatActivity implements
 
                     dbAdapter.setUpdateMessage_need_push(
                             msg.getKey_id(), 1);
-                   new uploa_audio().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR,String.valueOf(msg.get_id()), fromuser);
-                } else
-                {
+                    new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, String.valueOf(msg.get_id()), fromuser);
+                } else {
                     btn_upload.setVisibility(View.VISIBLE);
                     btn_play.setVisibility(View.GONE);
                     btn_cancel_upload.setVisibility(View.GONE);
@@ -14471,14 +15902,13 @@ public class MUCTest extends AppCompatActivity implements
                     seek_audio.setVisibility(View.GONE);
 
                 }
-            }
-            else {
+            } else {
 
                 btn_upload.setVisibility(View.GONE);
+                progress_audio.setVisibility(View.VISIBLE);
+                progress_audio.setIndeterminate(true);
                 btn_play.setVisibility(View.GONE);
                 btn_cancel_upload.setVisibility(View.VISIBLE);
-                progress_audio.setVisibility(View.VISIBLE);
-                progress_audio.setFocusable(true);
                 seek_audio.setVisibility(View.GONE);
             }
 
@@ -14486,7 +15916,7 @@ public class MUCTest extends AppCompatActivity implements
         } else if (msg_list.get(k).getStatus() == 2
                 && msg_list.get(k).getMedia_url() != null) {
 
-            Constant.printMsg("......Chat Video 2..not null url...."
+            Constant.printMsg("......Chat Audio 2..not null url...."
             );
 
             btn_upload.setVisibility(View.GONE);
@@ -14497,7 +15927,7 @@ public class MUCTest extends AppCompatActivity implements
 
         } else {
 
-            Constant.printMsg("......Chat Video 0 1 -1......"
+            Constant.printMsg("......Chat Audio 0 1 -1......"
             );
 
             btn_upload.setVisibility(View.GONE);
@@ -14510,7 +15940,6 @@ public class MUCTest extends AppCompatActivity implements
         //-------------------------------
 
 
-
         btn_upload.setOnClickListener(new OnClickListener() {
 
             @Override
@@ -14521,7 +15950,7 @@ public class MUCTest extends AppCompatActivity implements
 
 								/* new uploa_audio().execute(val[0],val[1]); */
 
-                    new uploa_audio().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, val[0], val[1]);
+                    new uploa_audio().executeOnExecutor(AsyncTask.SERIAL_EXECUTOR, val[0], val[1]);
 
                     btn_upload.setVisibility(View.GONE);
                     progress_audio.setVisibility(View.VISIBLE);
@@ -14529,9 +15958,8 @@ public class MUCTest extends AppCompatActivity implements
                     // txt_audio_size.setVisibility(View.GONE);
                     btn_cancel_upload.setVisibility(View.VISIBLE);
                     seek_audio.setVisibility(View.GONE);
-                } else
-                {
-                    Toast.makeText(mParentActivity,"No network available", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(mParentActivity, "No network available", Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -14698,9 +16126,7 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-    public void setLeftAudio_Old()
-    {
+    public void setLeftAudio_Old() {
         try {
 
             // Set timestamp
@@ -14902,11 +16328,11 @@ public class MUCTest extends AppCompatActivity implements
                 public void onClick(View v) {
 
 
-                    mLeftAudioBtnDownload=(Button)findViewById(v.getId());
-                    mLeftAudioBtnCancel=(Button)findViewById(v.getId()+800000);
-                    mLeftAudioDownloadProgress=(ProgressBar)findViewById(v.getId()+900000);
-                    mLeftAudioBtnPlay=(Button)findViewById(v.getId()+100000);
-                    mLeftAudioSeekBar=(SeekBar)findViewById(v.getId()+200000);
+                    mLeftAudioBtnDownload = (Button) findViewById(v.getId());
+                    mLeftAudioBtnCancel = (Button) findViewById(v.getId() + 800000);
+                    mLeftAudioDownloadProgress = (ProgressBar) findViewById(v.getId() + 900000);
+                    mLeftAudioBtnPlay = (Button) findViewById(v.getId() + 100000);
+                    mLeftAudioSeekBar = (SeekBar) findViewById(v.getId() + 200000);
 
 
                     mLeftAudioDownloadProgress.setIndeterminate(true);
@@ -14933,42 +16359,45 @@ public class MUCTest extends AppCompatActivity implements
 
                 @Override
                 public void onClick(View v) {
-                    mLeftAudioBtnDownload=(Button)findViewById(v.getId()-100000);
-                    mLeftAudioBtnCancel=(Button)findViewById(v.getId()+700000);
-                    mLeftAudioDownloadProgress=(ProgressBar)findViewById(v.getId()+800000);
-                    mLeftAudioBtnPlay=(Button)findViewById(v.getId());
-                    mLeftAudioSeekBar=(SeekBar)findViewById(v.getId()+100000);
+                    mLeftAudioBtnDownload = (Button) findViewById(v.getId() - 100000);
+                    mLeftAudioBtnCancel = (Button) findViewById(v.getId() + 700000);
+                    mLeftAudioDownloadProgress = (ProgressBar) findViewById(v.getId() + 800000);
+                    mLeftAudioBtnPlay = (Button) findViewById(v.getId());
+                    mLeftAudioSeekBar = (SeekBar) findViewById(v.getId() + 100000);
 
 
-                    if (mPressed == 0) {
-                        TempBtn = new ArrayList();
-                    }
-                    mPressed = 1;
-
-                    listTemp.add(list.size());
-                    if (mAudioTagValue.equalsIgnoreCase((String) v
-                            .getTag())) {
-
-                        Constant.printMsg("Oooop" + mAudioTagValue
-                                + "   " + (String) v.getTag());
-
-                        mAudioTagValue = (String) v.getTag();
-
-                    } else {
-                        mAudioTagValue = (String) v.getTag();
-                        for (int i = 0; i < list.size(); i++) {
-
-                            Constant.printMsg("KKKKKKP"
-                                    + v.getTag() + "    "
-                                    + list.get(i));
-
-                            MediaPlayer plays = list.get(i);
-
-                            // if (v.getTag().equals(plays.gette))
-
-                            plays.stop();
-
+                    try {
+                        if (mPressed == 0) {
+                            TempBtn = new ArrayList();
                         }
+                        mPressed = 1;
+
+                        listTemp.add(list.size());
+                        if (mAudioTagValue.equalsIgnoreCase((String) v
+                                .getTag())) {
+
+                            Constant.printMsg("Oooop" + mAudioTagValue
+                                    + "   " + (String) v.getTag());
+
+                            mAudioTagValue = (String) v.getTag();
+
+                        } else {
+                            mAudioTagValue = (String) v.getTag();
+                            for (int i = 0; i < list.size(); i++) {
+
+                                Constant.printMsg("KKKKKKP"
+                                        + v.getTag() + "    "
+                                        + list.get(i));
+
+                                MediaPlayer plays = list.get(i);
+
+                                // if (v.getTag().equals(plays.gette))
+
+                                plays.stop();
+
+                            }
+                        }
+                    } catch (IllegalStateException e) {
                     }
                     if (player.isPlaying()) {
                         seekHandler.removeCallbacks(run);
@@ -15111,8 +16540,7 @@ public class MUCTest extends AppCompatActivity implements
 
     boolean isDisplayed_notification = false;
 
-    public void notificationMessages()
-    {
+    public void notificationMessages() {
 
 
         try {
@@ -15129,11 +16557,9 @@ public class MUCTest extends AppCompatActivity implements
             }
 
 
+            Constant.printMsg("Notification loop 000: " + isDisplayed_notification + "  " + Integer.parseInt(msg_list.get(k).getMedia_wa_type()) + "  " + msg.getRemote_resource() + " " + KachingMeApplication.getUserID() + KachingMeApplication.getHost() + "  " + is_you);
 
-
-            Constant.printMsg("Notification loop 000: " + isDisplayed_notification +"  "+Integer.parseInt(msg_list.get(k).getMedia_wa_type())+"  "+msg.getRemote_resource()+" "+ KachingMeApplication.getUserID() + KachingMeApplication.getHost()+"  "+is_you);
-
-            if(!isDisplayed_notification || Integer.parseInt(msg_list.get(k).getMedia_wa_type())!=7 || !isSomeOne) {
+            if (!isDisplayed_notification || Integer.parseInt(msg_list.get(k).getMedia_wa_type()) != 7 || !isSomeOne) {
                 mRightTipLayout = new FrameLayout(mParentActivity);
                 mRightTipLayout.setId(k + 200000);
                 mRightTipLayout.setFocusable(true);
@@ -15155,8 +16581,6 @@ public class MUCTest extends AppCompatActivity implements
 
 
                 mNotificationText.setVisibility(View.VISIBLE);
-
-
 
 
                 if (msg.getRemote_resource().equals(
@@ -15238,8 +16662,7 @@ public class MUCTest extends AppCompatActivity implements
                                 Utils.getDisplayName(dbAdapter, msg.getData())));
                     }
 
-                    if(msg.getData()!=null)
-                    {
+                    if (msg.getData() != null) {
                         String title = null;
 
                         if (subject.length() > 15) {
@@ -15279,16 +16702,14 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-
-    public void getColorLeftUser(String userName)
-    {
+    public void getColorLeftUser(String userName) {
 
         try {
-            int rand =0 ;
+            int rand = 0;
 
-            if(colorMap.containsKey(userName)){
+            if (colorMap.containsKey(userName)) {
                 rand = colorMap.get(userName);
-            }else{
+            } else {
                 rand = getRandomColor();
                 colorMap.put(userName, rand); // Put the two parts into the map
             }
@@ -15300,208 +16721,209 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-    public int getRandomColor(){
+    public int getRandomColor() {
 
 
         Random rnd = new Random();
         return Color.argb(255, rnd.nextInt(256), rnd.nextInt(256), rnd.nextInt(256));
     }
 
-    public void mAttachKachingFeatures()
-    {
+    public void mAttachKachingFeatures() {
 
-        try{
-
-
-        if (Constant.mBazzleGroup == true) {
-
-            Constant.mBazzleGroup = false;
-
-            menuclick = false;
-
-            menuclick = true;
-            int point = sharedPrefs.getInt("zzlepoint", 0);
-
-            Constant.totalzzle = point;
-
-            Constant.totalzzle = Count + Constant.totalzzle;
-
-            Editor e1 = sharedPrefs.edit();
-            e1.putInt("zzlepoint", Constant.totalzzle);
-            e1.commit();
-
-            menuclick = true;
-            Constant.bux = sharedPrefs.getLong("buxvalue", 0);
-
-            Long buxval = Constant.bux + Constant.zzlepoints;
-            Constant.bux = buxval;
-
-            Editor e = sharedPrefs.edit();
-            e.putLong("buxvalue", buxval);
-            e.commit();
-            sendMessage("<z>" + Constant.mZzleText + "-" + Constant.mTimeZzle
-                    + "-" + Constant.mPreviewSpeed + "-"
-                    + Constant.mPreviewTextsize + "-" + Constant.shapeselected);
-
-        }
-
-        if (Constant.songlist) {
-            Constant.printMsg("songListValue in chat::if"
-                    + Constant.songlist);
-            for (int i = 0; i < Constant.song_list.size(); i++) {
-                Constant.songPath = Constant.song_list.get(i).toString();
-                songValue = Constant.songPath;
-                outputFile = Constant.local_audio_dir
-                        + System.currentTimeMillis() + ".amr";
-
-                Constant.printMsg("audio file path::" + songValue);
-
-                File f1 = new File(songValue);
-                File f2 = new File(outputFile);
-
-                try {
-
-                    copyDirectoryOneLocationToAnotherLocation(f1, f2);
-
-                } catch (IOException e) {
-
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
-                }
-            }
-            Constant.songlist = false;
-
-        } else {
-            Constant.printMsg("songListValue in chat::else"
-                    + Constant.songlist);
-        }
-
-        if (Constant.attachNym == true) {
-
-            Constant.printMsg("GGGGGGGG1111  " + Constant.attchnymstring);
-
-            Constant.attachNym = false;
-            Constant.bux = sharedPrefs.getLong("buxvalue", 0);
-
-            Long buxval1 = Constant.bux + Constant.nynMpoint;
-            Constant.bux = buxval1;
-
-            Editor edit = sharedPrefs.edit();
-            edit.putLong("buxvalue", buxval1);
-            edit.commit();
-
-            int point1 = sharedPrefs.getInt("nympoint", 0);
-
-            Constant.totalchat = point1;
-
-            Constant.totalchat = Count + Constant.totalchat;
-
-            Editor e11 = sharedPrefs.edit();
-            e11.putInt("nympoint", Constant.totalchat);
-            e11.commit();
-            sendMessage("<-" + Constant.attchnymstring);
-        }
+        try {
 
 
-        if (Constant.mKonsGroup == true) {
-            for (int i = 0; i < Constant.konsSelectedList.size(); i++) {
+            if (Constant.mBazzleGroup == true) {
 
-                Constant.mKonsText = Constant.konsSelectedList.get(i)
-                        .toString();
-                Constant.mKonsBackground = Constant.konsBackgroundList.get(i).toString();
-                Constant.mKonsColor = Constant.konsColorList.get(i).toString();
-                int point = sharedPrefs.getInt("konpoint", 0);
+                Constant.mBazzleGroup = false;
 
-                Constant.totalkon = point;
+                menuclick = false;
 
-                Constant.totalkon = Count + Constant.totalkon;
+                menuclick = true;
+                int point = sharedPrefs.getInt("zzlepoint", 0);
 
-                Editor e2 = sharedPrefs.edit();
-                e2.putInt("konpoint", Constant.totalkon);
-                e2.commit();
+                Constant.totalzzle = point;
 
+                Constant.totalzzle = Count + Constant.totalzzle;
+
+                Editor e1 = sharedPrefs.edit();
+                e1.putInt("zzlepoint", Constant.totalzzle);
+                e1.commit();
+
+                menuclick = true;
                 Constant.bux = sharedPrefs.getLong("buxvalue", 0);
 
-                Long buxval1 = Constant.bux + Constant.konspoint;
-                Constant.bux = buxval1;
+                Long buxval = Constant.bux + Constant.zzlepoints;
+                Constant.bux = buxval;
 
-                Editor e3 = sharedPrefs.edit();
-                e3.putLong("buxvalue", buxval1);
-                e3.commit();
-
-                Constant.mKonsGroup = false;
-                Constant.printMsg("tedddddddddd  " + Constant.mKonsBackground + Constant.mKonsColor + Constant.mKonsText);
-                sendMessage("<k>" + Constant.mKonsBackground + "-" + Constant.mKonsColor + "-" + Constant.mKonsText);
+                Editor e = sharedPrefs.edit();
+                e.putLong("buxvalue", buxval);
+                e.commit();
+                sendMessage("<z>" + Constant.mZzleText + "-" + Constant.mTimeZzle
+                        + "-" + Constant.mPreviewSpeed + "-"
+                        + Constant.mPreviewTextsize + "-" + Constant.shapeselected);
             }
 
-        }
-        if (Constant.karaoke == true) {
-            upload_audio_File(Constant.file);
-            Constant.karaoke = false;
-        }
+            if (Constant.songlist) {
 
-        // if (Constant.karaokegroup == true) {
-        // upload_audio_File(Constant.filegroup);
-        // Constant.karaokegroup = false;
-        // }
+                isFirstTime = false;
+                Constant.printMsg("songListValue in chat::if"
+                        + Constant.songlist);
+                for (int i = 0; i < Constant.song_list.size(); i++) {
+                    Constant.songPath = Constant.song_list.get(i).toString();
+                    songValue = Constant.songPath;
+                    outputFile = Constant.local_audio_dir
+                            + System.currentTimeMillis() + ".amr";
 
-        if (Constant.logogroup == true) {
-            Constant.printMsg("logog::" + Constant.logobitgroup);
+                    Constant.printMsg("audio file path::" + songValue);
+
+                    File f1 = new File(songValue);
+                    File f2 = new File(outputFile);
+
+                    try {
+
+                        copyDirectoryOneLocationToAnotherLocation(f1, f2);
+
+                    } catch (IOException e) {
+
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
+                }
+                Constant.songlist = false;
+
+            } else {
+                Constant.printMsg("songListValue in chat::else"
+                        + Constant.songlist);
+            }
+
+            if (Constant.attachNym == true) {
+
+                Constant.printMsg("GGGGGGGG1111  " + Constant.attchnymstring);
+
+                Constant.attachNym = false;
+                Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+
+                Long buxval1 = Constant.bux + Constant.nynMpoint;
+                Constant.bux = buxval1;
+
+                Editor edit = sharedPrefs.edit();
+                edit.putLong("buxvalue", buxval1);
+                edit.commit();
+
+                int point1 = sharedPrefs.getInt("nympoint", 0);
+
+                Constant.totalchat = point1;
+
+                Constant.totalchat = Count + Constant.totalchat;
+
+                Editor e11 = sharedPrefs.edit();
+                e11.putInt("nympoint", Constant.totalchat);
+                e11.commit();
+                sendMessage("<-" + Constant.attchnymstring);
+            }
+
+
+            if (Constant.mKonsGroup == true) {
+                for (int i = 0; i < Constant.konsSelectedList.size(); i++) {
+
+                    Constant.mKonsText = Constant.konsSelectedList.get(i)
+                            .toString();
+                    Constant.mKonsBackground = Constant.konsBackgroundList.get(i).toString();
+                    Constant.mKonsColor = Constant.konsColorList.get(i).toString();
+                    int point = sharedPrefs.getInt("konpoint", 0);
+
+                    Constant.totalkon = point;
+
+                    Constant.totalkon = Count + Constant.totalkon;
+
+                    Editor e2 = sharedPrefs.edit();
+                    e2.putInt("konpoint", Constant.totalkon);
+                    e2.commit();
+
+                    Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+
+                    Long buxval1 = Constant.bux + Constant.konspoint;
+                    Constant.bux = buxval1;
+
+                    Editor e3 = sharedPrefs.edit();
+                    e3.putLong("buxvalue", buxval1);
+                    e3.commit();
+
+                    Constant.mKonsGroup = false;
+                    Constant.printMsg("tedddddddddd  " + Constant.mKonsBackground + Constant.mKonsColor + Constant.mKonsText);
+                    sendMessage("<k>" + Constant.mKonsBackground + "-" + Constant.mKonsColor + "-" + Constant.mKonsText);
+                }
+
+            }
+            if (Constant.karaoke == true) {
+
+                isFirstTime = false;
+                upload_audio_File(Constant.file);
+                Constant.karaoke = false;
+            }
+
+            // if (Constant.karaokegroup == true) {
+            // upload_audio_File(Constant.filegroup);
+            // Constant.karaokegroup = false;
+            // }
+
+            if (Constant.logogroup == true) {
+                Constant.printMsg("logog::" + Constant.logobitgroup);
 //            uploadLogo(Constant.logobitgroup, true);
-            Constant.logogroup = false;
-        }
+                Constant.logogroup = false;
+            }
 
-        if (Constant.mZzleGroup == true) {
-            Constant.mZzleGroup = false;
-            // sendMessage("<x>" + Constant.mZzleTextGroup);
-            Constant.printMsg("zzzzzzzz   " + Constant.mPreviewBackground + "-"
-                    + Constant.mPreviewSpeed + "-"
-                    + Constant.mPreviewTextColor + "-"
-                    + Constant.mPreviewTextsize + "-"
-                    + Constant.mZzleTextGroup);
+            if (Constant.mZzleGroup == true) {
+                Constant.mZzleGroup = false;
+                // sendMessage("<x>" + Constant.mZzleTextGroup);
+                Constant.printMsg("zzzzzzzz   " + Constant.mPreviewBackground + "-"
+                        + Constant.mPreviewSpeed + "-"
+                        + Constant.mPreviewTextColor + "-"
+                        + Constant.mPreviewTextsize + "-"
+                        + Constant.mZzleTextGroup);
 
 
-            int point = sharedPrefs.getInt("zzlepoint", 0);
+                int point = sharedPrefs.getInt("zzlepoint", 0);
 
-            Constant.totalzzle = point;
+                Constant.totalzzle = point;
 
-            Constant.totalzzle = Count + Constant.totalzzle;
+                Constant.totalzzle = Count + Constant.totalzzle;
 
-            Editor e1 = sharedPrefs.edit();
-            e1.putInt("zzlepoint", Constant.totalzzle);
-            e1.commit();
+                Editor e1 = sharedPrefs.edit();
+                e1.putInt("zzlepoint", Constant.totalzzle);
+                e1.commit();
 
-            menuclick = true;
-            Constant.bux = sharedPrefs.getLong("buxvalue", 0);
+                menuclick = true;
+                Constant.bux = sharedPrefs.getLong("buxvalue", 0);
 
-            Long buxval = Constant.bux + Constant.zzlepoints;
-            Constant.bux = buxval;
+                Long buxval = Constant.bux + Constant.zzlepoints;
+                Constant.bux = buxval;
 
-            Editor e = sharedPrefs.edit();
-            e.putLong("buxvalue", buxval);
-            e.commit();
+                Editor e = sharedPrefs.edit();
+                e.putLong("buxvalue", buxval);
+                e.commit();
 
-            Calendar c = Calendar.getInstance();
-            c.add(Calendar.DAY_OF_MONTH, +5);
-            Constant.printMsg("dfreebie date ::::::" + c.getTime());
-            SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-            Constant.printMsg("last date of freebie::::::::>>>>>>>"
-                    + df1.format(c.getTime()));
-            String last = df1.format(c.getTime());
-            sendMessage("<x>" + Constant.mPreviewBackground + "-"
-                    + Constant.mPreviewSpeed + "-" + Constant.mPreviewTextColor
-                    + "-" + Constant.mPreviewTextsize + "-"
-                    + Constant.mZzleText + "-" + last);
-        }
-        }catch (Exception e){
+                Calendar c = Calendar.getInstance();
+                c.add(Calendar.DAY_OF_MONTH, +5);
+                Constant.printMsg("dfreebie date ::::::" + c.getTime());
+                SimpleDateFormat df1 = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                Constant.printMsg("last date of freebie::::::::>>>>>>>"
+                        + df1.format(c.getTime()));
+                String last = df1.format(c.getTime());
+                sendMessage("<x>" + Constant.mPreviewBackground + "-"
+                        + Constant.mPreviewSpeed + "-" + Constant.mPreviewTextColor
+                        + "-" + Constant.mPreviewTextsize + "-"
+                        + Constant.mZzleText + "-" + last);
+            }
+        } catch (Exception e) {
 
         }
 
 
     }
 
-    public int valueText()
-    {
+    public int valueText() {
         pref = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         String textSizePref = pref.getString("pref_font_size", "16");
         int textSize = Integer.valueOf(textSizePref);
@@ -15510,46 +16932,477 @@ public class MUCTest extends AppCompatActivity implements
     }
 
 
-    public int getTimeTxtSize()
-    {
-        return (valueText()/2);
+    public int getTimeTxtSize() {
+        return (valueText() / 2);
     }
 
-    public boolean containsCaseInsensitive(String s, List<String> l){
-        for (String string : l){
-            if (string.equalsIgnoreCase(s)){
+    public boolean containsCaseInsensitive(String s, List<String> l) {
+        for (String string : l) {
+            if (string.equalsIgnoreCase(s)) {
                 return true;
             }
         }
         return false;
     }
 
-    public boolean getCopyPastMediaType(String mediaType)
-    {
+    public boolean getCopyPastMediaType(String mediaType) {
         boolean isMedia = true;
 
-        if(!mediaType.trim().equalsIgnoreCase("0"))
+        if (!mediaType.trim().equalsIgnoreCase("0"))
             isMedia = false;
 
-        Constant.printMsg("Dilip copy " + mediaType +" " + mediaType.trim().equalsIgnoreCase("4")+ " " + isMedia);
+        Constant.printMsg("Dilip copy " + mediaType + " " + mediaType.trim().equalsIgnoreCase("4") + " " + isMedia);
 
         return isMedia;
     }
 
-    public boolean chekNynmDazzKon(String text)
-    {
+    public boolean chekNynmDazzKon(String text) {
         boolean isSpl = false;
 
-        if(text!=null)
-        {
-            if(text.length()>0) {
-                if (text.charAt(0) == '<')
+        Constant.printMsg("Gksjdfs" + text);
+
+        if (text.length() > 3) {
+
+            char s = text.charAt(0);
+            char s1 = text.charAt(1);
+            char s2 = text.charAt(2);
+
+            if ((s == '<' && s1 == '-') || (s1 == 'b' && s2 == '>') || (s1 == 'z' && s2 == '>') || (s1 == 'l' && s2 == '>') || (s1 == 'x' && s2 == '>') || (s1 == 'o' && s2 == '>') || (s1 == 'k' && s2 == '>')) {
+                isSpl = true;
+            } else if (s == '<') {
+                if (s1 == 's' && s2 == '>') {
                     isSpl = true;
+                }
             }
         }
 
+        Constant.printMsg("Gksjdfs11" + isSpl);
 
         return isSpl;
     }
 
+    public boolean chekDonate(String text) {
+        boolean isSpl = false;
+
+        if (text.length() > 3) {
+
+            char s = text.charAt(0);
+            char s1 = text.charAt(1);
+            char s2 = text.charAt(2);
+
+            if ((s1 == 'r' && s2 == '>') || (s1 == 'a' && s2 == '>') || (s1 == 'd' && s2 == '>')) {
+                isSpl = true;
+            }
+
+        }
+
+        return isSpl;
+    }
+
+    public void set_Download_Image(int j, String media_name) {
+
+        try {
+            mLeftImageChat = (ImageView) findViewById(j + 150000);
+            mLeftImageChatDownload = (ImageView) findViewById(j + 160000);
+            mLeftImagetProgressBar = (ProgressBar) findViewById(j + 170000);
+
+
+            mLeftImageChatDownload.setVisibility(View.GONE);
+            mLeftImagetProgressBar.setVisibility(View.GONE);
+
+            File file = new File(Constant.local_image_dir
+                    + media_name);
+            if (file.isFile()) {
+
+                Constant.printMsg("Image row data not null333");
+
+                Bitmap unscaledBitmap = new CompressImage().compressImage(Constant.local_image_dir
+                        + media_name, "", 1);
+
+
+                mLeftImageChat.setImageBitmap(unscaledBitmap);
+
+                mLeftImageChat.setTag(Constant.local_image_dir
+                        + media_name);
+            }
+        } catch (Exception e) {
+            Constant.printMsg("Image row data not null333 " + e.toString());
+        }
+    }
+
+    public void set_video_download(int k, String media_name) {
+        try {
+            mLeftVideoChat = (ImageView) findViewById(k + 180000);
+            mLeftVideoChatDownload = (ImageView) findViewById(k + 190000);
+            mLeftVideoButtonPlay = (ImageView) findViewById(k + 210000);
+
+            mLeftVideoProgress = (ProgressBar) findViewById(k + 220000);
+
+
+            mLeftVideoChatDownload.setVisibility(View.GONE);
+            mLeftVideoProgress.setVisibility(View.GONE);
+            mLeftVideoButtonPlay.setVisibility(View.VISIBLE);
+
+            File file = new File(Constant.local_video_dir
+                    + media_name);
+            mLeftVideoButtonPlay.setTag(Constant.local_video_dir
+                    + media_name);
+            try {
+                byte[] image_data = msg_list.get(k).getRow_data();
+                Bitmap bitmap = BitmapFactory.decodeByteArray(
+                        image_data, 0, image_data.length, Util.getBitmapOptions());
+                mLeftVideoChat.setImageBitmap(bitmap);
+                mLeftVideoChat.setScaleType(ImageView.ScaleType.FIT_XY);
+                mLeftVideoChat.setTag(null);
+            } catch (Exception e) {
+
+            }
+        } catch (Exception e) {
+
+        }
+    }
+
+
+    public void set_audio_download(int k, String media_name) {
+        try {
+
+            mLeftAudioBtnPlay = (Button) findViewById(k + 400000);
+            mLeftAudioBtnCancel = (Button) findViewById(k + 1100000);
+            mLeftAudioBtnDownload = (Button) findViewById(k + 300000);
+            mLeftAudioDownloadProgress = (ProgressBar) findViewById(k + 1200000);
+            mLeftAudioSeekBar = (SeekBar) findViewById(k + 500000);
+
+
+            mLeftAudioBtnDownload.setVisibility(View.GONE);
+            mLeftAudioBtnCancel.setVisibility(View.GONE);
+            mLeftAudioDownloadProgress.setVisibility(View.GONE);
+            mLeftAudioBtnPlay.setVisibility(View.VISIBLE);
+            // txt_audio_size.setVisibility(View.GONE);
+            mLeftAudioSeekBar.setVisibility(View.VISIBLE);
+
+            mLeftAudioBtnPlay.setTag(Constant.local_audio_dir
+                    + media_name);
+        } catch (Exception e) {
+
+            Constant.printMsg("Download audio setttt");
+        }
+    }
+
+    void handleSendText(Intent intent) {
+        String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+
+        if (sharedText != null) {
+            // Update UI to reflect text being shared
+        }
+    }
+
+    void handleSendImage(Uri imageUriSingle) {
+        Uri imageUri = imageUriSingle;
+        if (imageUri != null) {
+            // Update UI to reflect image being shared
+            String[] filePathColumn = {MediaStore.Images.Media.DATA};
+            Cursor cursor = getContentResolver().query(imageUri, filePathColumn, null, null, null);
+            cursor.moveToFirst();
+
+            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+            final String filePath = cursor.getString(columnIndex);
+
+            cursor.close();
+            File file = new File(filePath);
+            long length = file.length();
+            length = length / 1024;
+
+            if (length > 16384) {
+                new AlertManager().showAlertDialog(this, getResources().getString(R.string.imagesize_must_be_smaller), true);
+            } else {
+                new Thread(new Runnable() {
+                    public void run() {
+                        runOnUiThread(new Runnable() {
+                            public synchronized void run() {
+                                try {
+                                    synchronized (this) {
+                                        Constant.printMsg(" ::: " + filePath);
+
+                                        uploadFile(filePath, true);
+
+                                        Constant.singleImagUri = null;
+                                    }
+                                } catch (Exception e) {
+                                    Constant.printMsg(e.toString());
+                                }
+                            }
+                        });
+                    }
+                }).start();
+            }
+        }
+    }
+
+    void handleSendSingleVideo(Uri singleVideoUri) {
+        Uri selectedImage1 = singleVideoUri;
+        String[] filePathColumn1 = {MediaStore.Images.Media.DATA};
+        Cursor cursor1 = getContentResolver().query(selectedImage1, filePathColumn1, null, null, null);
+        cursor1.moveToFirst();
+
+        int columnIndex1 = cursor1.getColumnIndex(filePathColumn1[0]);
+        final String filePath1 = cursor1.getString(columnIndex1);
+
+        cursor1.close();
+        File file = new File(filePath1);
+        long length = file.length();
+
+        length = length / 1024;
+
+        if (length > 16384) {
+            new AlertManager().showAlertDialog(this, getResources().getString(R.string.videosize_must_be_smaller), true);
+        } else {
+            new Thread(new Runnable() {
+                public void run() {
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            try {
+                                Constant.printMsg("video file path::" + filePath1);
+
+                                uploadFile(filePath1, false);
+
+                                Constant.singleVideoUri = null;
+                            } catch (Exception e) {
+                                Constant.printMsg("Single Video Share ::: " + e.toString());
+                            }
+                        }
+                    });
+                }
+            }).start();
+        }
+    }
+
+    void handleSendSingleAudio(Uri singleAudioUri) {
+        Uri audioUri = singleAudioUri;
+        String[] filePathColumn1 = {MediaStore.Images.Media.DATA};
+        Cursor cursor1 = getContentResolver().query(audioUri, filePathColumn1, null, null, null);
+        cursor1.moveToFirst();
+
+        int columnIndex1 = cursor1.getColumnIndex(filePathColumn1[0]);
+        final String filePath1 = cursor1.getString(columnIndex1);
+        cursor1.close();
+
+        outputFile = Constant.local_audio_dir + System.currentTimeMillis() + ".amr";
+        Constant.printMsg("audio file path::" + filePath1);
+
+        File f1 = new File(filePath1);
+        File f2 = new File(outputFile);
+
+        try {
+            copyDirectoryOneLocationToAnotherLocation(f1, f2);
+        } catch (IOException e) {
+            e.printStackTrace();
+
+            Constant.printMsg("Single Audio Share ::: " + e.toString());
+        }
+    }
+
+    void handleSendMultipleImages() {
+        Constant.mSelectedImage = new ArrayList();
+
+        String selectImages = "";
+
+        for (int i = 0, l = Constant.multipleImageUri.size(); i < l; i++) {
+            selectImages = getRealPathFromURI(getApplicationContext(), Constant.multipleImageUri.get(i));
+
+            Constant.mSelectedImage.add(selectImages + "|");
+
+            Constant.printMsg("Selected Images ::: " + selectImages);
+        }
+        Constant.mImagepath = selectImages;
+
+        Constant.printMsg("Selected Images Path ::: " + selectImages);
+
+        imagesPathList = new ArrayList<>();
+
+        String[] imagesPath = Constant.mImagepath.split("\\|");
+
+        System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath);
+
+        for (int i = 0; i < imagesPath.length; i++) {
+            System.out.println("img path url select multiple:::::::::>>>>>>>>" + imagesPath[i]);
+
+            imagesPathList.add(imagesPath[i]);
+
+            File file = new File(imagesPath[i]);
+
+            long length = file.length();
+
+            length = length / 1024;
+
+            if (length > 16384) {
+                new AlertManager().showAlertDialog(this, getResources().getString(R.string.imagesize_must_be_smaller), true);
+            } else {
+                Thread t = new Thread(new Runnable() {
+                    @Override
+                    public synchronized void run() {
+                        try {
+                            for (int i = 0; i < Constant.mSelectedImage.size(); i++) {
+                                Constant.printMsg("Image Path ::::::::::::: " + Constant.mSelectedImage.get(i) + "   " + i);
+
+                                synchronized (this) {
+                                    uploadFile(String.valueOf(Constant.mSelectedImage.get(i)), true);
+                                }
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+
+                            Constant.printMsg("Multiple Image 1 ::: " + e.toString());
+                        }
+                    }
+                });
+                t.start();
+
+                i = imagesPath.length;
+            }
+        }
+    }
+
+    public String getRealPathFromURI(Context context, Uri contentUri) {
+        Cursor cursor = null;
+
+        try {
+            String[] proj = {MediaStore.Images.Media.DATA};
+            cursor = context.getContentResolver().query(contentUri, proj, null, null, null);
+            int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            cursor.moveToFirst();
+            return cursor.getString(column_index);
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case 1001:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1002:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1003:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1004:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1005:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 1006:
+
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Constant.printMsg("Permission Granted");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Allow Permission to Access", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
+    public void fetchNymFrom() {
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    SQLException e;
+                    Throwable th;
+                    Dbhelper dbhelper = new Dbhelper(getApplicationContext());
+                    Cursor c = null;
+                    ChatDictionary.mDictionaryList.clear();
+                    ChatDictionary.mDictionaryMeaningList.clear();
+
+                    try {
+                        String query = "SELECT * FROM nym ORDER BY name ";
+                        Dbhelper db = new Dbhelper(getApplicationContext());
+                        try {
+                            c = db.open().getDatabaseObj().rawQuery(query, null);
+                            int idIndex = c.getColumnIndex("id");
+                            int txnm = c.getColumnIndex(Contacts.PeopleColumns.NAME);
+                            int mnnm = c.getColumnIndex("meaning");
+                            Constant.printMsg("The pending cart list in db ::::"
+                                    + c.getCount());
+                            if (c.getCount() > 0) {
+                                while (c.moveToNext()) {
+                                    String tx = c.getString(txnm);
+                                    String mn = c.getString(mnnm);
+                                    Integer idnm = Integer.valueOf(c.getInt(idIndex));
+                                    System.out
+                                            .println("dbadd:nym:" + tx + "  " + mn + "  ");
+                                    ChatDictionary.mDictionaryList.add(tx);
+                                    ChatDictionary.mDictionaryMeaningList.add(mn);
+                                }
+                            } else {
+                                Constant.printMsg("there is nothing in db::");
+                            }
+                            c.close();
+                            db.close();
+                            dbhelper = db;
+                        } catch (SQLException e2) {
+                            e = e2;
+                            dbhelper = db;
+                        } catch (Throwable th2) {
+                            th = th2;
+                            dbhelper = db;
+                        }
+                    } catch (SQLException e3) {
+                        e = e3;
+                        try {
+                            Constant.printMsg("Sql exception in pending shop details ::::"
+                                    + e.toString());
+                            c.close();
+                            dbhelper.close();
+                        } catch (Throwable th3) {
+                            th = th3;
+                            c.close();
+                            dbhelper.close();
+
+                        }
+                    }
+                } catch (Exception e1) {
+
+                }
+            }
+        }).start();
+
+
+    }
 }

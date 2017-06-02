@@ -33,6 +33,7 @@ import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.applications.KachingMeApplication;
 import com.wifin.kachingme.applications.SherlockBaseActivity;
 import com.wifin.kachingme.chat.broadcast_chat.Broadcast_create;
+import com.wifin.kachingme.chat.muc_chat.MUC_Info;
 import com.wifin.kachingme.chat.muc_chat.NewGroup_MemberList;
 import com.wifin.kachingme.database.DatabaseHelper;
 import com.wifin.kachingme.pojo.ContactsGetSet;
@@ -129,6 +130,24 @@ public class MultiselectMembers extends SherlockBaseActivity {
 
         }
 
+
+        try {
+            for (int i = 0; i < MUC_Info.selected_users.size(); i++) {
+
+                for (int j = 0; j < users.size(); j++) {
+
+                    if (users.get(j).getJid().equalsIgnoreCase(NewGroup_MemberList.selected_users.get(i).getJid())) {
+                        users.remove(j);
+                    }
+
+                }
+
+            }
+        } catch (Exception e) {
+
+            Constant.printMsg("dfsmfsa" + e.toString());
+
+        }
 
         adapter = new MyCustomAdapter(this, R.layout.multi_select_member_item,
                 users);
@@ -232,7 +251,7 @@ public class MultiselectMembers extends SherlockBaseActivity {
 
     protected void getSearchText(String s) {
         // TODO Auto-generated method stub
-
+        Constant.printMsg("search ::::::::: 1" + s);
         ArrayList<ContactsGetSet> list = new ArrayList<ContactsGetSet>();
         // list = null;
         if (s != null && s.length() > 0) {
@@ -258,13 +277,14 @@ public class MultiselectMembers extends SherlockBaseActivity {
             list = users;
 
         }
-
+        Constant.printMsg("search ::::::::: 2" + s);
         // users=new ArrayList<contactsGetSet>();
         adapter = new MyCustomAdapter(this, R.layout.multi_select_member_item,
                 list);
 
         lstview.setAdapter(adapter);
         adapter.notifyDataSetChanged();
+        Constant.printMsg("search ::::::::: 3" + s);
 
         if (isSearched) {
             sendMemberList();

@@ -16,6 +16,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.database.SQLException;
 import android.graphics.Bitmap;
 import android.graphics.drawable.ColorDrawable;
@@ -26,6 +28,7 @@ import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.telephony.TelephonyManager;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Base64;
 import android.util.DisplayMetrics;
@@ -54,6 +57,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.gson.Gson;
 import com.google.i18n.phonenumbers.AsYouTypeFormatter;
 import com.google.i18n.phonenumbers.NumberParseException;
@@ -78,6 +82,7 @@ import com.wifin.kachingme.services.TempConnectionService;
 import com.wifin.kachingme.util.CommonMethods;
 import com.wifin.kachingme.util.Connectivity;
 import com.wifin.kachingme.util.Constant;
+import com.wifin.kachingme.util.GPSTrackerUtils;
 import com.wifin.kachingme.util.HttpConfig;
 import com.wifin.kachingme.util.KachingMeConfig;
 import com.wifin.kachingme.util.XMLParser;
@@ -103,16 +108,14 @@ import java.util.Map;
 public class Signin extends Slideshow implements OnClickListener {
 
     public static String COUNTRY, COUNTRYCODE, COUNTRYCODE_CHAR;
-    public static Handler mHandelSininMsg;
+    public static boolean isUserExist = false;
     EditText mMobileno, mPassword;
     TextView mMsgText, mCountryCode, mSeperator, mForgotPassword, mNextButton;
     AutoCompleteTextView mCountry;
     LinearLayout mMobileLayout;
-    public static boolean isUserExist = false;
     String data, strMobileNumber = null, TAG = Signin.class.getSimpleName(), country, mTextAuto,
-            country_code, mobileno, full_mobile_no, primary_number, secondary_number;
+            country_code, mobileno, full_mobile_no;
     ArrayList<CountryCodeGetSet> country_list;
-    CountryAdapter adapter;
     ArrayAdapter adapterc;
     ArrayList<String> items = new ArrayList<String>();
     ProgressDialog progressDialog;
@@ -121,11 +124,18 @@ public class Signin extends Slideshow implements OnClickListener {
     PhoneNumber NumberProto;
     PhoneNumberUtil phoneUtil;
     AsYouTypeFormatter formatter;
-    //    private static final int MY_PERMISSIONS_REQUEST_READ_SMS = 226;
     CommonMethods commonMethods;
     DatabaseHelper dbAdapter;
     Dbhelper db;
-    boolean isLogintry;
+    GoogleCloudMessaging gcm;
+    GPSTrackerUtils gpsTracker;
+    private static final String APP_VERSION = "appVersion";
+
+    public static String encodeToBase64(Bitmap image, Bitmap.CompressFormat compressFormat, int quality) {
+        ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
+        image.compress(compressFormat, quality, byteArrayOS);
+        return Base64.encodeToString(byteArrayOS.toByteArray(), Base64.DEFAULT);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -261,6 +271,16 @@ public class Signin extends Slideshow implements OnClickListener {
                 return false;
             }
         });
+//        if (Connectivity.isConnected(Signin.this)) {
+//            if (TextUtils.isEmpty(regId)) {
+//                //regId = registerGCM();
+//                Constant.device_id = regId;
+//                Log.d("RegisterActivity", "GCM RegId: " + regId + " res"
+//                        + Constant.device_id);
+//            } else {
+//                Constant.printMsg("Already Registered with GCM Server!");
+//            }
+//        }
     }
 
     private void initialization() {
@@ -291,10 +311,23 @@ public class Signin extends Slideshow implements OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.sigin_forgot_password:
-                forgetPasswordRedirect();
+                if (Connectivity.isConnected(Signin.this))
+                    commonMethods.Toast_call(Signin.this,
+                            getResources().getString(R.string.password_already_send_on_your_mobile_number));
+                else
+                    commonMethods.Toast_call(
+                            Signin.this, getResources().getString(
+                                    R.string.no_internet_connection));
+                //forgetPasswordRedirect();
                 break;
             case R.id.signin_next:
-                submitRegistration();
+                gpsTracker = new GPSTrackerUtils(Signin.this);
+                // check if GPS enabled
+                if (gpsTracker.canGetLocation()) {
+                    submitRegistration();
+                } else {
+                    gpsTracker.showSettingsAlert();
+                }
                 break;
         }
     }
@@ -323,10 +356,15 @@ public class Signin extends Slideshow implements OnClickListener {
             /**Siva after the country and phone validation */
             if (Constant.addverification) {
                 /** this can called for add secondary number */
-                data = jsonFormAddNumber();
-                Constant.printMsg("siva .postSecondaryNumber.....");
-                String secno = mMobileno.getText().toString();
-                new postSecondaryNumber().execute(secno);
+                if (Connectivity.isConnected(Signin.this)) {
+                    data = jsonFormAddNumber();
+                    Constant.printMsg("siva .postSecondaryNumber.....");
+                    String secno = mMobileno.getText().toString();
+                    new postSecondaryNumber().execute(secno);
+                } else {
+                    commonMethods.Toast_call(this, getResources()
+                            .getString(R.string.no_internet_connection));
+                }
             } else {
                 /** this can called for either login or primary number registration */
                 if (Connectivity.isConnected(Signin.this)) {
@@ -334,67 +372,19 @@ public class Signin extends Slideshow implements OnClickListener {
                     Constant.country = country;
                     Constant.countrycode = COUNTRYCODE;
                     if (isUserExist) {
-                        /**login session*/
+                        /**login session after number verified*/
                         if (mPassword.getText().toString().length() == 0) {
                             commonMethods.showAlertDialog(this, getResources()
                                     .getString(R.string.please_enter_password), true);
                         } else {
                             final String password = mPassword.getText().toString();
-                            Constant.printMsg("login Password verification....." + preferences.getString("MyPassword", "") + "..." + password);
-//                            if (preferences.getString("MyPassword","").equals(password)){
-                            //new MySyncLast().execute(preferences.getString("MyPrimaryNumber", ""), password);
-                            new getOtpForLogin().execute(preferences.getString("MyPrimaryNumber", ""), password);
-//                            }else{
-//                                commonMethods.showAlertDialog(this, getResources()
-//                                        .getString(R.string.please_enter_password), true);
-//                            }
-
-//                            dbAdapter.insertLogin(preferences.getString("MyPrimaryNumber", ""),
-//                                    mPassword.getText().toString().trim(), "",
-//                                    "", "", null);
-//                            Constant.printMsg("GFSKJHLKJDSLN" + dbAdapter.getLogin().size());
-//                            Constant.mIsLogin = true;
-//                            new getCartDetails().execute(preferences.getString("MyPrimaryNumber", ""));
-//                            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(Signin.this);
-//                            Editor editor = sp.edit();
-//                            editor.putString("activity_name", "SliderTesting");
-//                            editor.putBoolean("decline", false);
-//                            editor.commit();
-//
-//                            SharedPreferences sps = Signin.this.getSharedPreferences(KachingMeApplication.getPereference_label(),
-//                                    Activity.MODE_PRIVATE);
-//                            Editor editor1 = sps.edit();
-//                            editor1.putString("activity_name", "SliderTesting");
-//                            editor1.putBoolean("decline", false);
-//                            editor1.commit();
-//                            isLogintry = true;
-//                            editor.putString("pin", mPassword.getText()
-//                                    .toString().trim());
-//                            editor.putString(Constant.COUNTRY_CODE_LABEL, mCountryCode
-//                                    .getText().toString());
-//                            editor.commit();
-
-
-//                            stopService(new Intent(Signin.this, TempConnectionService.class));
-//                            startService(new Intent(Signin.this, TempConnectionService.class));
-//                            startService(new Intent(Signin.this, ContactLastSync.class));
-//                            startActivity(new Intent(Signin.this, SliderTesting.class));
-//                            finish();
-//                            mHandelSininMsg = new Handler() {
-//                                @Override
-//                                public void handleMessage(Message msg) {
-//                                    /**login with ejabed server for chat*/
-//                                    new MySync().execute(password);
-//                                }
-//                            };
-//                            new connectionForLogin().execute();
+                            Constant.printMsg("login Password verification....." + preferences.getString("ChatUserNumber", "") + "...." + preferences.getString("MyPassword", "") + "..." + password);
+                            new getOtpForLogin().execute(preferences.getString("ChatUserNumber", ""), password);
                         }
                     } else {
-                        /*Registration session*/
-                        // IS_USER_REGISTER();
+                        /*Registration session or login verification*/
                         String code = mCountryCode.getText().toString().trim();
                         String mobileNo = mMobileno.getText().toString().trim();
-                        //new getSecondaryNumber().execute(code, mobileNo);
                         /** check here the entered number as prinmary or secondary */
                         getSecondaryNumberByVolley(code, mobileNo);
                         Constant.mPrimarynum = COUNTRYCODE;
@@ -423,33 +413,33 @@ public class Signin extends Slideshow implements OnClickListener {
             editor.commit();
             Constant.printMsg("called");
             if (Connectivity.isConnected(Signin.this)) {
-                RequestParams request_params = new RequestParams();
-                request_params.put("jid",
-                        preferences.getString("MyPrimaryNumber", "")
-                                + KachingMeApplication.getHost());
-                AsyncHttpClient client = new AsyncHttpClient();
-                client.post(KachingMeConfig.FORGET_PASSWORD_PHP,
-                        request_params,
-                        new AsyncHttpResponseHandler(Looper.getMainLooper()) {
-
-                            @Override
-                            public void onFailure(int arg0,
-                                                  Header[] arg1, byte[] arg2,
-                                                  Throwable arg3) {
-                                // TODO Auto-generated method stub
-                                Constant.printMsg("failure");
-                            }
-
-                            @Override
-                            public void onSuccess(int arg0,
-                                                  Header[] arg1, byte[] arg2) {
-                                // TODO Auto-generated method stub
-                                // Log.d(TAG,"SMS Service Success Response::"+content);
-                                Constant.printMsg("success ");
-                                commonMethods.showAlertDialog(Signin.this,
-                                        getResources().getString(R.string.you_will_recieve_sms), true);
-                            }
-                        });
+//                RequestParams request_params = new RequestParams();
+//                request_params.put("jid",
+//                        preferences.getString("MyPrimaryNumber", "")
+//                                + KachingMeApplication.getHost());
+//                AsyncHttpClient client = new AsyncHttpClient();
+//                client.post(KachingMeConfig.FORGET_PASSWORD_PHP,
+//                        request_params,
+//                        new AsyncHttpResponseHandler(Looper.getMainLooper()) {
+//
+//                            @Override
+//                            public void onFailure(int arg0,
+//                                                  Header[] arg1, byte[] arg2,
+//                                                  Throwable arg3) {
+//                                // TODO Auto-generated method stub
+//                                Constant.printMsg("failure");
+//                            }
+//
+//                            @Override
+//                            public void onSuccess(int arg0,
+//                                                  Header[] arg1, byte[] arg2) {
+//                                // TODO Auto-generated method stub
+//                                // Log.d(TAG,"SMS Service Success Response::"+content);
+//                                Constant.printMsg("success ");
+//                                commonMethods.showAlertDialog(Signin.this,
+//                                        getResources().getString(R.string.you_will_recieve_sms), true);
+//                            }
+//                        });
             } else {
                 commonMethods.Toast_call(
                         Signin.this, getResources().getString(
@@ -458,88 +448,10 @@ public class Signin extends Slideshow implements OnClickListener {
         }
     }
 
-    public class getOtpForLogin extends AsyncTask<String, String, String> {
-        ProgressDialog progressDialog;
-        String password;
-
-        @Override
-        protected String doInBackground(String... parama) {
-            // TODO Auto-generated method stub
-            String result;
-            HttpConfig ht = new HttpConfig();
-            password=parama[1];
-            result = ht.httpget(KachingMeConfig.GET_LOGIN_OTP+"?username="+parama[0]+"&password="+parama[1]);
-            Constant.printMsg("siva ......dpostatya......" + KachingMeConfig.GET_LOGIN_OTP
-                    +"?username="+parama[0]+"&password="+parama[1] + "............" + result);
-            return result;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            // TODO Auto-generated method stub
-            super.onPostExecute(result);
-            if (result!=null && result.length()>0){
-                try {
-                    JSONObject jsonObject=new JSONObject(result);
-                    Constant.printMsg("sign login otp from server....."+jsonObject);
-                    String status=jsonObject.getString("status");
-                    String otp=jsonObject.getString("otp");
-                    String primaryNumber=jsonObject.getString("primaryContactNo");
-                    if (otp!=null&&!otp.equalsIgnoreCase("null")&&otp.length()>0){
-                        Constant.loginOtp=otp;
-                        Constant.loginCountryCode=mCountryCode.getText().toString();
-                        if (primaryNumber!=null && !primaryNumber.equalsIgnoreCase("null") && !primaryNumber.isEmpty()){
-                            Constant.loginMobileNumber=primaryNumber;
-                        }
-                        Constant.mVerifiedNum = "+" + COUNTRYCODE + " - "
-                                + mMobileno.getText().toString();
-                        Editor editor = preferences.edit();
-                        editor.putString("MyPassword", password);
-                        editor.commit();
-                        startActivity(new Intent(Signin.this, OtpVerification.class));
-                        finish();
-                        //new MySyncLast().execute(preferences.getString("MyPrimaryNumber", ""), password);
-                        Constant.printMsg("sign login check after activity true...");
-                    }else{
-                        Toast.makeText(Signin.this, "Please Check Your Credentials", Toast.LENGTH_SHORT).show();
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                progressDialog.dismiss();
-            }else{
-                progressDialog.dismiss();
-                Toast.makeText(Signin.this, "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        protected void onPreExecute() {
-            // TODO Auto-generated method stub
-            super.onPreExecute();
-            progressDialog = new ProgressDialog(Signin.this,
-                    AlertDialog.THEME_HOLO_LIGHT);
-            progressDialog.setMessage("Please Wait...");
-            progressDialog.setProgressDrawable(new ColorDrawable(
-                    android.graphics.Color.BLUE));
-            progressDialog.setCancelable(false);
-            progressDialog.show();
-        }
-    }
     /**
      * Call a service using volly library
      */
     public void getSecondaryNumberByVolley(String code, String mobile) {
-        // String tag_json_arry = "json_array_req";
-        String url = KachingMeConfig.GET_PRIMARY_NUMBER;
-//		JSONObject jsonObj = null;
-//		try {
-//			jsonObj = new JSONObject(data)
-//		} catch (JSONException e) {
-//			// TODO Auto-generated catch block
-//			Constant.printMsg("error  >>>>>>> " + e);
-//			e.printStackTrace();
-//		}
         Map<String, String> postParam = new HashMap<String, String>();
         postParam.put("phoneNumber", code + mobile);
         postParam.put("responseCode", "1");
@@ -548,7 +460,7 @@ public class Signin extends Slideshow implements OnClickListener {
         progressDialog.setMessage("Loading...");
         progressDialog.show();
         Constant.printMsg("post response........" + postData);
-        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST, url,
+        JsonObjectRequest jsonObjReq = new JsonObjectRequest(Request.Method.POST, KachingMeConfig.GET_PRIMARY_NUMBER,
                 postData, new Response.Listener<JSONObject>() {
 
             @Override
@@ -573,7 +485,7 @@ public class Signin extends Slideshow implements OnClickListener {
         jsonObjReq.setRetryPolicy(new DefaultRetryPolicy(10000, DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         jsonObjReq.setShouldCache(false);
-        queue.getCache().remove(url);
+        queue.getCache().remove(KachingMeConfig.GET_PRIMARY_NUMBER);
         queue.add(jsonObjReq);
 
     }
@@ -591,66 +503,75 @@ public class Signin extends Slideshow implements OnClickListener {
                             + jsonData.get("secondaryContactNo")
                             + "....primaryy..."
                             + jsonData.get("primaryContactNo"));
-                    /**here we confirm  the given number as primary or secondary*/
-                    if (!jsonData.get("primaryContactNo").toString().trim()
-                            .equalsIgnoreCase("null")
-                            && jsonData.get("primaryContactNo").toString()
-                            .length() > 0) {
-                        /**confirm the given number is secondary number*/
+                    /**here we confirm  the given number as valid for login or Register*/
+                    if (jsonData.get("primaryContactNo") != null
+                            && !jsonData.get("primaryContactNo").toString().trim().equalsIgnoreCase("null")
+                            && jsonData.get("primaryContactNo").toString().length() > 0) {
+                        /**Confirm the given number is Valid for Login*/
                         String Prime = jsonData.get("primaryContactNo")
                                 .toString().trim();
                         String second = jsonData.get("secondaryContactNo")
                                 .toString().trim();
                         String password = jsonData.get("password")
                                 .toString().trim();
-
-                        IS_USER_REGISTER(Prime + KachingMeApplication.getHost());
-                        Editor editor = preferences.edit();
-                        editor.putString("MySecondaryNumber", second);
-                        editor.putString("MyPrimaryNumber", Prime);
-                        editor.putString("ChatUserNumber", second);
-                        editor.putString("MyPassword", password);
-                        editor.commit();
-                        Constant.printMsg("siva Using number as sac to prim..."
-                                + Prime
-                                + KachingMeApplication.getHost());
-                    } else {
-                        /**confirm the given number is not secondary number may be primary or unknown number*/
-                        IS_USER_REGISTER(mCountryCode.getText().toString().trim()
-                                + mMobileno.getText().toString().trim()
-                                + KachingMeApplication.getHost());
-                        Constant.printMsg("siva Using number as direct prim..."
-                                + mCountryCode.getText().toString().trim()
-                                + mMobileno.getText().toString().trim()
-                                + KachingMeApplication.getHost());
-                        Editor editor = preferences.edit();
-                        editor.putString("MyPrimaryNumber", mCountryCode
-                                .getText().toString().trim()
-                                + mMobileno.getText().toString().trim());
-                        Editor editor1 = preferences.edit();
-                        editor1.putString("ChatUserNumber", mCountryCode
-                                .getText().toString().trim()
-                                + mMobileno.getText().toString().trim());
-                        editor1.commit();
-
-                        if (!jsonData.get("password").toString().equalsIgnoreCase("null") && jsonData.get("password")
-                                .toString().length() > 0) {
-                            editor.putString("MyPassword", jsonData.get("password").toString());
+                        if (Constant.login) {
+                            isUserExist = true;
+                            mMobileno.setEnabled(false);
+                            mCountry.setEnabled(false);
+                            mPassword.setVisibility(View.VISIBLE);
+                            mForgotPassword.setVisibility(View.VISIBLE);
+                            mNextButton.setText("Login");
+                            Editor editor = preferences.edit();
+                            editor.putString("MySecondaryNumber", second);
+                            editor.putString("MyPrimaryNumber", Prime);
+                            editor.putString("ChatUserNumber", mCountryCode
+                                    .getText().toString().trim()
+                                    + mMobileno.getText().toString().trim());
+                            editor.putString("MyPassword", password);
+                            editor.commit();
+                            Constant.printMsg("siva Using number as sac to prim..."
+                                    + Prime
+                                    + KachingMeApplication.getHost());
+                            Constant.printMsg("siva Using number as sac  no as......." + second);
+                        } else {
+                            /**Attempt Registration for already registered Number*/
+                            showAlerDialog(Prime, second, password);
                         }
-                        editor.commit();
+
+                    } else {
+                        /**confirm the given number is Valid for Registration  */
+                        if (Constant.login) {
+                            /**Attempt Login for non registered Number*/
+                            commonMethods.showAlertDialog(Signin.this,
+                                    getResources().getString(
+                                            R.string.invalid_user), true);
+
+                        } else {
+                            /**confirm the user Valid for Registration */
+                            editor.putString(Constant.COUNTRY_CODE_LABEL, mCountryCode.getText().toString());
+                            editor.commit();
+                            Constant.phone = mMobileno.getText().toString();
+                            Constant.printMsg("siva.........................postRegister");
+                            /**Registration on java server*/
+                            new postRegister().execute();
+                            Constant.printMsg("siva Using number as direct prim..."
+                                    + mCountryCode.getText().toString().trim()
+                                    + mMobileno.getText().toString().trim()
+                                    + KachingMeApplication.getHost());
+                            Editor editor = preferences.edit();
+                            editor.putString("MyPrimaryNumber", mCountryCode
+                                    .getText().toString().trim()
+                                    + mMobileno.getText().toString().trim());
+                            editor.putString("ChatUserNumber", mCountryCode
+                                    .getText().toString().trim()
+                                    + mMobileno.getText().toString().trim());
+                            if (!jsonData.get("password").toString().equalsIgnoreCase("null") && jsonData.get("password")
+                                    .toString().length() > 0) {
+                                editor.putString("MyPassword", jsonData.get("password").toString());
+                            }
+                            editor.commit();
+                        }
                     }
-//                    JSONArray jarry = new JSONArray(jsonData.get("secondaryContactNoList").toString());
-//                    if (jarry != null && jarry.length() > 0) {
-//                        for (int i = 0; i < jarry.length(); i++) {
-//                            if (!preferences.getString("MyPrimaryNumber", "").equalsIgnoreCase(jarry.get(i).toString())) {
-//                                Constant.printMsg("get secondary list........." + jarry.get(i));
-//                                ContentValues cv = new ContentValues();
-//                                cv.put("primarynum", preferences.getString("MyPrimaryNumber", ""));
-//                                cv.put("secondarynum", jarry.get(i).toString());
-//                                insertNumber(cv);
-//                            }
-//                        }
-//                    }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -685,123 +606,6 @@ public class Signin extends Slideshow implements OnClickListener {
         return d;
     }
 
-//    public void insertNumber(ContentValues cv) {
-//        // TODO Auto-generated method stub
-//        try {
-//            int a = (int) db.open().getDatabaseObj()
-//                    .insert(Dbhelper.TABLE_NUMBERS, null, cv);
-//            Constant.printMsg("No of inserted rows in kons :::::::::" + a);
-//        } catch (SQLException e) {
-//            Constant.printMsg("Sql exception in kons details ::::::"
-//                    + e.toString());
-//        } finally {
-//            db.close();
-//        }
-//    }
-
-    public void IS_USER_REGISTER(String strPhone) {
-        /**Now we check the given number as already present or not using php api*/
-        RequestParams request_params = new RequestParams();
-        request_params.put("jid", strPhone);
-        Log.d(TAG, "Jid::" + strPhone);
-        AsyncHttpClient client = new AsyncHttpClient();
-        Constant.printMsg("siva parama async......" + request_params);
-        client.post(KachingMeConfig.IS_USER_REGISTER_PHP,
-                request_params,
-                new AsyncHttpResponseHandler(Looper.getMainLooper()) {
-
-                    @Override
-                    public void onFinish() {
-                        Constant.printMsg("siva onFinish......");
-                        super.onFinish();
-                        progressDialog.dismiss();
-                    }
-
-                    @Override
-                    public void onStart() {
-                        Constant.printMsg("siva onStart......");
-                        super.onStart();
-                        progressDialog = ProgressDialog.show(Signin.this,
-                                getResources().getString(R.string.please_wait),
-                                getResources().getString(R.string.loading),
-                                false);
-
-                    }
-
-                    @Override
-                    public void onFailure(int arg0, Header[] arg1, byte[] arg2,
-                                          Throwable arg3) {
-                        // TODO Auto-generated method stub
-                        String error = null;
-
-                        if (arg3 != null)
-                            error = stackTraceToString(arg3);
-
-                        String resp = null;
-                        if (arg2 != null)
-                            resp = new String(arg2);
-
-                        if (arg3.getCause() instanceof IOException) {
-                            Constant.printMsg("failureF Connection timeout !");
-                        }
-                        Constant.printMsg("failureF register :::::>>>>>>@@@" + error + " -- ");
-
-                    }
-
-                    @Override
-                    public void onSuccess(int arg0, Header[] arg1, byte[] arg2) {
-                        // TODO Auto-generated method stub
-                        Log.d(TAG, "IS_USER_REGISTER:::::" + new String(arg2));
-                        Constant.printMsg("success register :::::>>>>>>" + Constant.login);
-                        Constant.printMsg("success register :::::>>>>>> arg..." + new String(arg2));
-                        Constant.printMsg("success register :::::>>>>>> arg..." + String.valueOf(arg0));
-                        Constant.printMsg("success register :::::>>>>>> arg..." + arg1);
-                        if (Constant.login) {
-                            /**Here user approche for login*/
-                            Constant.printMsg("siva.........................login true");
-                            if (new String(arg2).equals("1")) {
-                                /**Valid User for login*/
-                                Constant.printMsg("siva..............1...........postRegister");
-                                isUserExist = true;
-                                runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        mMobileno.setEnabled(false);
-                                        mCountry.setEnabled(false);
-                                        mPassword.setVisibility(View.VISIBLE);
-                                        mForgotPassword.setVisibility(View.VISIBLE);
-                                        mNextButton.setText("Login");
-                                    }
-                                });
-                            } else {
-                                /**InValid User for login*/
-                                commonMethods.showAlertDialog(Signin.this,
-                                        getResources().getString(
-                                                R.string.invalid_user), true);
-                            }
-                        } else {
-                            if (new String(arg2).equals("1")) {
-                                runOnUiThread(new Runnable() {
-                                    public void run() {
-                                        /**InValid User for Registration to ask permission to redirect*/
-                                        showAlerDialog();
-                                    }
-                                });
-                            } else {
-                                /**Valid User for Registration*/
-                                String nu = mMobileno.getText().toString();
-                                editor.putString(Constant.COUNTRY_CODE_LABEL, mCountryCode.getText().toString());
-                                editor.commit();
-                                Constant.phone = mMobileno.getText().toString();
-                                Constant.printMsg("siva.........................postRegister");
-                                /**Registration on java server*/
-                                new postRegister().execute();
-                            }
-                        }
-
-                    }
-                });
-    }
-
     public String stackTraceToString(Throwable e) {
         StringBuilder sb = new StringBuilder();
         for (StackTraceElement element : e.getStackTrace()) {
@@ -811,7 +615,7 @@ public class Signin extends Slideshow implements OnClickListener {
         return sb.toString();
     }
 
-    public void showAlerDialog() {
+    public void showAlerDialog(final String prime, final String second, final String password) {
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(Signin.this);
         alertDialog.setTitle(R.string.Alert);
         alertDialog.setMessage("Number Already Exist.!Do you want to login?");
@@ -826,6 +630,14 @@ public class Signin extends Slideshow implements OnClickListener {
                         mNextButton.setText("Login");
                         sLoginImage.setVisibility(View.GONE);
                         mMsgText.setVisibility(View.GONE);
+                        Editor editor = preferences.edit();
+                        editor.putString("MySecondaryNumber", second);
+                        editor.putString("MyPrimaryNumber", prime);
+                        editor.putString("ChatUserNumber", mCountryCode
+                                .getText().toString().trim()
+                                + mMobileno.getText().toString().trim());
+                        editor.putString("MyPassword", password);
+                        editor.commit();
 
                     }
                 });
@@ -836,6 +648,116 @@ public class Signin extends Slideshow implements OnClickListener {
                     }
                 });
         alertDialog.show();
+    }
+
+    /*
+     * To Register with google cloud
+     */
+    public String registerGCM() {
+        gcm = GoogleCloudMessaging.getInstance(this);
+        regId = getRegistrationId();
+        if (TextUtils.isEmpty(regId)) {
+            registerInBackground();
+            Log.d("RegisterActivity",
+                    "registerGCM - successfully registered with GCM server - regId: " + regId);
+        }
+        return regId;
+    }
+
+    private String getRegistrationId() {
+        final SharedPreferences prefs = getSharedPreferences(
+                RegisterActivity.class.getSimpleName(), Context.MODE_PRIVATE);
+        String registrationId = prefs.getString("regId", "");
+        if (registrationId.isEmpty()) {
+            Log.i("Kaching", "Registration not found.");
+            return "";
+        }
+        int registeredVersion = prefs.getInt(APP_VERSION, Integer.MIN_VALUE);
+        int currentVersion = getAppVersion(this);
+        if (registeredVersion != currentVersion) {
+            Log.i("Kaching", "App version changed.");
+            return "";
+        }
+        return registrationId;
+    }
+
+    private static int getAppVersion(Context context) {
+        try {
+            PackageInfo packageInfo = context.getPackageManager()
+                    .getPackageInfo(context.getPackageName(), 0);
+            return packageInfo.versionCode;
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.d("RegisterActivity",
+                    "I never expected this! Going down, going down!" + e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void registerInBackground() {
+        new AsyncTask<Void, Void, String>() {
+
+            @Override
+            protected String doInBackground(Void... params) {
+                String msg = "";
+                try {
+                    if (gcm == null) {
+                        gcm = GoogleCloudMessaging.getInstance(getApplicationContext());
+                    }
+                    regId = gcm.register(Constant.GOOGLE_PROJECT_ID);
+                    Log.d("RegisterActivity", "registerInBackground - regId: "
+                            + regId);
+                    msg = "Device registered, register_activity ID = " + regId;
+
+                    Constant.printMsg("inside posting" + msg);
+
+                    Constant.device_id = regId;
+                    // stored the register_activity ID in shared preferences
+                    storeRegistrationId(getApplicationContext(), regId);
+                } catch (IOException ex) {
+                    msg = "Error :" + ex.getMessage();
+                    Log.d("RegisterActivity", "Error: " + msg);
+                }
+                Log.d("RegisterActivity", "AsyncTask completed: " + msg);
+
+                return msg;
+            }
+
+            @Override
+            protected void onPostExecute(String msg) {
+
+                google_reg(msg);
+                // progressDialog.dismiss();
+            }
+
+            @Override
+            protected void onPreExecute() {
+                // TODO Auto-generated method stub
+                super.onPreExecute();
+            }
+
+        }.execute(null, null, null);
+    }
+
+    public void google_reg(String msg) {
+        Constant.printMsg("GCM Register id is ::::::::::" + msg);
+        if (msg.contains("SERVICE_NOT_AVAILABLE")) {
+            Constant.device_id = "";
+            registerGCM();
+        } else {
+            Constant.printMsg("GCM Registration Success ::::::::");
+        }
+    }
+
+    private void storeRegistrationId(Context context, String regId) {
+        final SharedPreferences prefs = getSharedPreferences(
+                RegisterActivity.class.getSimpleName(), Context.MODE_PRIVATE);
+        int appVersion = getAppVersion(context);
+        Log.i("Kaching", "Saving regId on app version " + appVersion);
+        Editor editor = prefs.edit();
+        editor.putString("regId", regId);
+        editor.putInt(APP_VERSION, appVersion);
+        editor.commit();
+
     }
 
     public ArrayList<CountryCodeGetSet> getCountry() {
@@ -977,13 +899,6 @@ public class Signin extends Slideshow implements OnClickListener {
 
     }
 
-    protected void setshared(int newstlistpos) {
-        // TODO Auto-generated method stub
-        editor = preferences.edit();
-        editor.putInt("sec_count", newstlistpos);
-        editor.commit();
-    }
-
     @Override
     public void onBackPressed() {
         // TODO Auto-generated method stub
@@ -998,15 +913,256 @@ public class Signin extends Slideshow implements OnClickListener {
             Constant.printMsg("siva mobile " + full_mobile_no);
             isUserExist = false;
             Intent ii = new Intent(Signin.this, VerificationActivity.class);
-            int count = preferences.getInt("sec_count", 0);
-            Constant.printMsg("count sub:" + count);
-            setshared(count - 1);
             Constant.fullmob = full_mobile_no;
             Constant.countrycode = country_code;
             ii.putExtra("mobileno", full_mobile_no);
             ii.putExtra("country_code", country_code);
             startActivity(ii);
             finish();
+        }
+    }
+
+    public String jsonForRegistration() {
+        String data;
+        String android_id = null;
+        String regId = preferences.getString("regId", null);
+        try {
+            android_id = android.os.Build.MODEL + "(" + android.os.Build.PRODUCT
+                    + ")(" + System.getProperty("os.version") + "("
+                    + android.os.Build.VERSION.INCREMENTAL + "))";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        RegistrationPojo registrationPojo = new RegistrationPojo();
+        registrationPojo.setUserName(Constant.first);
+        registrationPojo.setDateofBirth(Constant.dob);
+        registrationPojo.setDeviceId(android_id);
+        registrationPojo.setEmailId(Constant.manualmail);
+        if (preferences.getString("ImeiNo", "") != null)
+            registrationPojo.setImeNumber(preferences.getString("ImeiNo", ""));
+        else
+            registrationPojo.setImeNumber("");
+        registrationPojo.setPassword(Constant.pass);
+        registrationPojo.setPhoneNumber(COUNTRYCODE + Constant.phone);
+        registrationPojo.setDeviceType("1");
+        if (Constant.mProfileImage != null) {
+            registrationPojo.setUserProfileImage(encodeToBase64(Constant.mProfileImage, Bitmap.CompressFormat.JPEG, 100));
+        } else {
+            registrationPojo.setUserProfileImage("");
+        }
+        registrationPojo.setUserStatus(getResources().getString(R.string.hey_im_usning_niftycha));
+        if (regId != null && !regId.isEmpty()) {
+            registrationPojo.setNotificationToken(regId);
+        } else {
+            registrationPojo.setNotificationToken("");
+        }
+        data = new Gson().toJson(registrationPojo);
+        Constant.printMsg("signin  registration........" + data.toString());
+        Constant.registrationData = data.toString();
+        return data;
+    }
+
+    private void screenArrangeSignin() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        int height = displayMetrics.heightPixels;
+        int width = displayMetrics.widthPixels;
+
+        LinearLayout.LayoutParams msgTextParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        msgTextParama.width = (int) (width * 85 / 100);
+        msgTextParama.gravity = Gravity.CENTER;
+        msgTextParama.topMargin = height * 5 / 100;
+        mMsgText.setLayoutParams(msgTextParama);
+        mMsgText.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams countryParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        countryParama.height = (int) (height * 7 / 100);
+        countryParama.width = (int) (width * 80 / 100);
+        countryParama.gravity = Gravity.CENTER;
+        countryParama.topMargin = height * 2 / 100;
+        mCountry.setLayoutParams(countryParama);
+        mCountry.setGravity(Gravity.LEFT | Gravity.CENTER);
+        mCountry.setPadding(width * 2 / 100, 0, 0, 0);
+        mCountry.setLongClickable(false);
+
+        LinearLayout.LayoutParams mobileLayoutParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        mobileLayoutParama.height = (int) (height * 7 / 100);
+        mobileLayoutParama.width = (int) (width * 80 / 100);
+        mobileLayoutParama.gravity = Gravity.CENTER;
+        mobileLayoutParama.topMargin = height * 1 / 100;
+        mMobileLayout.setLayoutParams(mobileLayoutParama);
+
+        LinearLayout.LayoutParams countryCodeParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        countryCodeParama.height = (int) (height * 7 / 100);
+        countryCodeParama.width = (int) (width * 13 / 100);
+        countryCodeParama.gravity = Gravity.CENTER;
+        mCountryCode.setLayoutParams(countryCodeParama);
+        mCountryCode.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams separatorParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        separatorParama.height = (int) (height * 7 / 100);
+        separatorParama.width = (int) (width * 6 / 100);
+        separatorParama.gravity = Gravity.CENTER;
+        //separatorParama.setMargins(width*1/100,0,width*1/100,0);
+        mSeperator.setLayoutParams(separatorParama);
+        mSeperator.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams mobileNoParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        mobileNoParama.height = (int) (height * 7 / 100);
+        mobileNoParama.width = (int) (width * 61 / 100);
+        mMobileno.setLayoutParams(mobileNoParama);
+        mMobileno.setGravity(Gravity.LEFT | Gravity.CENTER);
+        mMobileno.setPadding(width * 2 / 100, 0, 0, 0);
+
+        LinearLayout.LayoutParams passwordParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        passwordParama.height = (int) (height * 7 / 100);
+        passwordParama.width = (int) (width * 80 / 100);
+        passwordParama.gravity = Gravity.CENTER;
+        passwordParama.topMargin = height * 1 / 100;
+        mPassword.setLayoutParams(passwordParama);
+        mPassword.setGravity(Gravity.CENTER | Gravity.LEFT);
+        mPassword.setPadding(width * 2 / 100, 0, 0, 0);
+
+        LinearLayout.LayoutParams forgetParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        forgetParama.width = (int) (width * 80 / 100);
+        forgetParama.gravity = Gravity.CENTER;
+        forgetParama.topMargin = (int) (height * 0.7 / 100);
+        mForgotPassword.setLayoutParams(forgetParama);
+        mForgotPassword.setGravity(Gravity.RIGHT | Gravity.CENTER);
+
+        LinearLayout.LayoutParams nextParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        nextParama.width = width * 30 / 100;
+        nextParama.height = height * 6 / 100;
+        nextParama.gravity = Gravity.CENTER;
+        nextParama.topMargin = height * 4 / 100;
+        mNextButton.setLayoutParams(nextParama);
+        mNextButton.setGravity(Gravity.CENTER);
+
+        if (width >= 600) {
+            mMobileno.setTextSize(16);
+            mPassword.setTextSize(16);
+            mMsgText.setTextSize(16);
+            mCountryCode.setTextSize(16);
+            mSeperator.setTextSize(16);
+            mForgotPassword.setTextSize(16);
+            mNextButton.setTextSize(16);
+            mCountry.setTextSize(16);
+        } else if (width > 501 && width < 600) {
+            mMobileno.setTextSize(15);
+            mPassword.setTextSize(15);
+            mMsgText.setTextSize(15);
+            mCountryCode.setTextSize(15);
+            mSeperator.setTextSize(15);
+            mForgotPassword.setTextSize(15);
+            mNextButton.setTextSize(15);
+            mCountry.setTextSize(15);
+        } else if (width > 260 && width < 500) {
+            mMobileno.setTextSize(14);
+            mPassword.setTextSize(14);
+            mMsgText.setTextSize(14);
+            mCountryCode.setTextSize(14);
+            mSeperator.setTextSize(14);
+            mForgotPassword.setTextSize(14);
+            mNextButton.setTextSize(14);
+            mCountry.setTextSize(14);
+        } else if (width <= 260) {
+            mMobileno.setTextSize(13);
+            mPassword.setTextSize(13);
+            mMsgText.setTextSize(13);
+            mCountryCode.setTextSize(13);
+            mSeperator.setTextSize(13);
+            mForgotPassword.setTextSize(13);
+            mNextButton.setTextSize(13);
+            mCountry.setTextSize(13);
+        }
+    }
+
+    public class getOtpForLogin extends AsyncTask<String, String, String> {
+        ProgressDialog progressDialog;
+        String password;
+
+        @Override
+        protected String doInBackground(String... parama) {
+            // TODO Auto-generated method stub
+            String result;
+            HttpConfig ht = new HttpConfig();
+            password = parama[1];
+            result = ht.httpget(KachingMeConfig.GET_LOGIN_OTP + "?username=" + parama[0] + "&password=" + parama[1]);
+            Constant.printMsg("siva ......dpostatya......" + KachingMeConfig.GET_LOGIN_OTP
+                    + "?username=" + parama[0] + "&password=" + parama[1] + "............" + result);
+            return result;
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+            if (result != null && result.length() > 0) {
+                try {
+                    JSONObject jsonObject = new JSONObject(result);
+                    Constant.printMsg("sign login otp from server....." + jsonObject);
+                    String status = jsonObject.getString("status");
+                    String otp = jsonObject.getString("otp");
+                    String primaryNumber = jsonObject.getString("primaryContactNo");
+                    if (otp != null && !otp.equalsIgnoreCase("null") && otp.length() > 0) {
+                        Constant.loginOtp = otp;
+                        Constant.Otp = null;
+                        Constant.loginCountryCode = mCountryCode.getText().toString();
+                        if (primaryNumber != null && !primaryNumber.equalsIgnoreCase("null") && !primaryNumber.isEmpty()) {
+                            Constant.loginMobileNumber = primaryNumber;
+                        }
+                        Constant.mVerifiedNum = "+" + COUNTRYCODE + " - "
+                                + mMobileno.getText().toString();
+                        Constant.mVerifiedNumResend = COUNTRYCODE + mMobileno.getText().toString().trim();
+                        Editor editor = preferences.edit();
+                        editor.putString("MyPassword", password);
+                        editor.commit();
+                        startActivity(new Intent(Signin.this, OtpVerification.class));
+                        finish();
+                        //new MySyncLast().execute(preferences.getString("MyPrimaryNumber", ""), password);
+                        Constant.printMsg("sign login check after activity true...");
+                    } else {
+                        Toast.makeText(Signin.this, "Please Check Your Credentials", Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                progressDialog.dismiss();
+            } else {
+                progressDialog.dismiss();
+                Toast.makeText(Signin.this, "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
+            }
+        }
+
+        @Override
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(Signin.this,
+                    AlertDialog.THEME_HOLO_LIGHT);
+            progressDialog.setMessage("Please Wait...");
+            progressDialog.setProgressDrawable(new ColorDrawable(
+                    android.graphics.Color.BLUE));
+            progressDialog.setCancelable(false);
+            progressDialog.show();
         }
     }
 
@@ -1090,19 +1246,18 @@ public class Signin extends Slideshow implements OnClickListener {
         protected void onPostExecute(String result) {
             // TODO Auto-generated method stub
             super.onPostExecute(result);
+
             progressDialog.dismiss();
             if (result != null && result.length() > 0) {
                 JSONObject jsonObject;
                 String response = "", otp = "";
                 try {
-                    jsonObject = new JSONObject(result.trim());
+                    jsonObject = new JSONObject(result);
                     response = jsonObject.getString("status");
-                    //JSONArray jsonArray=new JSONArray("");
                     otp = jsonObject.getString("otp");
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Constant.printMsg("Sigin get the response......."+response+"...."+otp);
                 if (response.equalsIgnoreCase("Primary Number Not Exists")) {
                     Toast.makeText(getApplicationContext(),
                             "Invalid User...Mobile Number Not Exists",
@@ -1114,25 +1269,21 @@ public class Signin extends Slideshow implements OnClickListener {
                 } else if (response.equalsIgnoreCase("Secondary Limit Reached")) {
                     Toast.makeText(getApplicationContext(),
                             "Sorry Limit Exceeded", Toast.LENGTH_SHORT).show();
+                } else if (response.equalsIgnoreCase("ALREADYEXISTS AS PRIMARYNUMBER")) {
+                    Toast.makeText(getApplicationContext(),
+                            "Aleady Exists as Primary Number", Toast.LENGTH_SHORT).show();
                 } else {
-//                    ContentValues cv = new ContentValues();
-//                    cv.put("primarynum", primary_number);
-//                    cv.put("secondarynum", secondary_number);
-//                    insertNumber(cv);
                     Constant.Otp = otp;
-                    Constant.otpnumner = mMobileno.getText().toString();
+                    Constant.loginOtp = null;
                     Constant.printMsg("verif otp:" + Constant.Otp);
-
+                    Constant.secondaryCountryCode = COUNTRYCODE;
                     Intent intent = new Intent(Signin.this,
                             OtpVerification.class);
                     Constant.mVerifiedNum = "+" + COUNTRYCODE + " - "
                             + mMobileno.getText().toString();
+                    Constant.mVerifiedNumResend = COUNTRYCODE + mMobileno.getText().toString().trim();
                     intent.putExtra("mobileno", COUNTRYCODE
                             + mMobileno.getText().toString());
-                    // intent.putExtra("mobileno", sp1.getString("countrycode",
-                    // "")
-                    // +sp1.getString("number", ""));
-
                     Constant.printMsg("siva mobile......1,....."
                             + COUNTRYCODE + mMobileno.getText().toString());
                     Constant.printMsg("siva mobile......1,prinmary....."
@@ -1148,47 +1299,6 @@ public class Signin extends Slideshow implements OnClickListener {
                         Toast.LENGTH_SHORT).show();
             }
         }
-    }
-    public static String encodeToBase64(Bitmap image, Bitmap.CompressFormat compressFormat, int quality) {
-        ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
-        image.compress(compressFormat, quality, byteArrayOS);
-        return Base64.encodeToString(byteArrayOS.toByteArray(), Base64.DEFAULT);
-    }
-
-    public String jsonForRegistration() {
-        String data;
-        String android_id = null;
-        String regId = preferences.getString("regId", null);
-        try {
-            android_id = android.os.Build.MODEL + "(" + android.os.Build.PRODUCT
-                    + ")(" + System.getProperty("os.version") + "("
-                    + android.os.Build.VERSION.INCREMENTAL + "))";
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        RegistrationPojo registrationPojo = new RegistrationPojo();
-        registrationPojo.setUserName(Constant.first);
-        registrationPojo.setDateofBirth(Constant.dob);
-        registrationPojo.setDeviceId(android_id);
-        registrationPojo.setEmailId(Constant.manualmail);
-        registrationPojo.setImeNumber(Constant.Imei_no);
-        registrationPojo.setPassword(Constant.pass);
-        registrationPojo.setPhoneNumber(COUNTRYCODE + Constant.phone);
-        registrationPojo.setDeviceType("1");
-        if (Constant.mProfileImage!=null){
-            registrationPojo.setUserProfileImage(encodeToBase64(Constant.mProfileImage, Bitmap.CompressFormat.JPEG, 100));
-        }else{
-            registrationPojo.setUserProfileImage("");
-        }
-        registrationPojo.setUserStatus(getResources().getString(R.string.hey_im_usning_niftycha));
-        if (regId !=null && !regId.isEmpty()){
-            registrationPojo.setNotificationToken(regId);
-        }else{
-            registrationPojo.setNotificationToken("");
-        }
-        data = new Gson().toJson(registrationPojo);
-        Constant.printMsg("signin  registration........" + data.toString());
-        return data;
     }
 
     public class postRegister extends AsyncTask<String, String, String> {
@@ -1211,7 +1321,7 @@ public class Signin extends Slideshow implements OnClickListener {
             String result = null;
             HttpConfig ht = new HttpConfig();
             Constant.printMsg("registeration id check......" + Constant.device_id);
-            String postData=jsonForRegistration();
+            String postData = jsonForRegistration();
 
 //            if (android_id==null && android_id.isEmpty()){
 //                android_id=Constant.device_id;
@@ -1239,9 +1349,9 @@ public class Signin extends Slideshow implements OnClickListener {
 //                        + Constant.pass + "&deviceId=" + encodeDevicId
 //                        + "&imeNumber=" + Constant.Imei_no + "........." + result);
 //            } else {
-                result = ht.doPostMobizee(postData, KachingMeConfig.REGISTER_URL);
-                Constant.printMsg("siva post registration...."
-                        + KachingMeConfig.REGISTER_URL + "......." + postData+ "........." + result);
+            result = ht.doPostMobizee(postData, KachingMeConfig.REGISTER_URL);
+            Constant.printMsg("siva post registration...."
+                    + KachingMeConfig.REGISTER_URL + "......." + postData + "........." + result);
             return result;
         }
 
@@ -1271,10 +1381,11 @@ public class Signin extends Slideshow implements OnClickListener {
                 if (login_response.getOtp() != null && login_response.getOtp().length() > 0) {
                     String s = login_response.getOtp().toString().trim();
                     Constant.Otp = s;
-                    Constant.otpnumner = mMobileno.getText().toString();
+                    Constant.loginOtp = null;
                     Constant.printMsg("country:::" + COUNTRYCODE + mMobileno.getText().toString());
                     Intent intent = new Intent(Signin.this, OtpVerification.class);
                     Constant.mVerifiedNum = "+" + COUNTRYCODE + " - " + mMobileno.getText().toString();
+                    Constant.mVerifiedNumResend = COUNTRYCODE + mMobileno.getText().toString().trim();
                     intent.putExtra("mobileno", COUNTRYCODE + mMobileno.getText().toString());
                     Constant.printMsg("siva mobile......2,....." + COUNTRYCODE + mMobileno.getText().toString());
                     intent.putExtra("country_code", COUNTRYCODE);
@@ -1295,65 +1406,6 @@ public class Signin extends Slideshow implements OnClickListener {
                 Toast.makeText(getApplicationContext(),
                         "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
             }
-        }
-    }
-
-    public class connectionForLogin extends AsyncTask<String, String, String> {
-
-        @Override
-        protected String doInBackground(String... params) {
-            if (TempConnectionService.connection != null) {
-                if (TempConnectionService.connection.isConnected()) {
-                    try {
-//                                    TempConnectionService.connection.login(dbAdapter.getLogin().get(0).getUserName(),
-//                                            dbAdapter.getLogin().get(0).getPassword(),
-//                                            "Messnger");
-                        new TempConnectionService().authenticationProcess();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    stopService(new Intent(Signin.this, TempConnectionService.class));
-                    GlobalBroadcast.stopService(Signin.this);
-                    startService(new Intent(Signin.this, TempConnectionService.class));
-
-//                    try {
-//                        TempConnectionService.connection.connect();
-//                    } catch (SmackException e) {
-//                        e.printStackTrace();
-//                        stopService(new Intent(Signin.this, TempConnectionService.class));
-//                        startService(new Intent(Signin.this, TempConnectionService.class));
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                        stopService(new Intent(Signin.this, TempConnectionService.class));
-//                        startService(new Intent(Signin.this, TempConnectionService.class));
-//                    } catch (XMPPException e) {
-//                        e.printStackTrace();
-//                        stopService(new Intent(Signin.this, TempConnectionService.class));
-//                        startService(new Intent(Signin.this, TempConnectionService.class));
-//                    }
-                }
-            } else {
-                stopService(new Intent(Signin.this, TempConnectionService.class));
-                startService(new Intent(Signin.this, TempConnectionService.class));
-
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressDialog = ProgressDialog.show(Signin.this, getResources()
-                            .getString(R.string.please_wait),
-                    getResources().getString(R.string.loading), false);
-            progressDialog.show();
-        }
-
-        @Override
-        protected void onPostExecute(String s) {
-            super.onPostExecute(s);
-
         }
     }
 
@@ -1621,6 +1673,65 @@ public class Signin extends Slideshow implements OnClickListener {
 //        }
 //    }
 
+    public class connectionForLogin extends AsyncTask<String, String, String> {
+
+        @Override
+        protected String doInBackground(String... params) {
+            if (TempConnectionService.connection != null) {
+                if (TempConnectionService.connection.isConnected()) {
+                    try {
+//                                    TempConnectionService.connection.login(dbAdapter.getLogin().get(0).getUserName(),
+//                                            dbAdapter.getLogin().get(0).getPassword(),
+//                                            "Messnger");
+                        new TempConnectionService().authenticationProcess();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    stopService(new Intent(Signin.this, TempConnectionService.class));
+                    GlobalBroadcast.stopService(Signin.this);
+                    startService(new Intent(Signin.this, TempConnectionService.class));
+
+//                    try {
+//                        TempConnectionService.connection.connect();
+//                    } catch (SmackException e) {
+//                        e.printStackTrace();
+//                        stopService(new Intent(Signin.this, TempConnectionService.class));
+//                        startService(new Intent(Signin.this, TempConnectionService.class));
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                        stopService(new Intent(Signin.this, TempConnectionService.class));
+//                        startService(new Intent(Signin.this, TempConnectionService.class));
+//                    } catch (XMPPException e) {
+//                        e.printStackTrace();
+//                        stopService(new Intent(Signin.this, TempConnectionService.class));
+//                        startService(new Intent(Signin.this, TempConnectionService.class));
+//                    }
+                }
+            } else {
+                stopService(new Intent(Signin.this, TempConnectionService.class));
+                startService(new Intent(Signin.this, TempConnectionService.class));
+
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            progressDialog = ProgressDialog.show(Signin.this, getResources()
+                            .getString(R.string.please_wait),
+                    getResources().getString(R.string.loading), false);
+            progressDialog.show();
+        }
+
+        @Override
+        protected void onPostExecute(String s) {
+            super.onPostExecute(s);
+
+        }
+    }
+
     public class getCartDetails extends AsyncTask<String, String, String> {
         ProgressDialog progressDialog;
 
@@ -1739,138 +1850,6 @@ public class Signin extends Slideshow implements OnClickListener {
                 Toast.makeText(getApplicationContext(), "Network Error!Please try again later!",
                         Toast.LENGTH_SHORT).show();
             }
-        }
-    }
-
-    private void screenArrangeSignin() {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int height = displayMetrics.heightPixels;
-        int width = displayMetrics.widthPixels;
-
-        LinearLayout.LayoutParams msgTextParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        msgTextParama.width = (int) (width * 85 / 100);
-        msgTextParama.gravity = Gravity.CENTER;
-        msgTextParama.topMargin = height * 5 / 100;
-        mMsgText.setLayoutParams(msgTextParama);
-        mMsgText.setGravity(Gravity.CENTER);
-
-        LinearLayout.LayoutParams countryParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        countryParama.height = (int) (height * 7 / 100);
-        countryParama.width = (int) (width * 80 / 100);
-        countryParama.gravity = Gravity.CENTER;
-        countryParama.topMargin = height * 2 / 100;
-        mCountry.setLayoutParams(countryParama);
-        mCountry.setGravity(Gravity.LEFT | Gravity.CENTER);
-        mCountry.setPadding(width * 2 / 100, 0, 0, 0);
-
-        LinearLayout.LayoutParams mobileLayoutParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        mobileLayoutParama.height = (int) (height * 7 / 100);
-        mobileLayoutParama.width = (int) (width * 80 / 100);
-        mobileLayoutParama.gravity = Gravity.CENTER;
-        mobileLayoutParama.topMargin = height * 1 / 100;
-        mMobileLayout.setLayoutParams(mobileLayoutParama);
-
-        LinearLayout.LayoutParams countryCodeParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        countryCodeParama.height = (int) (height * 7 / 100);
-        countryCodeParama.width = (int) (width * 13 / 100);
-        countryCodeParama.gravity = Gravity.CENTER;
-        mCountryCode.setLayoutParams(countryCodeParama);
-        mCountryCode.setGravity(Gravity.CENTER);
-
-        LinearLayout.LayoutParams separatorParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        separatorParama.height = (int) (height * 7 / 100);
-        separatorParama.width = (int) (width * 6 / 100);
-        separatorParama.gravity = Gravity.CENTER;
-        //separatorParama.setMargins(width*1/100,0,width*1/100,0);
-        mSeperator.setLayoutParams(separatorParama);
-        mSeperator.setGravity(Gravity.CENTER);
-
-        LinearLayout.LayoutParams mobileNoParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        mobileNoParama.height = (int) (height * 7 / 100);
-        mobileNoParama.width = (int) (width * 61 / 100);
-        mMobileno.setLayoutParams(mobileNoParama);
-        mMobileno.setGravity(Gravity.LEFT | Gravity.CENTER);
-        mMobileno.setPadding(width * 2 / 100, 0, 0, 0);
-
-        LinearLayout.LayoutParams passwordParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        passwordParama.height = (int) (height * 7 / 100);
-        passwordParama.width = (int) (width * 80 / 100);
-        passwordParama.gravity = Gravity.CENTER;
-        passwordParama.topMargin = height * 1 / 100;
-        mPassword.setLayoutParams(passwordParama);
-        mPassword.setGravity(Gravity.CENTER | Gravity.LEFT);
-        mPassword.setPadding(width * 2 / 100, 0, 0, 0);
-
-        LinearLayout.LayoutParams forgetParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        forgetParama.width = (int) (width * 80 / 100);
-        forgetParama.gravity = Gravity.CENTER;
-        forgetParama.topMargin = (int) (height * 0.7 / 100);
-        mForgotPassword.setLayoutParams(forgetParama);
-        mForgotPassword.setGravity(Gravity.RIGHT | Gravity.CENTER);
-
-        LinearLayout.LayoutParams nextParama = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT);
-        nextParama.width = width * 30 / 100;
-        nextParama.height = height * 6 / 100;
-        nextParama.gravity = Gravity.CENTER;
-        nextParama.topMargin = height * 4 / 100;
-        mNextButton.setLayoutParams(nextParama);
-        mNextButton.setGravity(Gravity.CENTER);
-
-        if (width >= 600) {
-            mMobileno.setTextSize(16);
-            mPassword.setTextSize(16);
-            mMsgText.setTextSize(16);
-            mCountryCode.setTextSize(16);
-            mSeperator.setTextSize(16);
-            mForgotPassword.setTextSize(16);
-            mNextButton.setTextSize(16);
-            mCountry.setTextSize(16);
-        } else if (width > 501 && width < 600) {
-            mMobileno.setTextSize(15);
-            mPassword.setTextSize(15);
-            mMsgText.setTextSize(15);
-            mCountryCode.setTextSize(15);
-            mSeperator.setTextSize(15);
-            mForgotPassword.setTextSize(15);
-            mNextButton.setTextSize(15);
-            mCountry.setTextSize(15);
-        } else if (width > 260 && width < 500) {
-            mMobileno.setTextSize(14);
-            mPassword.setTextSize(14);
-            mMsgText.setTextSize(14);
-            mCountryCode.setTextSize(14);
-            mSeperator.setTextSize(14);
-            mForgotPassword.setTextSize(14);
-            mNextButton.setTextSize(14);
-            mCountry.setTextSize(14);
-        } else if (width <= 260) {
-            mMobileno.setTextSize(13);
-            mPassword.setTextSize(13);
-            mMsgText.setTextSize(13);
-            mCountryCode.setTextSize(13);
-            mSeperator.setTextSize(13);
-            mForgotPassword.setTextSize(13);
-            mNextButton.setTextSize(13);
-            mCountry.setTextSize(13);
         }
     }
 }

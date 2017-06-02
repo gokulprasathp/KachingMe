@@ -5,13 +5,13 @@ import java.util.List;
 
 public class FreebieMainDto {
 
-	String advertiserId;
-	String website;
-	String firstName;
-	String lastName;
-	String companyLogoPath;
-	String companyName;
-	List<FreebieDto> freebilist = new ArrayList<FreebieDto>();
+	private String advertiserId;
+    private String website;
+    private String firstName;
+    private String lastName;
+    private String companyLogoPath;
+    private String companyName;
+    private List<FreebieDto> freebilist = new ArrayList<FreebieDto>();
 
 	public String getCompanyName() {
 		return companyName;

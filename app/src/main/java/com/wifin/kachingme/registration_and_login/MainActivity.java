@@ -19,12 +19,9 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.pm.Signature;
 import android.database.Cursor;
 import android.database.SQLException;
-import android.net.ParseException;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.provider.Settings.Global;
-import android.provider.Settings.SettingNotFoundException;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -65,14 +62,13 @@ import java.util.List;
  */
 public class MainActivity extends BaseActivity {
 
-    Boolean isBound, freedecline = false;
+    Boolean freedecline = false;
     SharedPreferences sp, sharedPreferences;
     SharedPreferences.Editor editor;
     int width, height;
     Dbhelper db;
     String phone, code;
     String mFreebieLastDay = "";
-    Date mFreebieLastDayDate, mTodayDate;
     int mFreebieCount = 0;
     int mFreeBie = 0;
     String actvity;
@@ -196,19 +192,6 @@ public class MainActivity extends BaseActivity {
                     finish();
 
                 } else {
-//					Constant.printMsg("called main1:::::::::");
-//					DbDelete();
-//					DbDeleteDeel();
-//					DbDeleteNym();
-//					DbDeleteBux();
-//					DbDeleteDonation();
-//					DbDeleteZZle();
-//					DbDeleteWish();
-//					DbDeleteFreeBie();
-//					DbDeleteMer();
-//					DbdeletePrimary();
-                    // Intent intent = new Intent(RegistrationMainActivity.this,
-                    // SocialActivity.class);
                     startActivity(new Intent(MainActivity.this, Slideshow.class));
                     finish();
                 }
@@ -229,132 +212,85 @@ public class MainActivity extends BaseActivity {
                     startActivity(new Intent(MainActivity.this, Slideshow.class));
                     finish();
                 } else {
-                    Constant.printMsg("mainactivity called:::::::::else");
-                    fetchFrom();
-                    fetchNymFrom();
-                    fetchDonate();
-                    fetchFreebie();
-                    FetchRet();
-                    FetchPreference();
-                    Constant.freebie = true;
+                    if (sharedPreferences.getString("loginSucess", "").equalsIgnoreCase("VerificationActivity")) {
+                        fetchFreebie();
+                        Constant.printMsg("mainactivity VerificationActivity  sizeeeeeee ::: >>> "
+                                + Constant.freelistmain.size());
+                        startActivity(new Intent(this, VerificationActivity.class));
+                        finish();
+                    } else {
+                        Constant.printMsg("mainactivity called:::::::::else");
+                        fetchFrom();
+                        fetchNymFrom();
+                        fetchDonate();
+                        fetchFreebie();
+                        FetchRet();
+                        FetchPreference();
+                        Constant.freebie = true;
+                        KachingMeApplication.setUserID(dbadapter.getLogin().get(0)
+                                .getUserName());
+                        KachingMeApplication.setNifty_name(dbadapter.getLogin().get(0)
+                                .getNifty_name());
+                        KachingMeApplication.setNifty_email(dbadapter.getLogin().get(0)
+                                .getNifty_email());
+                        KachingMeApplication.setAvatar(dbadapter.getLogin().get(0)
+                                .getAvatar());
+                        KachingMeApplication.setStatus(dbadapter.getLogin().get(0)
+                                .getStatus());
+                        KachingMeApplication.setAcra();
 
-                    // Constant("User ID::"+dbadapter.getLogin().get(0).getUserName());
-                    KachingMeApplication.setUserID(dbadapter.getLogin().get(0)
-                            .getUserName());
-                    KachingMeApplication.setNifty_name(dbadapter.getLogin().get(0)
-                            .getNifty_name());
-                    KachingMeApplication.setNifty_email(dbadapter.getLogin().get(0)
-                            .getNifty_email());
-                    KachingMeApplication.setAvatar(dbadapter.getLogin().get(0)
-                            .getAvatar());
-                    KachingMeApplication.setStatus(dbadapter.getLogin().get(0)
-                            .getStatus());
-                    KachingMeApplication.setAcra();
-                    int currentApiVersion = android.os.Build.VERSION.SDK_INT;
+                        Calendar calendar = Calendar.getInstance();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+                        String currentDate = dateFormat.format(calendar.getTime());
+                        int dazzScrollCount = sharedPreferences.getInt("scrollValue", 0);
+                        String dazzScrollDate = sharedPreferences.getString("scrollDate", "");
 
-                    try {
-                        if (currentApiVersion >= 17) {
-                            if (Global.getInt(getContentResolver(),
-                                    Global.AUTO_TIME) == 1) {
-                            } else {
-                                autoTimeEnable();
-                            }
-                        } else {
-                            if (Settings.System.getInt(getContentResolver(),
-                                    Settings.System.AUTO_TIME) == 1) {
-                            } else {
-                                autoTimeEnable();
-                            }
-                        }
-                    } catch (SettingNotFoundException e) {
-                        // TODO: handle exception
-                        e.printStackTrace();
-                    }
-
-                    Calendar c = Calendar.getInstance();
-                    Constant.printMsg("mainactivity Current time => " + c.getTime());
-                    SimpleDateFormat sdf = new SimpleDateFormat("HHmmss");
-                    String currentDateandTime = sdf.format(c.getTime());
-                    SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy");
-                    String formattedDate = df.format(c.getTime());
-
-                    String query = "select date  from " + Dbhelper.TABLE_FREEBIE;
-                    callFreebieDB(query);
-
-                    if (mFreebieCount != 0) {
-                        mTodayDate = new Date();
-                        try {
-                            try {
-                                mTodayDate = df.parse(formattedDate);
-                            } catch (java.text.ParseException e) {
-                                // TODO Auto-generated catch block
-                                e.printStackTrace();
-                            }
-                        } catch (ParseException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                        mFreebieLastDayDate = new Date();
-                        try {
-                            Constant.printMsg("fffffffffffffffffffffffffff"
-                                    + mFreebieLastDay);
-                            mFreebieLastDayDate = df.parse(mFreebieLastDay);
-                        } catch (ParseException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        } catch (java.text.ParseException e) {
-                            // TODO Auto-generated catch block
-                            e.printStackTrace();
-                        }
-                        Constant.printMsg("last::::" + mFreebieLastDayDate
-                                + "   " + mTodayDate + "  SPPP "
-                                + sp.getString("freebie_dazz_date", ""));
-                        String var = sp.getString("freebie_dazz_date", "");
-                        if (var.length() > 0) {
-                            if (sp.getString("freebie_dazz_date", "") != formattedDate) {
-                                Constant.printMsg("last::::11111"
-                                        + mFreebieLastDayDate + "   " + mTodayDate
-                                        + "  SPPP "
-                                        + sp.getString("freebie_dazz_date", ""));
-                                if (!mTodayDate.after(mFreebieLastDayDate)) {
-
-                                    startActivity(new Intent(this, SliderTesting.class));
-                                    finish();
-                                } else {
-                                    if (Double.valueOf(currentDateandTime) > 1200) {
-                                        editor = sp.edit();
-                                        // editor.putBoolean("freebie_status",
-                                        // true);
-                                        editor.putString("freebie_dazz_date",
-                                                formattedDate);
-                                        editor.commit();
-
-                                        Constant.mFrebieScroll = true;
-                                        startActivity(new Intent(this, StartUpDazz.class));
-                                        finish();
-                                    } else {
-                                        startActivity(new Intent(this, SliderTesting.class));
-                                        finish();
-                                    }
-                                }
-                            } else {
+                        Constant.printMsg("mainactivity Current date => " + dazzScrollCount + "...."
+                                + dazzScrollDate + "...." + currentDate);
+                        String query = "select date  from " + Dbhelper.TABLE_FREEBIE;
+                        callFreebieDB(query);
+                        if (mFreebieCount != 0) {
+                            Constant.printMsg("mainactivity called:::::::::have freebie");
+                            if (currentDate.equalsIgnoreCase(dazzScrollDate)) {
+                                Constant.printMsg("mainactivity called:::::::::have freebie second time scroll");
                                 startActivity(new Intent(this, SliderTesting.class));
                                 finish();
-
+                            } else {
+                                if (dazzScrollCount != 0 && dazzScrollCount < 6) {
+                                    Constant.printMsg("mainactivity called:::::::::DazzActivity....." + dazzScrollCount);
+                                    Constant.mFrebieScroll = true;
+                                    startActivity(new Intent(this, StartUpDazz.class));
+                                    finish();
+                                } else {
+                                    Constant.printMsg("mainactivity called:::::::::all dazz finized");
+                                    startActivity(new Intent(this, SliderTesting.class));
+                                    finish();
+                                }
                             }
                         } else {
-                            Constant.printMsg("FASTTT   " + formattedDate);
-                            editor = sp.edit();
-                            // editor.putBoolean("freebie_status", true);
-                            editor.putString("freebie_dazz_date", formattedDate);
-                            editor.commit();
-                            Constant.mFrebieScroll = true;
+                            Constant.printMsg("mainactivity called:::::::::no freebie");
                             startActivity(new Intent(this, SliderTesting.class));
                             finish();
                         }
-                    } else {
-                        startActivity(new Intent(this, SliderTesting.class));
-                        finish();
+//                        int currentApiVersion = android.os.Build.VERSION.SDK_INT;
+//                        try {
+//                            if (currentApiVersion >= 17) {
+//                                if (Global.getInt(getContentResolver(),
+//                                        Global.AUTO_TIME) == 1) {
+//                                } else {
+//                                    autoTimeEnable();
+//                                }
+//                            } else {
+//                                if (Settings.System.getInt(getContentResolver(),
+//                                        Settings.System.AUTO_TIME) == 1) {
+//                                } else {
+//                                    autoTimeEnable();
+//                                }
+//                            }
+//                        } catch (Exception e) {
+//                            // TODO: handle exception
+//                            e.printStackTrace();
+//                        }
                     }
                 }
             }
@@ -401,6 +337,7 @@ public class MainActivity extends BaseActivity {
     public AbstractXMPPConnection getServiceConnection() {
         return TempConnectionService.connection;
     }
+
     public void DbDelete() {
         // TODO Auto-generated method stub
         try {
@@ -425,158 +362,6 @@ public class MainActivity extends BaseActivity {
         try {
             int a = db.open().getDatabaseObj()
                     .delete(Dbhelper.TABLE_CART, null, null);
-            System.out
-                    .println("No of deleted rows from deel data is ::::::::::::"
-                            + a);
-
-        } catch (SQLException e) {
-            System.out
-                    .println("Sql exception while deleting particular record for shop:::::"
-                            + e.toString());
-        } finally {
-            db.close();
-        }
-    }
-
-    public void DbDeleteNym() {
-        // TODO Auto-generated method stub
-
-        try {
-            int a = db.open().getDatabaseObj()
-                    .delete(Dbhelper.TABLE_NYM, null, null);
-            System.out
-                    .println("No of deleted rows from deel data is ::::::::::::"
-                            + a);
-
-        } catch (SQLException e) {
-            System.out
-                    .println("Sql exception while deleting particular record for shop:::::"
-                            + e.toString());
-        } finally {
-            db.close();
-        }
-    }
-
-    public void DbDeleteBux() {
-        // TODO Auto-generated method stub
-
-        try {
-            int a = db.open().getDatabaseObj()
-                    .delete(Dbhelper.TABLE_BUX, null, null);
-            System.out
-                    .println("No of deleted rows from deel data is ::::::::::::"
-                            + a);
-
-        } catch (SQLException e) {
-            System.out
-                    .println("Sql exception while deleting particular record for shop:::::"
-                            + e.toString());
-        } finally {
-            db.close();
-        }
-    }
-
-    public void DbDeleteZZle() {
-        // TODO Auto-generated method stub
-
-        try {
-            int a = db.open().getDatabaseObj()
-                    .delete(Dbhelper.TABLE_ZZLE, null, null);
-            System.out
-                    .println("No of deleted rows from deel data is ::::::::::::"
-                            + a);
-
-        } catch (SQLException e) {
-            System.out
-                    .println("Sql exception while deleting particular record for shop:::::"
-                            + e.toString());
-        } finally {
-            db.close();
-        }
-    }
-
-    public void DbDeleteWish() {
-        // TODO Auto-generated method stub
-
-        try {
-            int a = db.open().getDatabaseObj()
-                    .delete(Dbhelper.TABLE_WISH, null, null);
-            System.out
-                    .println("No of deleted rows from deel data is ::::::::::::"
-                            + a);
-
-        } catch (SQLException e) {
-            System.out
-                    .println("Sql exception while deleting particular record for shop:::::"
-                            + e.toString());
-        } finally {
-            db.close();
-        }
-    }
-
-    public void DbDeleteFreeBie() {
-        // TODO Auto-generated method stub
-
-        try {
-            int a = db.open().getDatabaseObj()
-                    .delete(Dbhelper.TABLE_FREEBIE, null, null);
-            System.out
-                    .println("No of deleted rows from freebie data is ::::::::::::"
-                            + a);
-
-        } catch (SQLException e) {
-            System.out
-                    .println("Sql exception while deleting particular record for shop:::::"
-                            + e.toString());
-        } finally {
-            db.close();
-        }
-    }
-
-    public void DbDeleteMer() {
-        // TODO Auto-generated method stub
-
-        try {
-            int a = db.open().getDatabaseObj()
-                    .delete(Dbhelper.TABLE_RET, null, null);
-            System.out
-                    .println("No of deleted rows from retmetr data is ::::::::::::"
-                            + a);
-
-        } catch (SQLException e) {
-            System.out
-                    .println("Sql exception while deleting particular record for shop:::::"
-                            + e.toString());
-        } finally {
-            db.close();
-        }
-    }
-
-    public void DbdeletePrimary() {
-        // TODO Auto-generated method stub
-
-        try {
-            int a = db.open().getDatabaseObj()
-                    .delete(Dbhelper.TABLE_PRIMENUMBER, null, null);
-            System.out
-                    .println("No of deleted rows from primary data is ::::::::::::"
-                            + a);
-
-        } catch (SQLException e) {
-            System.out
-                    .println("Sql exception while deleting particular primary for shop:::::"
-                            + e.toString());
-        } finally {
-            db.close();
-        }
-    }
-
-    public void DbDeleteDonation() {
-        // TODO Auto-generated method stub
-
-        try {
-            int a = db.open().getDatabaseObj()
-                    .delete(Dbhelper.TABLE_DONATE, null, null);
             System.out
                     .println("No of deleted rows from deel data is ::::::::::::"
                             + a);
@@ -877,7 +662,6 @@ public class MainActivity extends BaseActivity {
     private void callFreebieDB(String query) {
         // TODO Auto-generated method stub
         Cursor c = null;
-
         try {
             c = db.open().getDatabaseObj().rawQuery(query, null);
             System.out
@@ -893,9 +677,7 @@ public class MainActivity extends BaseActivity {
                                 .println("Caling sysout:::::::::::::::::::::::::"
                                         + mFreebieLastDay);
                         mFreebieCount = c.getCount();
-
                     }
-
                 }
             }
         } catch (Exception e) {

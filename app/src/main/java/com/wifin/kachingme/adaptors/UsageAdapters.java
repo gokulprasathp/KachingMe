@@ -2,6 +2,7 @@ package com.wifin.kachingme.adaptors;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
@@ -9,13 +10,17 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.SQLException;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.os.Environment;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
+import android.text.Html;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Gravity;
@@ -23,6 +28,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -39,6 +45,7 @@ import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.google.i18n.phonenumbers.Phonenumber;
 import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.applications.KachingMeApplication;
+import com.wifin.kachingme.async_tasks.ConcurrentAsyncTaskExecutor;
 import com.wifin.kachingme.database.Dbhelper;
 import com.wifin.kachingme.pojo.CountryCodeGetSet;
 import com.wifin.kachingme.settings.DataUsage;
@@ -46,6 +53,7 @@ import com.wifin.kachingme.settings.DeleteAccount;
 import com.wifin.kachingme.settings.DeleteSecondaryNumber;
 import com.wifin.kachingme.settings.Network_Usage;
 import com.wifin.kachingme.util.CommonMethods;
+import com.wifin.kachingme.util.Connectivity;
 import com.wifin.kachingme.util.Constant;
 import com.wifin.kachingme.util.HttpConfig;
 import com.wifin.kachingme.util.KachingMeConfig;
@@ -68,8 +76,8 @@ import java.util.Stack;
 
 public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewHolder> {
     List<String> usageItem;
-    Context contextUsage;
-    String TAG = UsageAdapters.class.getSimpleName(), primary_number, secondary_number, fullMobileNo;
+    static Context contextUsage;
+    static String TAG = UsageAdapters.class.getSimpleName(), primary_number, secondary_number, fullMobileNo;
     public static final String local_image_dir = Environment.getExternalStorageDirectory() + "/Kaching.me/";
     ArrayAdapter adapterc;
     ArrayList<String> items = new ArrayList<>();
@@ -79,15 +87,20 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
     Phonenumber.PhoneNumber NumberProto;
     String mTextAuto;
     public static String COUNTRY, COUNTRYCODE, COUNTRYCODE_CHAR;
-    EditText  etMobileNumbSec;
-    TextView tvSignSecProceed, tvSignSecDismiss,etCountryCodeSec,mAlertTextMsg,mAlertCountryCodeSeparator;
-    LinearLayout mAlertMobileLayout,mAlertControlLayout;
+    EditText etMobileNumbSec;
+    TextView tvSignSecProceed, tvSignSecDismiss, etCountryCodeSec, mAlertTextMsg, mAlertCountryCodeSeparator;
+    LinearLayout mAlertMobileLayout, mAlertControlLayout;
     AutoCompleteTextView atvCountryName;
     CommonMethods commonMethods;
     AlertDialog dialogSecondary;
-    Dbhelper db;
-    SharedPreferences  preferenceses, preference;
-    SharedPreferences.Editor ed;
+    static Dbhelper db;
+    static SharedPreferences preferenceses, preference;
+    static SharedPreferences.Editor ed;
+    Dialog otpVerificationDialog;
+    static EditText mVerificationCode;
+    static Handler callLogHandler = new Handler();
+    static Runnable callRunnable;
+    int countClick;
 
     public UsageAdapters() {
         Log.e(TAG, "Usage Adapter");
@@ -213,6 +226,7 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
         atvCountryName.requestFocus();
         db = new Dbhelper(contextUsage.getApplicationContext());
         commonMethods = new CommonMethods(contextUsage);
+        etMobileNumbSec.setEnabled(false);
         atvCountryName.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -547,9 +561,15 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
         } else if (!phoneUtil.isValidNumber(NumberProto)) {
             commonMethods.showAlertDialog(contextUsage, "Invalid phone number", true);
         } else {
-            String secno = etMobileNumbSec.getText().toString();
-            new postSecondaryNumber().execute(secno);
-            dialogSecondary.dismiss();
+            if (Connectivity.isConnected(contextUsage)) {
+                String secno = etMobileNumbSec.getText().toString();
+                Constant.mVerifiedNumResend = secno;
+                ConcurrentAsyncTaskExecutor.executeConcurrently(new postSecondaryNumber(), secno, COUNTRYCODE);
+                dialogSecondary.dismiss();
+            } else {
+                Toast.makeText(contextUsage.getApplicationContext(), "Please Chek Your Network Connection.!",
+                        Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -561,7 +581,7 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
             super.onPreExecute();
             progressDialog = new ProgressDialog(contextUsage, AlertDialog.THEME_HOLO_LIGHT);
             progressDialog.setMessage("Please Wait...");
-            progressDialog.setProgressDrawable(new ColorDrawable(android.graphics.Color.BLUE));
+            progressDialog.setProgressDrawable(new ColorDrawable(Color.BLUE));
             progressDialog.setCancelable(false);
             progressDialog.show();
         }
@@ -574,20 +594,17 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
             //sp1 = PreferenceManager.getDefaultSharedPreferences(contextUsage);
             //String no = sp1.getString("number", "");
             //String code = sp1.getString("countrycode", "");
-            result = ht.httpget(KachingMeConfig.SECONDARY_URL +preference.getString("MyPrimaryNumber", "")+
-                    "&secondaryNumber=" + COUNTRYCODE + params[0] + "&countryCode=" + COUNTRYCODE);
-            Constant.printMsg("siva secondary result..." + KachingMeConfig.SECONDARY_URL +preference.getString("MyPrimaryNumber", "")
-                    + "&secondaryNumber=" + COUNTRYCODE + params[0] + "&countryCode=" + COUNTRYCODE + "............" + result);
+            result = ht.httpget(KachingMeConfig.SECONDARY_URL + preference.getString("MyPrimaryNumber", "") +
+                    "&secondaryNumber=" + params[1] + params[0] + "&countryCode=" + params[1]);
+            Constant.printMsg("siva secondary result..." + KachingMeConfig.SECONDARY_URL + preference.getString("MyPrimaryNumber", "")
+                    + "&secondaryNumber=" + params[1] + params[0] + "&countryCode=" + params[1] + "............" + result);
             return result;
         }
 
         protected void onPostExecute(String result) {
             // TODO Auto-generated method stub
-
             super.onPostExecute(result);
-
             progressDialog.dismiss();
-
             if (result != null && result.length() > 0) {
                 JSONObject jsonObject;
                 String response = "", otp = "";
@@ -605,41 +622,56 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
                 } else if (response.equalsIgnoreCase("Secondary Limit Reached")) {
                     Toast.makeText(contextUsage.getApplicationContext(), "Sorry Limit Exceeded", Toast.LENGTH_SHORT).show();
                 } else {
-                    ContentValues cv = new ContentValues();
-                    cv.put("primarynum", primary_number);
-                    cv.put("secondarynum", secondary_number);
-                    insertNumber(cv);
-                    Constant.Otp = otp;
-                    Constant.otpnumner = etMobileNumbSec.getText().toString();
-                    fullMobileNo = COUNTRYCODE + etMobileNumbSec.getText().toString();
-                    Constant.printMsg("verif otp:" + Constant.Otp);
+                    if (otp != null && !otp.isEmpty() && !otp.equalsIgnoreCase("null")) {
+                        ContentValues cv = new ContentValues();
+                        cv.put("primarynum", primary_number);
+                        cv.put("secondarynum", secondary_number);
+                        insertNumber(cv);
+                        Constant.secondaryOtp = otp;
+                        fullMobileNo = COUNTRYCODE + etMobileNumbSec.getText().toString();
+                        Constant.printMsg("verif otp:" + Constant.secondaryOtp);
+                        callRunnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(contextUsage,
+                                        "Enter First Five Digit Number Of Missed Call", Toast.LENGTH_SHORT).show();
+                            }
+                        };
+                        callLogHandler.postDelayed(callRunnable, 15000);
+                        countClick = 0;
+                        otpVerificationPopUp();
 
-                    AlertDialog.Builder dialogOtp = new AlertDialog.Builder(contextUsage);
-                    dialogOtp.setTitle("OTP For Secondary Number");
-                    dialogOtp.setMessage(Constant.Otp);
-                    dialogOtp.setPositiveButton("Proceed", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            new postSecondaryOtp().execute();
-                            dialog.dismiss();
-                        }
-                    });
-                    dialogOtp.setNegativeButton("Dismiss", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            dialog.dismiss();
-                        }
-                    });
-                    dialogOtp.setCancelable(false);
-                    dialogOtp.show();
+//                    AlertDialog.Builder dialogOtp = new AlertDialog.Builder(contextUsage);
+//                    dialogOtp.setTitle("OTP For Secondary Number");
+//                    dialogOtp.setMessage(Constant.Otp);
+//                    dialogOtp.setPositiveButton("Proceed", new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            new postSecondaryOtp().execute();
+//                            dialog.dismiss();
+//                        }
+//                    });
+//                    dialogOtp.setNegativeButton("Dismiss", new DialogInterface.OnClickListener() {
+//                        @Override
+//                        public void onClick(DialogInterface dialog, int which) {
+//                            dialog.dismiss();
+//                        }
+//                    });
+//                    dialogOtp.setCancelable(false);
+//                    dialogOtp.show();
+                    } else {
+                        Toast.makeText(contextUsage.getApplicationContext(),
+                                "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
+                    }
                 }
             } else {
-                Toast.makeText(contextUsage.getApplicationContext(), "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(contextUsage.getApplicationContext(),
+                        "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    public void insertNumber(ContentValues cv) {
+    public static void insertNumber(ContentValues cv) {
         // TODO Auto-generated method stub
 
         try {
@@ -653,7 +685,242 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
         }
     }
 
-    public class postSecondaryOtp extends AsyncTask<String, String, String> {
+    private void otpVerificationPopUp() {
+        // TODO Auto-generated method stubw
+        otpVerificationDialog = new Dialog(contextUsage);
+        otpVerificationDialog.getWindow();
+        otpVerificationDialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        otpVerificationDialog.setContentView(R.layout.add_secondary_number);
+        otpVerificationDialog.show();
+        otpVerificationDialog.setCanceledOnTouchOutside(false);
+        otpVerificationDialog.getWindow().setSoftInputMode(
+                WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+
+        final TextView mMsgTop, mMsgBottom, mReSend, mNextButton, mReSendTimer;
+
+        mMsgTop = (TextView) otpVerificationDialog.findViewById(R.id.usageAdapter_topMessage);
+        mVerificationCode = (EditText) otpVerificationDialog.findViewById(R.id.usageAdapter_verification_code);
+        mMsgBottom = (TextView) otpVerificationDialog.findViewById(R.id.usageAdapter_bottomText);
+        mReSend = (TextView) otpVerificationDialog.findViewById(R.id.usageAdapter_resend);
+        mNextButton = (TextView) otpVerificationDialog.findViewById(R.id.usageAdapter_next);
+        LinearLayout mNextLayout = (LinearLayout) otpVerificationDialog.findViewById(R.id.usageAdapter_nextLayout);
+        mReSendTimer = (TextView) otpVerificationDialog.findViewById(R.id.usageAdapter_resendTimer);
+
+        Constant.typeFace(contextUsage, mMsgTop);
+        Constant.typeFace(contextUsage, mVerificationCode);
+        Constant.typeFace(contextUsage, mMsgBottom);
+        Constant.typeFace(contextUsage, mReSend);
+        Constant.typeFace(contextUsage, mNextButton);
+        Constant.typeFace(contextUsage, mReSendTimer);
+
+        int width = Constant.screenWidth;
+        int height = Constant.screenHeight;
+        if (Constant.mVerifiedNumResend != null && !Constant.mVerifiedNumResend.equalsIgnoreCase("null")
+                && !Constant.mVerifiedNumResend.isEmpty()) {
+            mMsgTop.setText(Html.fromHtml(String.format(
+                    contextUsage.getResources().getString(R.string.we_sent_sms), "+" + COUNTRYCODE + " - " +
+                            String.valueOf(Constant.mVerifiedNumResend))));
+        } else {
+            mMsgTop.setText(Html.fromHtml(String.format(
+                    contextUsage.getResources().getString(R.string.we_sent_sms_no_number))));
+        }
+
+        LinearLayout.LayoutParams msgTopParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        msgTopParama.width = (int) (width * 75 / 100);
+        msgTopParama.gravity = Gravity.CENTER;
+        msgTopParama.topMargin = height * 5 / 100;
+        mMsgTop.setLayoutParams(msgTopParama);
+        mMsgTop.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams verificationParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        verificationParama.height = (int) (height * 7 / 100);
+        verificationParama.width = (int) (width * 75 / 100);
+        verificationParama.topMargin = height * 3 / 100;
+        verificationParama.gravity = Gravity.CENTER;
+        mVerificationCode.setLayoutParams(verificationParama);
+        mVerificationCode.setGravity(Gravity.CENTER | Gravity.LEFT);
+        mVerificationCode.setPadding(width * 2 / 100, 0, 0, 0);
+
+        LinearLayout.LayoutParams sendLayoutParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        sendLayoutParama.height = (int) (height * 6 / 100);
+        sendLayoutParama.width = (int) (width * 85 / 100);
+        sendLayoutParama.topMargin = height * 4 / 100;
+        sendLayoutParama.gravity = Gravity.CENTER;
+        mNextLayout.setLayoutParams(sendLayoutParama);
+        mNextLayout.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams resendParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        resendParama.width = (int) (width * 30 / 100);
+        resendParama.height = (int) (height * 6 / 100);
+        resendParama.gravity = Gravity.CENTER;
+        mReSend.setLayoutParams(resendParama);
+        mReSend.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams resendTimerParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        resendTimerParama.width = (int) (width * 30 / 100);
+        resendTimerParama.height = (int) (height * 6 / 100);
+        resendTimerParama.gravity = Gravity.CENTER;
+        mReSendTimer.setLayoutParams(resendTimerParama);
+        mReSendTimer.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams nextParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        nextParama.height = (int) (height * 6 / 100);
+        nextParama.width = (int) (width * 30 / 100);
+        nextParama.gravity = Gravity.CENTER;
+        nextParama.leftMargin = width * 3 / 100;
+        mNextButton.setLayoutParams(nextParama);
+        mNextButton.setGravity(Gravity.CENTER);
+
+        LinearLayout.LayoutParams msgBottomParama = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT);
+        msgBottomParama.width = (int) (width * 75 / 100);
+        msgBottomParama.gravity = Gravity.CENTER | Gravity.BOTTOM;
+        msgBottomParama.topMargin = height * 3 / 100;
+        msgBottomParama.bottomMargin = height * 5 / 100;
+        mMsgBottom.setLayoutParams(msgBottomParama);
+        mMsgBottom.setGravity(Gravity.CENTER);
+
+        if (width >= 600) {
+            mMsgTop.setTextSize(16);
+            mReSend.setTextSize(16);
+            mVerificationCode.setTextSize(16);
+            mNextButton.setTextSize(16);
+            mMsgBottom.setTextSize(16);
+            mReSendTimer.setTextSize(16);
+        } else if (width > 501 && width < 600) {
+            mMsgTop.setTextSize(15);
+            mReSend.setTextSize(15);
+            mVerificationCode.setTextSize(15);
+            mNextButton.setTextSize(15);
+            mMsgBottom.setTextSize(15);
+            mReSendTimer.setTextSize(15);
+        } else if (width > 260 && width < 500) {
+            mMsgTop.setTextSize(13);
+            mReSend.setTextSize(13);
+            mVerificationCode.setTextSize(13);
+            mNextButton.setTextSize(13);
+            mMsgBottom.setTextSize(13);
+            mReSendTimer.setTextSize(13);
+        } else if (width <= 260) {
+            mMsgTop.setTextSize(11);
+            mReSend.setTextSize(11);
+            mVerificationCode.setTextSize(11);
+            mNextButton.setTextSize(11);
+            mMsgBottom.setTextSize(11);
+            mReSendTimer.setTextSize(11);
+        }
+        mReSendTimer.setVisibility(View.GONE);
+        mNextButton.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                //otpVerificationDialog.setCanceledOnTouchOutside(false);
+                Constant.printMsg("otp number for confirmation......" + Constant.secondaryOtp);
+                if (!mVerificationCode.getText().toString().isEmpty()) {
+                    if (Constant.secondaryOtp != null && !Constant.secondaryOtp.isEmpty()) {
+                        if (mVerificationCode.getText().toString().trim()
+                                .equals(Constant.secondaryOtp)) {
+                            if (Connectivity.isConnected(contextUsage)) {
+                                otpVerificationDialog.dismiss();
+                                ConcurrentAsyncTaskExecutor.executeConcurrently(new postSecondaryOtp(), Constant.secondaryOtp);
+                            } else {
+                                Toast.makeText(contextUsage.getApplicationContext(), "Please Chek Your Network Connection.!",
+                                        Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            commonMethods.showAlertDialog(contextUsage, contextUsage.getResources()
+                                    .getString(R.string.sorry_you_have_entered_wrong_pin), true);
+                        }
+                    }
+                } else {
+                    Toast.makeText(contextUsage,
+                            "Field Cannot be Empty", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+        mReSend.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                //otpVerificationDialog.setCanceledOnTouchOutside(true);
+                if (Connectivity.isConnected(contextUsage)) {
+                    if (countClick < 3) {
+                        mReSendTimer.setVisibility(View.VISIBLE);
+                        mReSend.setVisibility(View.GONE);
+                        String reSendPhoneNumber = Constant.mVerifiedNumResend.replaceAll("[-+.^:,]", "");
+                        /**for Secondary(Registration) Resend*/
+                        Constant.printMsg("Otp Verification,,.........for Secondary(Registration) Resend.." + countClick);
+                        ConcurrentAsyncTaskExecutor.executeConcurrently(new reSendMissedCall(),COUNTRYCODE,
+                                reSendPhoneNumber);
+
+                        if (countClick < 2) {
+                            new CountDownTimer(60000, 1000) {
+                                public void onTick(long millisUntilFinished) {
+                                    Constant.printMsg("Otp Verification,,.........timer start..." + countClick);
+                                    mReSendTimer.setText("Enable in : " + millisUntilFinished / 1000);
+                                }
+
+                                public void onFinish() {
+                                    Constant.printMsg("Otp Verification,,.........mReSendTimer..." + countClick);
+                                    mReSendTimer.setVisibility(View.GONE);
+                                    mReSend.setVisibility(View.VISIBLE);
+                                }
+                            }.start();
+                        } else {
+                            mReSendTimer.setVisibility(View.GONE);
+                            mReSend.setVisibility(View.VISIBLE);
+                            mReSend.setTextColor(Color.parseColor("#6633404f"));
+                            mReSend.setBackgroundResource(R.drawable.border_style_gray);
+                            mReSend.setClickable(false);
+                            mReSend.setEnabled(false);
+                        }
+                        countClick++;
+                    } else {
+                        Constant.printMsg("Otp Verification,,.........count exceed..." + countClick);
+                    }
+                } else {
+                    Toast.makeText(contextUsage,
+                            "Please check your network connection", Toast.LENGTH_SHORT).show();
+                }
+                Constant.printMsg("Otp Verification,,.........count..." + countClick);
+            }
+        });
+    }
+
+    public static void otpConfirmation(String otpNumber) {
+        if (Constant.secondaryOtp != null && !Constant.secondaryOtp.equalsIgnoreCase("null")
+                && !Constant.secondaryOtp.isEmpty()) {
+            if (otpNumber != null && !otpNumber.isEmpty()) {
+                Constant.isOtpVerification = false;
+                Constant.printMsg("Otpverification check data........" + otpNumber + ".." + Constant.secondaryOtp);
+                if (callLogHandler != null && callRunnable != null)
+                    callLogHandler.removeCallbacks(callRunnable);
+                mVerificationCode.setText(Constant.secondaryOtp);
+                if (mVerificationCode.getText().toString().trim()
+                        .equals(Constant.secondaryOtp)) {
+                    ConcurrentAsyncTaskExecutor.executeConcurrently(new postSecondaryOtp(), Constant.secondaryOtp);
+                }
+            }
+        }
+    }
+
+    public static class postSecondaryOtp extends AsyncTask<String, String, String> {
         ProgressDialog progressDialog;
 
         protected void onPreExecute() {
@@ -662,7 +929,7 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
             super.onPreExecute();
             progressDialog = new ProgressDialog(contextUsage, AlertDialog.THEME_HOLO_LIGHT);
             progressDialog.setMessage("Please Wait...");
-            progressDialog.setProgressDrawable(new ColorDrawable(android.graphics.Color.BLUE));
+            progressDialog.setProgressDrawable(new ColorDrawable(Color.BLUE));
             progressDialog.setCancelable(false);
             progressDialog.show();
         }
@@ -671,19 +938,19 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
             // TODO Auto-generated method stub
             String result = null;
             HttpConfig ht = new HttpConfig();
-            result = ht.httpget(KachingMeConfig.SECONDARY_URL_RES + fullMobileNo + "&otp=" + Constant.Otp);
+            result = ht.httpget(KachingMeConfig.SECONDARY_URL_RES + fullMobileNo + "&otp=" + params[0]);
             Constant.printMsg("result dis verification" + result);
             return result;
         }
 
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-
             progressDialog.dismiss();
 
             if (result != null && result.length() > 0) {
                 if (result.equalsIgnoreCase("Number Not Exists")) {
-                    Toast.makeText(contextUsage.getApplicationContext(), "Invalid User...Mobile Number And Otp Wrong", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(contextUsage.getApplicationContext(), "Invalid User...Mobile Number And Otp Wrong",
+                            Toast.LENGTH_SHORT).show();
                 } else {
                     preferenceses = PreferenceManager.getDefaultSharedPreferences(contextUsage);
                     int count = preferenceses.getInt("added_num", 0);
@@ -700,7 +967,6 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
                     insertNumber(cv);
                     preference = contextUsage.getSharedPreferences(KachingMeApplication.getPereference_label(), Activity.MODE_PRIVATE);
                     int countMsg = preference.getInt("sec_count", 0);
-
                     if (countMsg == 1) {
                         Toast.makeText(contextUsage, "Number Added", Toast.LENGTH_SHORT).show();
                     } else if (countMsg == 2) {
@@ -713,6 +979,66 @@ public class UsageAdapters extends RecyclerView.Adapter<UsageAdapters.UsageViewH
                 }
             } else {
                 Toast.makeText(contextUsage.getApplicationContext(), "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    public class reSendMissedCall extends AsyncTask<String, String, String> {
+
+        protected void onPreExecute() {
+            // TODO Auto-generated method stub
+            super.onPreExecute();
+        }
+
+        protected String doInBackground(String... params) {
+            // TODO Auto-generated method stub
+            String result = null;
+            try {
+                HttpConfig ht = new HttpConfig();
+                result = ht.httpget(KachingMeConfig.RESEND_MISSED_CALL + "phoneNo=" +params[0]+ params[1]);
+            } catch (Exception e) {
+                e.printStackTrace();
+                Constant.printMsg("reSendMissedCall update....result err....." + e);
+            }
+            Constant.printMsg("reSendMissedCall url...links....." +
+                    KachingMeConfig.RESEND_MISSED_CALL + "phoneNo="+params[0] + params[1]+"........."+result);
+            return result;
+        }
+
+        protected void onPostExecute(String result) {
+            // TODO Auto-generated method stub
+            super.onPostExecute(result);
+            Constant.printMsg("reSendMissedCall res:;" + result);
+            if (result != null && !result.isEmpty() && !result.equalsIgnoreCase("null")) {
+                CommonMethods commonMethods = new CommonMethods(contextUsage);
+                if (commonMethods.isJSONValid(result)) {
+                    String otp = null;
+                    String errMsg = null;
+                    try {
+                        JSONObject jsonObject = new JSONObject(result);
+                        otp = jsonObject.getString("otp");
+                        errMsg = jsonObject.getString("errorMsg");
+                    } catch (JSONException e) {
+                        Toast.makeText(contextUsage, "TimeOut Error!Please try again later!", Toast.LENGTH_SHORT).show();
+                    }
+                    if (Constant.secondaryOtp != null && !Constant.secondaryOtp.equalsIgnoreCase("null")
+                            && !Constant.secondaryOtp.isEmpty()) {
+                        if (otp != null && !otp.isEmpty() && !otp.equalsIgnoreCase("null")) {
+                            Constant.secondaryOtp = otp;
+                        } else {
+                            if (errMsg != null && !errMsg.isEmpty() && !errMsg.equalsIgnoreCase("null")) {
+                                Toast.makeText(contextUsage, errMsg, Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }else  {
+                        Toast.makeText(contextUsage, "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(contextUsage, "TimeOut Error!Please try again later!", Toast.LENGTH_SHORT).show();
+                }
+
+            } else {
+                Toast.makeText(contextUsage, "Network Error!Please try again later!", Toast.LENGTH_SHORT).show();
             }
         }
     }

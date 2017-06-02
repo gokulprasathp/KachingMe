@@ -18,9 +18,12 @@ import com.wifin.kachingme.database.DatabaseHelper;
 import com.wifin.kachingme.database.Dbhelper;
 import com.wifin.kachingme.pojo.MessageGetSet;
 import com.wifin.kachingme.services.DestructService;
+import com.wifin.kachingme.services.TempConnectionService;
 import com.wifin.kachingme.util.ChatDictionary;
+import com.wifin.kachingme.util.Connectivity;
 import com.wifin.kachingme.util.Constant;
 import com.wifin.kachingme.util.Log;
+import com.wifin.kachingme.util.NetworkSharedPreference;
 import com.wifin.kachingme.util.Utils;
 
 import org.jivesoftware.smack.chat.Chat;
@@ -29,9 +32,14 @@ import org.jivesoftware.smackx.chatstates.ChatState;
 import org.jivesoftware.smackx.chatstates.ChatStateListener;
 import org.jivesoftware.smackx.delay.packet.DelayInformation;
 import org.jivesoftware.smackx.jiveproperties.JivePropertiesManager;
+import org.jivesoftware.smackx.receipts.DeliveryReceiptRequest;
+import org.jxmpp.jid.impl.JidCreate;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+
+import static android.content.Context.MODE_PRIVATE;
 
 public class ChatStatusListener implements ChatStateListener {
 
@@ -43,17 +51,28 @@ public class ChatStatusListener implements ChatStateListener {
     SharedPreferences sp, pref;
     Editor editor;
 
+    boolean isChatTestFront;
+    int status_msg = 3;
+    int IS_OWNER = 0;
+    NetworkSharedPreference mNewtSharPref;
+
+    SharedPreferences prefResponse;
+    String preferenceResp = "auto_response", responseMsg = "";
+    boolean response_state = false, dest_status = false;
+
     public ChatStatusListener(Context service, String uid) {
 
         this.service = service;
         this.uid = uid;
         dbadapter = KachingMeApplication.getDatabaseAdapter();
         sp = service.getSharedPreferences(
-                KachingMeApplication.getPereference_label(), Activity.MODE_PRIVATE);
+                KachingMeApplication.getPereference_label(), MODE_PRIVATE);
         editor = sp.edit();
         Context context = (Context) service;
         pref = PreferenceManager.getDefaultSharedPreferences(context
                 .getApplicationContext());
+        mNewtSharPref = new NetworkSharedPreference(service);
+        prefResponse = context.getSharedPreferences(preferenceResp, MODE_PRIVATE);
     }
 
     @Override
@@ -373,23 +392,40 @@ public class ChatStatusListener implements ChatStateListener {
                                     if (msg.getMedia_wa_type().equals("8")) {
                                         SharedPreferences sp = service.getSharedPreferences(
                                                 KachingMeApplication.getPereference_label(),
-                                                Activity.MODE_PRIVATE);
+                                                MODE_PRIVATE);
                                         Editor editor = sp.edit();
                                         editor.remove(fromUser + "_self_desc_time");
                                         editor.commit();
                                         Constant.printMsg("called::>>> secret5");
 
                                         dbadapter.setDelete_Sec_chat(fromUser);
-                                    } else {
+                                    }
+                                    else {
                                         l = dbadapter.setInsertMessages(msg);
+
+                                        String mTempParse = message.getBody().toString();
+
+                                        boolean autoResp = false;
+
+                                        Constant.printMsg("called::>>> secret5" + mTempParse);
+
+                                        if (mTempParse.length() > 3)
+                                        {
+                                            char s = mTempParse.charAt(0);
+                                            char s1 = mTempParse.charAt(1);
+                                            char s2 = mTempParse.charAt(2);
+
+                                            if (s == '<' && s1 == 'o' && s2 == '>')
+                                            {
+                                                autoResp = true;
+                                            }
+                                        }
 
                                         //Nynm insertion..
                                         checkNynmInsetion(message.getBody().toString());
 
                                         if (isChatTestFront == true && ChatTest.jid.equalsIgnoreCase(fromUser)) {
 
-                                            String mTempParse = message.getBody()
-                                                    .toString();
                                             if (mTempParse.length() > 3) {
 
                                                 char s = mTempParse.charAt(0);
@@ -401,6 +437,7 @@ public class ChatStatusListener implements ChatStateListener {
                                                     if (!GlobalBroadcast.isServiceRunning(DestructService.class.getCanonicalName(), service))
                                                         service.startService(new Intent(service, DestructService.class));
 
+                                                    dest_status = true;
                                                     String self_destruct = mTempParse.substring(3)
                                                             .toString();
                                                     String[] parts = self_destruct.split("-");
@@ -424,11 +461,12 @@ public class ChatStatusListener implements ChatStateListener {
                                                 ChatTest.dest_list_bombids.add(R.drawable.black_bomb);
                                                 ChatTest.dest_list_anim.add(0);
                                             }
-
+                                            Constant.printMsg("Auto Response Broad 1000  " + ChatTest.msg_list.size() );
                                             msg.setPostion(ChatTest.msg_list.size());
                                             ChatTest.msg_list.add(msg);
+                                            ChatTest.mPositionKey.add(msg.getKey_id());
 
-                                            Constant.printMsg("HHHHHHHHHHHHHHHHHHHHHHupdate_left");
+                                            Constant.printMsg("Auto Response Broad 111 " + ChatTest.msg_list.size() );
 
                                             Context context = (Context) service;
                                             Intent login_broadcast = new Intent("update_left");
@@ -438,16 +476,23 @@ public class ChatStatusListener implements ChatStateListener {
                                             login_broadcast = new Intent("invisible");
                                             context.getApplicationContext().sendBroadcast(login_broadcast);
                                         } else {
-
                                             Intent login_broadcast = new Intent("lastseen_broadcast");
                                             login_broadcast.putExtra("from", arg0.getParticipant().toString().split("/")[0]);
                                             login_broadcast.putExtra("type", msg.getData());
                                             Context context = (Context) service;
                                             context.getApplicationContext().sendBroadcast(login_broadcast);
+                                        }
+                                        response_state = prefResponse.getBoolean("status_auto", false);
+                                        responseMsg = prefResponse.getString("status_msg", "");
 
+                                        Constant.printMsg("Preference Status :: " + response_state + " Resp :: " + prefResponse.getBoolean("status_auto", false) + " Msg :: " + responseMsg);
+
+                                        if (response_state && !autoResp)
+                                        {
+                                            autoResp("<o>" + "-" + responseMsg, fromUser);
                                         }
 
-
+                                        autoResp = false;
                                     }
                                     int unseen_msg = dbadapter.getunseen_msg(fromUser,
                                             msg.getIs_sec_chat());
@@ -455,8 +500,13 @@ public class ChatStatusListener implements ChatStateListener {
                                             msg.getIs_sec_chat());
                                     Constant.printMsg("called::>>> secret6");
 
-                                    dbadapter.setUpdateContact_unseen_msg_chat(fromUser,
-                                            unseen_msg, msg.getIs_sec_chat());
+                                    if (isChatTestFront == true && ChatTest.jid.equalsIgnoreCase(fromUser))
+                                    {
+
+                                    }else {
+                                        dbadapter.setUpdateContact_unseen_msg_chat(fromUser,
+                                                unseen_msg, msg.getIs_sec_chat());
+                                    }
 
                                     Log.d("Chat",
                                             "Is Sec Chat::" + msg.getIs_sec_chat()
@@ -481,11 +531,13 @@ public class ChatStatusListener implements ChatStateListener {
                                         Log.d("Message", "Contact does not exist::" + fromUser);
                                         new StatusListenerMethods(service)
                                                 .Add_New_Contact(fromUser);
-
                                         chat_msg_id = msg.getKey_id();
-
                                         isNewContact = true;
-
+                                    }else{
+                                        Log.d("Message", "Contact exist::" + fromUser);
+//                                        new StatusListenerMethods(service)
+//                                                .Update_Exisiting_Contact(fromUser);
+//                                        chat_msg_id = msg.getKey_id();
                                     }
 
                                     if (!isChatTestFront
@@ -527,20 +579,20 @@ public class ChatStatusListener implements ChatStateListener {
 
     }
 
-    @Override
-    public void stateChanged(Chat arg0, ChatState arg1) {
-        // Constant.printMsg("Chat State Recived!!!!!!!"+arg1.name());
-
-        if (ChatState.composing.equals(arg1)) {
-            Log.d("Chat State", arg0.getParticipant() + " is typing..");
-        } else if (ChatState.gone.equals(arg1)) {
-            Log.d("Chat State", arg0.getParticipant()
-                    + " has left the conversation.");
-        } else {
-            Log.d("Chat State", arg0.getParticipant() + ": " + arg1.name());
-        }
-
-    }
+//    @Override
+//    public void stateChanged(Chat arg0, ChatState arg1) {
+//        // Constant.printMsg("Chat State Recived!!!!!!!"+arg1.name());
+//
+//        if (ChatState.composing.equals(arg1)) {
+//            Log.d("Chat State", arg0.getParticipant() + " is typing..");
+//        } else if (ChatState.gone.equals(arg1)) {
+//            Log.d("Chat State", arg0.getParticipant()
+//                    + " has left the conversation.");
+//        } else {
+//            Log.d("Chat State", arg0.getParticipant() + ": " + arg1.name());
+//        }
+//
+//    }
 
     public void update_received_count(int code) {
         Constant.printMsg("received msg update_received_count added is::"
@@ -573,7 +625,6 @@ public class ChatStatusListener implements ChatStateListener {
 
                 Constant.printMsg("FFFFFFF split " + status + " " + typing_msg);
 
-
                 if (status.equalsIgnoreCase(Constant.TYPING_STRING)) {
 
                     login_broadcast.putExtra("type_msg", typing_msg);
@@ -597,9 +648,6 @@ public class ChatStatusListener implements ChatStateListener {
 
     public void checkNynmInsetion(String text)
     {
-
-
-
         if (text.length() > 2) {
 
             char q = text.charAt(0);
@@ -612,7 +660,6 @@ public class ChatStatusListener implements ChatStateListener {
                 }
             }
         }
-
     }
 
     void getNynmStrings(String value) {
@@ -628,7 +675,6 @@ public class ChatStatusListener implements ChatStateListener {
                         if (subSplits.length > 0) {
                             String subSplitsMeaning = ss.substring(subSplits[0]
                                     .length() + 4);
-
 
                             Constant.printMsg("Dilip MUC Test :" + subSplits[0].substring(3,
                                     subSplits[0].length()) + " " + subSplitsMeaning.substring(3,
@@ -790,5 +836,167 @@ public class ChatStatusListener implements ChatStateListener {
         return str;
     }
 
+    public void autoResp(final String stringmsg, final String jid)
+    {
+        final int sec = 1;
+        final String msg_id_resp = "" + new Date().getTime();
+        Constant.printMsg("Donate buxs msg_id start   " + msg_id_resp);
+        final MessageGetSet msggetset = new MessageGetSet();
 
+        Constant.printMsg("Auto Response Broad 1 :: " + ChatTest.k + dest_status);
+
+        isChatTestFront = Utils.isActivityIsFront(service, ChatTest.class.getCanonicalName().toString());
+
+        Thread thread = new Thread()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    if (dest_status)
+                    {
+                        dest_status = false;
+                        Constant.printMsg("Auto Response Broad Threaddd :: " );
+                        Thread.sleep(500);
+                        Constant.printMsg("Auto Response Broad Threaddd222 :: ");
+                    }
+                    Message msg = new Message(JidCreate.from(jid), Message.Type.chat);
+                    msg.setStanzaId(msg_id_resp);
+                    msg.setBody(Utils.EncryptMessage(stringmsg));
+                    msg.addExtension(new DeliveryReceiptRequest());
+
+                    JivePropertiesManager.addProperty(msg, "media_type", 0);
+
+                    if (sec == 0)
+                    {
+                        JivePropertiesManager.addProperty(msg, "is_sec_chat", sec);
+                        JivePropertiesManager.addProperty(msg, "self_desc_time", sp.getInt(jid + "_self_desc_time", 0));
+                    }
+
+                    /*if(TempConnectionService.connection != null)
+                        Constant.printMsg("FFFFFFFFFFFFFFF" + TempConnectionService.connection + "        " + TempConnectionService.connection.isConnected());
+                    else
+                    {
+                        Constant.printMsg("FFFFFFFFFFFFFFF connection null ");
+                        service.startService(new Intent(service, TempConnectionService.class));
+                    }
+*/
+                    DeliveryReceiptRequest.addTo(msg);
+
+                    if (Connectivity.isOnline(service) == true && Connectivity.isTempConnection())
+                    {
+                        status_msg = 2;
+                        TempConnectionService.connection.sendStanza(msg);
+                        Constant.mselected_self_destruct_time = 0;
+                        Constant.printMsg("dataaa ::::::: " + status_msg + "     " + msg.toString());
+                    }
+
+                    Constant.printMsg("dataaa ::::::: " + stringmsg + "  " + "" + msg_id_resp + "    " + jid);
+
+                    try
+                    {
+                        if (Connectivity.isOnline(service) && Connectivity.isTempConnection())
+                        {
+                            status_msg = 2;
+                        }
+                        msggetset.setData(stringmsg);
+                        msggetset.setKey_from_me(0);
+                        msggetset.setKey_id("" + msg_id_resp);
+                        msggetset.setKey_remote_jid(jid);
+                        msggetset.setNeeds_push(1);
+                        msggetset.setSend_timestamp(new Date().getTime());
+                        msggetset.setStatus(status_msg);
+                        msggetset.setTimestamp(new Date().getTime());
+                        msggetset.setMedia_wa_type("0");
+                        msggetset.setIs_sec_chat(sec);
+                        msggetset.setSelf_des_time(sp.getInt(jid + "_self_desc_time", 0));
+                        msggetset.setIs_owner(IS_OWNER);
+
+                        long id_insert = dbadapter.setInsertMessages(msggetset);
+                        msggetset.set_id((int)id_insert);
+
+                        Constant.printMsg("Auto Response Broad 4 :: " + isChatTestFront + " JID :: " + Constant.CURRENT_OPEN_JID + " JID V" + jid + "      " + ChatTest.k + " Size " + ChatTest.msg_list.size());
+
+                        if(isChatTestFront && Constant.CURRENT_OPEN_JID.equalsIgnoreCase(jid))
+                        {
+                            ChatTest.msg_list.add(msggetset);
+                            ChatTest.mPositionKey.add(msggetset.getKey_id());
+                            ChatTest.dest_list_msgids.add(id_insert);
+                            ChatTest.dest_list_bombids.add(R.drawable.black_bomb);
+                            ChatTest.dest_list_anim.add(0);
+
+                            Intent login_broadcast = new Intent("update_auto_response");
+                            service.getApplicationContext().sendBroadcast(login_broadcast);
+                            Constant.printMsg("Auto Response Broad 2 :: " + ChatTest.k + " Size " + ChatTest.msg_list.size());
+                        }
+
+                        int l = dbadapter.getLastMsgid_chat(jid, sec);
+                        Constant.printMsg("looooollll   " + l);
+                        Constant.printMsg("Donate buxs msg_id insert   " + l);
+
+                        if (dbadapter.isExistinChatList_chat(jid, sec))
+                        {
+                            dbadapter.setUpdateChat_lits_chat(jid, l, sec);
+                        }
+                        else
+                        {
+                            dbadapter.setInsertChat_list_chat(jid, l, sec);
+                        }
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                }
+                catch (Exception e)
+                {
+                    Constant.printMsg("EEEEEEEEEEE Chat msg send excp ::::  " + e.toString());
+                }
+            }
+        };
+
+        thread.start();
+
+
+
+        try
+        {
+            Constant.printMsg("Double msg:" + stringmsg);
+            long lng = stringmsg.getBytes().length;
+            updateNetwork_Message_Sent(lng);
+        }
+        catch (Exception e)
+        {
+
+        }
+    }
+
+    public void updateNetwork_Message_Sent(long bite)
+    {
+        try
+        {
+            long val = 0;
+            HashMap<String, String> user = mNewtSharPref.getMessage_SentDetails();
+            String value = user.get(NetworkSharedPreference.KEY_MESSAGE_GET_SX);
+
+            if (value != null)
+            {
+                val = Long.parseLong(value);
+            }
+
+            Long update = bite + val;
+            String data = String.valueOf(update);
+            mNewtSharPref.setMessageData_Sent(data);
+        }
+        catch (NumberFormatException e)
+        {
+
+        }
+    }
+
+    @Override
+    public void stateChanged(Chat chat, ChatState state, Message message) {
+
+    }
 }

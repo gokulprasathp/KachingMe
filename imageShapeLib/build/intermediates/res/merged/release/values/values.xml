@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- From: file:/D:/CurrentProjects/Studio_Workspace/KachingMe/imageShapeLib/src/main/res/values/attrs.xml -->
-    <eat-comment/>
     <attr name="siArrowPosition">
         <enum name="left" value="0"/>
         <enum name="right" value="1"/>

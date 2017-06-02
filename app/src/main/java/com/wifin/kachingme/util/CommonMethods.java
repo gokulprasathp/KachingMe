@@ -9,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.Cursor;
 import android.database.SQLException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -23,13 +24,16 @@ import android.text.Html;
 import android.view.ContextThemeWrapper;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.wifin.kaching.me.ui.R;
 import com.wifin.kachingme.applications.KachingMeApplication;
+import com.wifin.kachingme.async_tasks.ConcurrentAsyncTaskExecutor;
 import com.wifin.kachingme.chat_home.SliderTesting;
 import com.wifin.kachingme.database.DatabaseHelper;
 import com.wifin.kachingme.database.Dbhelper;
+import com.wifin.kachingme.pojo.BuxAchivedDto;
 import com.wifin.kachingme.pojo.CartDetailsDto;
 import com.wifin.kachingme.pojo.LoginGetSet;
 import com.wifin.kachingme.pojo.RestUserDetailsDto;
@@ -57,7 +61,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class CommonMethods {
 	Context context;
@@ -65,7 +71,7 @@ public class CommonMethods {
 //	SharedPreferences preference;
     DatabaseHelper dbAdapter;
     byte[] imageByte = null;
-    SharedPreferences preference;
+    SharedPreferences preference,sp;
     Dbhelper dbHelper;
 
     public CommonMethods(Context con){
@@ -74,167 +80,12 @@ public class CommonMethods {
         dbHelper = new Dbhelper(context);
         preference = this.context.getSharedPreferences(KachingMeApplication.getPereference_label(),
                 Activity.MODE_PRIVATE);
-
-    }
-	public boolean isJSONValid(String test) {
-		try {
-			try {
-				new JSONObject(test);
-			} catch (JSONException ex) {
-				// edited, to include @Arthur's comment
-				// e.g. in case JSONArray is valid as well...
-				try {
-					new JSONArray(test);
-				} catch (JSONException ex1) {
-					return false;
-				}
-			}
-		} catch (Exception e) {
-			return false;
-		}
-		return true;
-	}
-    public void stopAsyncTask(final AsyncTask asyncTask, final ProgressDialog progressDialog) {
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Constant.printMsg("commonmethod timeout error......" + asyncTask.getStatus() + "....." +
-                        AsyncTask.Status.RUNNING);
-                if (asyncTask != null) {
-                    if (asyncTask.getStatus() == AsyncTask.Status.PENDING) {
-                        Constant.printMsg("commonmethod timeout error....CANCEL STATE...");
-                        asyncTask.cancel(true);
-                        Constant.printMsg("commonmethod timeout error....CHECK CANCEL STATE..." +
-                                asyncTask.getStatus() + "...." + asyncTask.isCancelled());
-                        if (progressDialog != null && progressDialog.isShowing() && asyncTask.isCancelled()){
-                            progressDialog.cancel();
-                            Toast.makeText(context, "Network Error.!Please try again later!",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    } else {
-                        Constant.printMsg("commonmethod timeout error NOTHING to CANCEL...");
-                    }
-                }
-            }
-        }, 22000);
-    }
-
-	public  void okDialogBox(Context contex, String msg) {
-
-		AlertDialog.Builder builder1 = new AlertDialog.Builder(context);
-		builder1.setMessage(msg);
-		builder1.setCancelable(true);
-		builder1.setPositiveButton(
-				"OK",
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int id) {
-						dialog.cancel();
-					}
-				});
-//
-//			builder1.setNegativeButton(
-//					"No",
-//					new DialogInterface.OnClickListener() {
-//						public void onClick(DialogInterface dialog, int id) {
-//							dialog.cancel();
-//						}
-//					});
-		AlertDialog alert11 = builder1.create();
-		alert11.show();
-	}
-
-//	private boolean result;
-//	public boolean yes_no_dialog(Context contex) {
-//		AlertDialog.Builder builder = new AlertDialog.Builder(contex);
-//		builder.setTitle("Erase hard drive")
-//				.setMessage("Are you sure?")
-//				.setIcon(android.R.drawable.ic_dialog_alert)
-//				.setPositiveButton("Yes",
-//						new DialogInterface.OnClickListener() {
-//							public void onClick(DialogInterface dialog,
-//												int which) {
-//								// Yes button clicked, do something
-//								result = true;
-//							}
-//						})
-//				.setNegativeButton("No", new DialogInterface.OnClickListener() {
-//
-//					@Override
-//					public void onClick(DialogInterface dialog, int which) {
-//						// TODO Auto-generated method stub
-//						result = false;
-//					}
-//				}) // Do nothing on no
-//				.show();
-//		return result;
-//	}
-
-	public void Toast_call(Context contex, String message) {
-		Toast.makeText(contex, message, Toast.LENGTH_SHORT).show();
-	}
-    public void autoTimeEnable() {
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
-                context, android.R.style.Theme_Material_Light_Dialog_Alert);
-        // alertDialogBuilder.setTitle("Your Title");
-        alertDialogBuilder.setMessage("Please Enable Automatic Date and Time")
-                .setCancelable(false)
-                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        context.startActivity(new Intent(
-                                android.provider.Settings.ACTION_DATE_SETTINGS));
-                    }
-                });
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
-
-    }
-	public void showAlertDialog(Context context, String message, Boolean status) {
-//		AlertDialog.Builder  alertDialog = new AlertDialog.Builder(context, AlertDialog.THEME_HOLO_LIGHT).;
-//
-//		// Setting Dialog Title
-//		alertDialog.setTitle("Kaching.Me");
-//
-//		// Setting Dialog Message
-//		alertDialog.setMessage(message);
-//
-//		if (status != null)
-//			// Setting alert dialog icon
-//			// alertDialog.setIcon((status) ? R.drawable.success :
-//			// R.drawable.fail);
-//
-//			// Setting OK Button
-//			alertDialog.setButton(
-//					context.getResources().getString(R.string.ok),
-//					new DialogInterface.OnClickListener() {
-//						public void onClick(DialogInterface dialog, int which) {
-//
-//						}
-//					});
-//
-//		// Showing Alert Message
-//		alertDialog.show();
-//
-		AlertDialog.Builder alertDialogBuilder  = new AlertDialog.Builder(new ContextThemeWrapper
-				(context, android.R.style.Theme_Holo_Light_Dialog));
-		alertDialogBuilder
-				//.setTitle(context.getResources().getString(R.string.app_name))
-				.setMessage(Html.fromHtml("<font color=#232323>"+message+"</font>"))
-				.setCancelable(false)
-				.setPositiveButton(Html.fromHtml("<font color=#db0606>"+"OK"+"</font>"),
-						new DialogInterface.OnClickListener() {
-							public void onClick(DialogInterface dialog, int id) {
-								dialog.cancel();
-							}
-				});
-		AlertDialog alertDialog = alertDialogBuilder.create();
-		alertDialog.show();
+		sp = PreferenceManager.getDefaultSharedPreferences(context);
 	}
 
 	public static void getToast(Context context, String message) {
 		Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
 	}
-
 
 	/**
 	 * Utility function for decoding an image resource. The decoded bitmap will
@@ -279,6 +130,31 @@ public class CommonMethods {
 		return unscaledBitmap;
 	}
 
+//	private boolean result;
+//	public boolean yes_no_dialog(Context contex) {
+//		AlertDialog.Builder builder = new AlertDialog.Builder(contex);
+//		builder.setTitle("Erase hard drive")
+//				.setMessage("Are you sure?")
+//				.setIcon(android.R.drawable.ic_dialog_alert)
+//				.setPositiveButton("Yes",
+//						new DialogInterface.OnClickListener() {
+//							public void onClick(DialogInterface dialog,
+//												int which) {
+//								// Yes button clicked, do something
+//								result = true;
+//							}
+//						})
+//				.setNegativeButton("No", new DialogInterface.OnClickListener() {
+//
+//					@Override
+//					public void onClick(DialogInterface dialog, int which) {
+//						// TODO Auto-generated method stub
+//						result = false;
+//					}
+//				}) // Do nothing on no
+//				.show();
+//		return result;
+//	}
 
 	public static Bitmap createScaledBitmap(Bitmap unscaledBitmap,
 											int dstWidth, int dstHeight) {
@@ -295,23 +171,6 @@ public class CommonMethods {
 				Paint.FILTER_BITMAP_FLAG));
 
 		return scaledBitmap;
-	}
-
-	/**
-	 * ScalingLogic defines how scaling should be carried out if source and
-	 * destination image has different aspect ratio.
-	 *
-	 * CROP: Scales the image the minimum amount while making sure that at least
-	 * one of the two dimensions fit inside the requested destination area.
-	 * Parts of the source image will be cropped to realize this.
-	 *
-	 * FIT: Scales the image the minimum amount while making sure both
-	 * dimensions fit inside the requested destination area. The resulting
-	 * destination dimensions might be adjusted to a smaller size than
-	 * requested.
-	 */
-	public enum ScalingLogic {
-		CROP, FIT
 	}
 
 	/**
@@ -432,145 +291,277 @@ public class CommonMethods {
 		return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
 
+	public boolean isJSONValid(String test) {
+		try {
+			try {
+				new JSONObject(test);
+			} catch (JSONException ex) {
+				// edited, to include @Arthur's comment
+				// e.g. in case JSONArray is valid as well...
+				try {
+					new JSONArray(test);
+				} catch (JSONException ex1) {
+					return false;
+				}
+			}
+		} catch (Exception e) {
+			return false;
+		}
+		return true;
+	}
+
+    public void stopAsyncTask(final AsyncTask asyncTask, final ProgressDialog progressDialog,int seconds) {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Constant.printMsg("commonmethod timeout error......" + asyncTask.getStatus() + "....." +
+                        AsyncTask.Status.RUNNING);
+                if (asyncTask != null) {
+                    if (asyncTask.getStatus() == AsyncTask.Status.PENDING) {
+                        Constant.printMsg("commonmethod timeout error....CANCEL STATE...");
+                        asyncTask.cancel(true);
+                        Constant.printMsg("commonmethod timeout error....CHECK CANCEL STATE..." +
+                                asyncTask.getStatus() + "...." + asyncTask.isCancelled());
+                        if (progressDialog != null && progressDialog.isShowing() && asyncTask.isCancelled()){
+                            progressDialog.cancel();
+//                            Toast.makeText(context, "Network Error.!Please try again later!",
+//                                    Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Constant.printMsg("commonmethod timeout error NOTHING to CANCEL...");
+                    }
+                }
+            }
+        }, seconds);
+    }
+
+	public  void okDialogBox(Context contex, String msg) {
+
+		AlertDialog.Builder builder1 = new AlertDialog.Builder(context);
+		builder1.setMessage(msg);
+		builder1.setCancelable(true);
+		builder1.setPositiveButton(
+				"OK",
+				new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int id) {
+						dialog.cancel();
+					}
+				});
+//
+//			builder1.setNegativeButton(
+//					"No",
+//					new DialogInterface.OnClickListener() {
+//						public void onClick(DialogInterface dialog, int id) {
+//							dialog.cancel();
+//						}
+//					});
+		AlertDialog alert11 = builder1.create();
+		alert11.show();
+	}
+
+	public void Toast_call(Context contex, String message) {
+		Toast.makeText(contex, message, Toast.LENGTH_SHORT).show();
+	}
+
+    public void autoTimeEnable() {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                context, android.R.style.Theme_Material_Light_Dialog_Alert);
+        // alertDialogBuilder.setTitle("Your Title");
+        alertDialogBuilder.setMessage("Please Enable Automatic Date and Time")
+                .setCancelable(false)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        context.startActivity(new Intent(
+                                android.provider.Settings.ACTION_DATE_SETTINGS));
+                    }
+                });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+
+    }
+
+	public void showAlertDialog(Context context, String message, Boolean status) {
+//		AlertDialog.Builder  alertDialog = new AlertDialog.Builder(context, AlertDialog.THEME_HOLO_LIGHT).;
+//
+//		// Setting Dialog Title
+//		alertDialog.setTitle("Kaching.Me");
+//
+//		// Setting Dialog Message
+//		alertDialog.setMessage(message);
+//
+//		if (status != null)
+//			// Setting alert dialog icon
+//			// alertDialog.setIcon((status) ? R.drawable.success :
+//			// R.drawable.fail);
+//
+//			// Setting OK Button
+//			alertDialog.setButton(
+//					context.getResources().getString(R.string.ok),
+//					new DialogInterface.OnClickListener() {
+//						public void onClick(DialogInterface dialog, int which) {
+//
+//						}
+//					});
+//
+//		// Showing Alert Message
+//		alertDialog.show();
+//
+		AlertDialog.Builder alertDialogBuilder  = new AlertDialog.Builder(new ContextThemeWrapper
+				(context, android.R.style.Theme_Holo_Light_Dialog));
+		alertDialogBuilder
+				//.setTitle(context.getResources().getString(R.string.app_name))
+				.setMessage(Html.fromHtml("<font color=#232323>"+message+"</font>"))
+				.setCancelable(false)
+				.setPositiveButton(Html.fromHtml("<font color=#db0606>"+"OK"+"</font>"),
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog, int id) {
+								dialog.cancel();
+							}
+				});
+		AlertDialog alertDialog = alertDialogBuilder.create();
+		alertDialog.show();
+	}
+
     /**
      * added by siva for contact sync annd get status from php
      */
-    public void syncDataForStatus(final String strPrimary, final byte[] photo_ts, final String strSecondary) {
-        Constant.printMsg("Service get called...primary......." + strPrimary);
-        Constant.printMsg("Service get called...secondary......." + strSecondary);
-//        RequestParams request_params = new RequestParams();
-//        request_params.put("Wquery", "'SELECT * FROM tbl_user WHERE jid in ("
-//                + strPrimary + ")'");
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.setTimeout(600000);
-        client.get(KachingMeConfig.USER_GETDATA_PHP+
-                        "?Wcolumn=jid &Wvalue=" + strPrimary + KachingMeApplication.getHost() + "&Wtable=tbl_user ",
-                null,
-                new AsyncHttpResponseHandler(Looper.getMainLooper()) {
-
-                    @Override
-                    public void onFailure(int arg0, Header[] arg1, byte[] arg2,
-                                          Throwable arg3) {
-                        // TODO Auto-generated method stub
-                        Constant.printMsg("Service Failure Response::"
-                                + new String(arg2));
-                    }
-
-                    @Override
-                    public void onSuccess(int arg0, Header[] arg1, byte[] arg2) {
-                        // TODO Auto-generated method stub
-                        ObjectMapper mapper = new ObjectMapper();
-                        Constant.printMsg("Service Success Response::"
-                                + new String(arg2));
-                        String status = null;
-                        String response = new String(arg2);
-                        if (response != null && response.length() > 0) {
-                            if (!response.equals(0)) {
-                                CommonMethods com = new CommonMethods(context);
-                                if (com.isJSONValid(response.trim())) {
-                                    Constant.printMsg("Service Success Response Valid.........::");
-                                    JSONArray jarry;
-                                    JSONObject jsonObject;
-                                    try {
-                                        jarry = new JSONArray(response);
-                                        for (int i = 0; i<jarry.length(); i++) {
-                                            jsonObject = new JSONObject(jarry.get(i).toString());
-                                            status = jsonObject.getString("status");
-                                            Constant.printMsg("User status.............." + status);
-                                        }
-//                                        if (strSecondary != null) {
-//                                            dbAdapter.updateInsertedContacts(
-//                                                    strSecondary + KachingMeApplication.getHost(),
-//                                                    strSecondary, photo_ts, status);
-//                                        } else {
-//                                            dbAdapter.updateInsertedContacts(
-//                                                    strPrimary + KachingMeApplication.getHost(),
-//                                                    strPrimary, photo_ts, status);
+//    public void syncDataForStatus(final String strPrimary, final byte[] photo_ts, final String strSecondary) {
+//        Constant.printMsg("Service get called...primary......." + strPrimary);
+//        Constant.printMsg("Service get called...secondary......." + strSecondary);
+////        RequestParams request_params = new RequestParams();
+////        request_params.put("Wquery", "'SELECT * FROM tbl_user WHERE jid in ("
+////                + strPrimary + ")'");
+//        AsyncHttpClient client = new AsyncHttpClient();
+//        client.setTimeout(600000);
+//        client.get(KachingMeConfig.USER_GETDATA_PHP+
+//                        "?Wcolumn=jid &Wvalue=" + strPrimary + KachingMeApplication.getHost() + "&Wtable=tbl_user ",
+//                null,
+//                new AsyncHttpResponseHandler(Looper.getMainLooper()) {
 //
+//                    @Override
+//                    public void onFailure(int arg0, Header[] arg1, byte[] arg2,
+//                                          Throwable arg3) {
+//                        // TODO Auto-generated method stub
+//                        Constant.printMsg("Service Failure Response::"
+//                                + new String(arg2));
+//                    }
+//
+//                    @Override
+//                    public void onSuccess(int arg0, Header[] arg1, byte[] arg2) {
+//                        // TODO Auto-generated method stub
+//                        ObjectMapper mapper = new ObjectMapper();
+//                        Constant.printMsg("Service Success Response::"
+//                                + new String(arg2));
+//                        String status = null;
+//                        String response = new String(arg2);
+//                        if (response != null && response.length() > 0) {
+//                            if (!response.equals(0)) {
+//                                CommonMethods com = new CommonMethods(context);
+//                                if (com.isJSONValid(response.trim())) {
+//                                    Constant.printMsg("Service Success Response Valid.........::");
+//                                    JSONArray jarry;
+//                                    JSONObject jsonObject;
+//                                    try {
+//                                        jarry = new JSONArray(response);
+//                                        for (int i = 0; i<jarry.length(); i++) {
+//                                            jsonObject = new JSONObject(jarry.get(i).toString());
+//                                            status = jsonObject.getString("status");
+//                                            Constant.printMsg("User status.............." + status);
 //                                        }
-                                    } catch (Exception e) {
-                                        // TODO: handle exception
-                                    }
-                                } else {
-                                    Constant.printMsg("Service Success Response InValid.........::");
-//                                    if (strSecondary != null) {
-//                                        dbAdapter.updateInsertedContacts(
-//                                                strSecondary + KachingMeApplication.getHost(),
-//                                                strSecondary, photo_ts, status);
-//                                    } else {
-//                                        dbAdapter.updateInsertedContacts(
-//                                                strPrimary + KachingMeApplication.getHost(),
-//                                                strPrimary, photo_ts, status);
-//
+////                                        if (strSecondary != null) {
+////                                            dbAdapter.updateInsertedContacts(
+////                                                    strSecondary + KachingMeApplication.getHost(),
+////                                                    strSecondary, photo_ts, status);
+////                                        } else {
+////                                            dbAdapter.updateInsertedContacts(
+////                                                    strPrimary + KachingMeApplication.getHost(),
+////                                                    strPrimary, photo_ts, status);
+////
+////                                        }
+//                                    } catch (Exception e) {
+//                                        // TODO: handle exception
 //                                    }
-                                }
-                            } else {
-//                                if (strSecondary != null) {
-//                                    dbAdapter.updateInsertedContacts(
-//                                            strSecondary + KachingMeApplication.getHost(),
-//                                            strSecondary, photo_ts, status);
 //                                } else {
-//                                    dbAdapter.updateInsertedContacts(
-//                                            strPrimary + KachingMeApplication.getHost(),
-//                                            strPrimary, photo_ts, status);
-//
+//                                    Constant.printMsg("Service Success Response InValid.........::");
+////                                    if (strSecondary != null) {
+////                                        dbAdapter.updateInsertedContacts(
+////                                                strSecondary + KachingMeApplication.getHost(),
+////                                                strSecondary, photo_ts, status);
+////                                    } else {
+////                                        dbAdapter.updateInsertedContacts(
+////                                                strPrimary + KachingMeApplication.getHost(),
+////                                                strPrimary, photo_ts, status);
+////
+////                                    }
 //                                }
-                            }
-                        } else {
-//                            if (strSecondary != null) {
-//                                dbAdapter.updateInsertedContacts(
-//                                        strSecondary + KachingMeApplication.getHost(),
-//                                        strSecondary, photo_ts, status);
 //                            } else {
-//                                dbAdapter.updateInsertedContacts(
-//                                        strPrimary + KachingMeApplication.getHost(),
-//                                        strPrimary, photo_ts, status);
-//
+////                                if (strSecondary != null) {
+////                                    dbAdapter.updateInsertedContacts(
+////                                            strSecondary + KachingMeApplication.getHost(),
+////                                            strSecondary, photo_ts, status);
+////                                } else {
+////                                    dbAdapter.updateInsertedContacts(
+////                                            strPrimary + KachingMeApplication.getHost(),
+////                                            strPrimary, photo_ts, status);
+////
+////                                }
 //                            }
-                        }
-
-//                        JSONArray jarry;
-//                        ArrayList<App_Users> ar_list = new ArrayList<App_Users>();
-//                        try {
-//                            jarry = new JSONArray(new String(response));
-////							ar_list = mapper.readValue(
-////									jarry.toString(),
-////									mapper.getTypeFactory()
-////											.constructCollectionType(
-////													List.class, App_Users.class));
-//                        } catch (Exception e) {
-//                            // TODO: handle exception
+//                        } else {
+////                            if (strSecondary != null) {
+////                                dbAdapter.updateInsertedContacts(
+////                                        strSecondary + KachingMeApplication.getHost(),
+////                                        strSecondary, photo_ts, status);
+////                            } else {
+////                                dbAdapter.updateInsertedContacts(
+////                                        strPrimary + KachingMeApplication.getHost(),
+////                                        strPrimary, photo_ts, status);
+////
+////                            }
 //                        }
 //
-//                        for (int i = 0; i < ar_list.size(); i++) {
-//                            App_Users user = ar_list.get(i);
-//                            ContactsGetSet contects = dbAdapter
-//                                    .getContact(user.jid);
-//                            if (contects != null) {
-//                                contects.setIs_niftychat_user(1);
-//                                contects.setStatus(user.status);
-//                                contects.setPhoto_ts(user.avatar);
-//                                contects.setNifty_name(user.name);
-//                                contects.setNifty_email(user.email);
-////								dbAdapter.setDeleteContact(contects.getJid());
-////								dbAdapter.insertContacts(contects);
-//
-//                            }
-//
-//                        }
-////						editor.putBoolean(Constant.CONTACT_GROUP_SYNC_STATUS,
-////								true);
-////						editor.commit();
+////                        JSONArray jarry;
+////                        ArrayList<App_Users> ar_list = new ArrayList<App_Users>();
+////                        try {
+////                            jarry = new JSONArray(new String(response));
+//////							ar_list = mapper.readValue(
+//////									jarry.toString(),
+//////									mapper.getTypeFactory()
+//////											.constructCollectionType(
+//////													List.class, App_Users.class));
+////                        } catch (Exception e) {
+////                            // TODO: handle exception
+////                        }
 ////
-////						Intent intn = new Intent("Add_New_Contact");
-////						sendBroadcast(intn);
+////                        for (int i = 0; i < ar_list.size(); i++) {
+////                            App_Users user = ar_list.get(i);
+////                            ContactsGetSet contects = dbAdapter
+////                                    .getContact(user.jid);
+////                            if (contects != null) {
+////                                contects.setIs_niftychat_user(1);
+////                                contects.setStatus(user.status);
+////                                contects.setPhoto_ts(user.avatar);
+////                                contects.setNifty_name(user.name);
+////                                contects.setNifty_email(user.email);
+//////								dbAdapter.setDeleteContact(contects.getJid());
+//////								dbAdapter.insertContacts(contects);
 ////
-////						Intent intent1 = new Intent(Contact_server.this,
-////								Vcard_Sync_Service.class);
-////						startService(intent1);//siva
-                    }
-                });
-    }
+////                            }
+////
+////                        }
+//////						editor.putBoolean(Constant.CONTACT_GROUP_SYNC_STATUS,
+//////								true);
+//////						editor.commit();
+//////
+//////						Intent intn = new Intent("Add_New_Contact");
+//////						sendBroadcast(intn);
+//////
+//////						Intent intent1 = new Intent(Contact_server.this,
+//////								Vcard_Sync_Service.class);
+//////						startService(intent1);//siva
+//                    }
+//                });
+//    }
 
 //    public void updateDataForKachingUser(final String strPrimary, final byte[] photo_ts, String status, final String strSecondary) {
 //        Constant.printMsg("photo insert called..........."+photo_ts);
@@ -616,6 +607,191 @@ public class CommonMethods {
 //        thread.start();
         return imageByte;
     }
+
+    /**Login Process Methods*/
+
+    public void loginUserProcess() {
+        // String status="Available";
+        dbAdapter.insertLogin(preference.getString("MyPrimaryNumber", ""),
+                preference.getString("pin", ""), "",
+                "", "", null);
+        Constant.printMsg("login GFSKJHLKJDSLN" + dbAdapter.getLogin().size());
+        Constant.mIsLogin = true;
+        new getLoginVcard().execute();
+
+//        byte[] av = null;
+//        String status = "", fname = null, email = null;
+//        try {
+//            Constant.printMsg("login GFSKJHLKJDSLN.......vc....");
+//            VCard vc = VCardManager.getInstanceFor(
+//                    TempConnectionService.connection).loadVCard();
+//            // vc.load(connection);
+//            Constant.printMsg("login GFSKJHLKJDSLN........"+vc);
+//            Constant.printMsg("login email::" + vc.getEmailWork());
+//            Constant.printMsg("login FirstName()::" + vc.getFirstName());
+//            Constant.printMsg("login Status::" + vc.getField("SORT-STRING"));
+//            status = vc.getField("SORT-STRING");
+//            fname = vc.getFirstName();
+//            email = vc.getEmailWork();
+//            av = new AvatarManager().saveBitemap(vc.getAvatar());
+//        } catch (Exception e) {
+//            // ACRA.getErrorReporter().handleException(e);
+//            e.printStackTrace();
+//            Constant.printMsg("Exception....." + e);
+//        }
+        Constant.printMsg("login GFSKJHLKJDSLN.....end...");
+    }
+
+    public void insertDB(ContentValues v) {
+        try {
+            int a = (int) dbHelper.open().getDatabaseObj()
+                    .insert(Dbhelper.TABLE_CART, null, v);
+            Constant.printMsg("No of inserted rows in shop details :::::::::" + a);
+        } catch (SQLException e) {
+            Constant.printMsg("Sql exception in new shop details ::::::" + e.toString());
+        } finally {
+            dbHelper.close();
+        }
+    }
+
+    public void insertDBBux(ContentValues v) {
+
+        try {
+            int a = (int) dbHelper.open().getDatabaseObj()
+                    .insert(Dbhelper.TABLE_BUX, null, v);
+
+            Constant.printMsg("No of inserted rows in shop details :::::::::" + a);
+        } catch (SQLException e) {
+            Constant.printMsg("Sql exception in new shop details ::::::"
+                    + e.toString());
+        } finally {
+            dbHelper.close();
+        }
+    }
+
+	public void postEarnedBux(String status) {
+		if (Connectivity.isConnected(context))
+			ConcurrentAsyncTaskExecutor.executeConcurrently(new postEarnedBux(),status);
+	}
+
+	private Map<String, String> getBuxsIdFromDB() {
+		String achive, name, id, buxs;
+		Map<String, String> earnedBuxList = new HashMap<>();
+		Cursor c = null;
+		try {
+			c = dbHelper.open().getDatabaseObj().query(Dbhelper.TABLE_BUX_COUNTER,
+					null, null, null, null, null, null);
+			int activity_bux_index = c.getColumnIndex("activity_bux");
+			int activity_index = c.getColumnIndex("activity");
+			int bux_id_index = c.getColumnIndex("bux_master_id");
+			int earned_bux_index = c.getColumnIndex("earned_bux");
+			Constant.printMsg("The pending donate list in db ::::" + c.getCount());
+			if (c.getCount() > 0) {
+
+				while (c.moveToNext()) {
+					id = c.getString(bux_id_index);
+					name = c.getString(activity_index);
+					buxs = c.getString(earned_bux_index);
+					achive = c.getString(activity_bux_index);
+					Constant.printMsg("get Buxs Db  " + id + "  " + name + "  " + achive + " " + sp.getInt("chatpoint", 0) + " " + buxs);
+					switch (name) {
+						case "Regs":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("regpoints", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "ConT Intro":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("intropoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "ChaT":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("chatpoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "DazZ":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("zzlepoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "WheR":
+							earnedBuxList.put(id, String.valueOf(Integer.valueOf(achive) * sp.getInt("locpoint", 0) - Integer.valueOf(buxs)));
+							break;
+						case "ShwT":
+							earnedBuxList.put(id, String.valueOf(Integer.valueOf(achive) * sp.getInt("imgpoint", 0) - Integer.valueOf(buxs)));
+							break;
+						case "DeeL":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("deelpoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "Wish":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("wishpoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "KonS":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("konpoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "DesT":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("destpoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "NynM":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("nympoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						case "RegWoFreebie":
+							earnedBuxList.put(id, String.valueOf((Integer.valueOf(achive) * sp.getInt("nofreebiepoint", 0)) - Integer.valueOf(buxs)));
+							break;
+						default:
+							break;
+					}
+				}
+			}
+		} catch (SQLException e) {
+			Constant.printMsg("Sql exception in pending shop details ::::" + e.toString());
+		} finally {
+			c.close();
+			dbHelper.close();
+		}
+		Constant.printMsg("Sql in earnedBuxList shop details ::::" + earnedBuxList);
+		return earnedBuxList;
+	}
+
+	private void delete(String query) {
+		// TODO Auto-generated method stub
+		Cursor c = null;
+		try {
+			c = dbHelper.open().getDatabaseObj().rawQuery(query, null);
+			Constant.printMsg("No of deleted rows ::::::::::" + c.getCount());
+		} catch (SQLException e) {
+
+		} finally {
+			if (c != null) {
+				c.close();
+			}
+			dbHelper.close();
+		}
+	}
+
+	protected void insertbuxDB(ContentValues cv) {
+		// TODO Auto-generated method stub
+		try {
+			int a = (int) dbHelper.open().getDatabaseObj()
+					.insert(Dbhelper.TABLE_BUX_COUNTER, null, cv);
+			Constant.printMsg("No of inserted rows in zzle :::::::::" + a);
+		} catch (SQLException e) {
+			Constant.printMsg("Sql exception in led details ::::::"
+					+ e.toString());
+		} finally {
+			dbHelper.close();
+		}
+	}
+
+	/**
+	 * ScalingLogic defines how scaling should be carried out if source and
+	 * destination image has different aspect ratio.
+	 *
+	 * CROP: Scales the image the minimum amount while making sure that at least
+	 * one of the two dimensions fit inside the requested destination area.
+	 * Parts of the source image will be cropped to realize this.
+	 *
+	 * FIT: Scales the image the minimum amount while making sure both
+	 * dimensions fit inside the requested destination area. The resulting
+	 * destination dimensions might be adjusted to a smaller size than
+	 * requested.
+	 */
+	public enum ScalingLogic {
+		CROP, FIT
+	}
 
     public  class getImagefromUrlAsy extends AsyncTask<String, Void, byte[]> {
         String primaryNumber,secondaryNumber,status;
@@ -665,42 +841,7 @@ public class CommonMethods {
         }
     }
 
-    /**Login Process Methods*/
-
-    public void loginUserProcess() {
-        // String status="Available";
-        dbAdapter.insertLogin(preference.getString("MyPrimaryNumber", ""),
-                preference.getString("pin", ""), "",
-                "", "", null);
-        Constant.printMsg("login GFSKJHLKJDSLN" + dbAdapter.getLogin().size());
-        Constant.mIsLogin = true;
-        new getLoginVcard().execute();
-
-//        byte[] av = null;
-//        String status = "", fname = null, email = null;
-//        try {
-//            Constant.printMsg("login GFSKJHLKJDSLN.......vc....");
-//            VCard vc = VCardManager.getInstanceFor(
-//                    TempConnectionService.connection).loadVCard();
-//            // vc.load(connection);
-//            Constant.printMsg("login GFSKJHLKJDSLN........"+vc);
-//            Constant.printMsg("login email::" + vc.getEmailWork());
-//            Constant.printMsg("login FirstName()::" + vc.getFirstName());
-//            Constant.printMsg("login Status::" + vc.getField("SORT-STRING"));
-//            status = vc.getField("SORT-STRING");
-//            fname = vc.getFirstName();
-//            email = vc.getEmailWork();
-//            av = new AvatarManager().saveBitemap(vc.getAvatar());
-//        } catch (Exception e) {
-//            // ACRA.getErrorReporter().handleException(e);
-//            e.printStackTrace();
-//            Constant.printMsg("Exception....." + e);
-//        }
-        Constant.printMsg("login GFSKJHLKJDSLN.....end...");
-    }
-
     public class getLoginVcard extends AsyncTask<String, String, VCard> {
-        ProgressDialog progressDialog;
 
         protected void onPreExecute() {
             // TODO Auto-generated method stub
@@ -1009,30 +1150,79 @@ public class CommonMethods {
         }
     }
 
-    public void insertDB(ContentValues v) {
-        try {
-            int a = (int) dbHelper.open().getDatabaseObj()
-                    .insert(Dbhelper.TABLE_CART, null, v);
-            Constant.printMsg("No of inserted rows in shop details :::::::::" + a);
-        } catch (SQLException e) {
-            Constant.printMsg("Sql exception in new shop details ::::::" + e.toString());
-        } finally {
-            dbHelper.close();
-        }
-    }
+	public class postEarnedBux extends AsyncTask<String, String, String> {
 
-    public void insertDBBux(ContentValues v) {
+		String  status;
 
-        try {
-            int a = (int) dbHelper.open().getDatabaseObj()
-                    .insert(Dbhelper.TABLE_BUX, null, v);
+		@Override
+		protected void onPreExecute() {
+			// TODO Auto-generated method stub
+			super.onPreExecute();
+		}
 
-            Constant.printMsg("No of inserted rows in shop details :::::::::" + a);
-        } catch (SQLException e) {
-            Constant.printMsg("Sql exception in new shop details ::::::"
-                    + e.toString());
-        } finally {
-            dbHelper.close();
-        }
-    }
+		@Override
+		protected String doInBackground(String... params) {
+			// TODO Auto-generated method stub
+			String earedRequestData, result;
+			status=params[0];
+			BuxAchivedDto buxAchivedDto = new BuxAchivedDto();
+			buxAchivedDto.setUserId(preference.getString("buxUserId", ""));
+			buxAchivedDto.setBuxsEarned(getBuxsIdFromDB());
+			earedRequestData = new Gson().toJson(buxAchivedDto);
+			HttpConfig ht = new HttpConfig();
+			Constant.printMsg("PRODUCT Earned REQUEST>>>>>>" + earedRequestData);
+			Constant.printMsg("PRODUCT Earned URL>>>>>>" + KachingMeConfig.POST_EARNED_BUXS);
+			result = ht.doPostMobizee(earedRequestData, KachingMeConfig.POST_EARNED_BUXS);
+			return result;
+		}
+
+		@Override
+		protected void onPostExecute(String result) {
+			// TODO Auto-generated method stub
+			super.onPostExecute(result);
+			Constant.printMsg("PRODUCT Earned RESULT>>>>>>" + result);
+			if (result != null && !result.isEmpty()) {
+				JSONObject jObject = null;
+				try {
+					jObject = new JSONObject(result);
+				} catch (JSONException e) {
+					// TODO: handle exception
+					e.printStackTrace();
+				}
+				JSONArray jsonArray = null;
+				String status;
+				try {
+					jsonArray = jObject.getJSONArray("buxEarnedDtos");
+					status = jObject.getString("status");
+					if (status.equalsIgnoreCase("SUCCESS")) {
+						if (status.equalsIgnoreCase("buxs")) {
+							if (jsonArray.length() > 0) {
+							String query1 = "DELETE FROM " + Dbhelper.TABLE_BUX_COUNTER;
+							Constant.printMsg("delete query1 ::>>>> " + query1);
+							delete(query1);
+							for (int i = 0; i < jsonArray.length(); i++) {
+								String buxsId = jsonArray.getJSONObject(i).getString("buxMasterId");
+								String name = jsonArray.getJSONObject(i).getString("name");
+								String acheive = jsonArray.getJSONObject(i).getString("acheive");
+								String buxs = jsonArray.getJSONObject(i).getString("buxs");
+								ContentValues cv = new ContentValues();
+								cv.put("bux_master_id", buxsId);
+								cv.put("activity", name);
+								cv.put("activity_bux", acheive);
+								cv.put("earned_bux", buxs);
+								Constant.printMsg("activity data   " + name + "   "
+										+ buxs + "    " + acheive);
+								insertbuxDB(cv);
+							}
+						}
+					}
+					}
+				} catch (JSONException e) {
+					// TODO: handle exception
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
 }

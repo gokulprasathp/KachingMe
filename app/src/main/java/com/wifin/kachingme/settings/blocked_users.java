@@ -460,6 +460,8 @@ public class blocked_users extends SherlockBaseActivity {
 		} catch (NotConnectedException e) {// ACRA.getErrorReporter().handleException(e);
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 
 		users.clear();
@@ -551,6 +553,8 @@ public class blocked_users extends SherlockBaseActivity {
 			e.printStackTrace();
 		} catch (NotConnectedException e) {// ACRA.getErrorReporter().handleException(e);
 			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
 		// pDialog.hide();\

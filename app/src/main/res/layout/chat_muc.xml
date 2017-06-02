@@ -2,22 +2,22 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#ffffff"
+    android:isScrollContainer="false"
     android:orientation="vertical">
 
     <ImageView
         android:id="@+id/img_chat_background1"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:scaleType="centerCrop" />
+        android:scaleType="fitXY" />
 
     <com.wifin.kachingme.util.GIFView
         android:id="@+id/img_chat_background"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:scaleType="centerCrop" />
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"/>
 
-    <ScrollView
+    <com.wifin.kachingme.util.CustomScrollView
         android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -36,11 +36,9 @@
                 android:layout_marginBottom="2dp"
                 android:layout_marginTop="2dp"
                 android:orientation="vertical" />
-
         </LinearLayout>
 
-    </ScrollView>
-
+    </com.wifin.kachingme.util.CustomScrollView>
 
     <include layout="@layout/test_muc_menu" />
 
@@ -98,7 +96,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:gravity="center_vertical" />
+                    android:gravity="center_vertical"
+                    android:maxLength="15"
+                    android:ellipsize="end"/>
 
             </LinearLayout>
 
@@ -256,7 +256,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|center_vertical"
-                android:background="#EEEDF2"
+                android:background="#73abb5be"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -269,6 +269,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center"
+                        android:background="@drawable/circle_border"
                         android:gravity="center">
 
                         <ImageButton
@@ -276,7 +277,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical"
-                            android:background="@drawable/up_arrow" />
+                            android:background="@drawable/up_arrow"
+                            android:scaleType="fitXY" />
 
                     </LinearLayout>
 
@@ -301,7 +303,7 @@
                             android:gravity="center_vertical"
                             android:hint="Enter your message"
                             android:imeOptions="actionDone"
-                            android:inputType="textMultiLine"
+                            android:inputType="textMultiLine|textNoSuggestions"
                             android:maxLines="5"
                             android:paddingLeft="1dp"
                             android:paddingRight="1dp" />
